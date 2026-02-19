@@ -50,11 +50,17 @@ A hyper-realistic AI avatar video lands in Telegram every day, ready to approve 
 
 ## Constraints
 
+- **Tech — Language/Backend**: Python 3.11 + FastAPI
+- **Tech — Script AI**: GPT-4o (primary) / Claude 3.5 (fallback)
 - **Tech — Video generation**: HeyGen API (avatar rendering, lip-sync)
-- **Tech — Script AI**: OpenAI API (GPT-4 class model for script generation)
-- **Tech — Publishing**: Ayrshare or Buffer API for native multi-platform publish
-- **Tech — Storage**: S3 or Supabase for video lifecycle management
-- **Tech — Vector DB**: Required for anti-repetition concept similarity search
+- **Tech — Voice**: ElevenLabs (TTS/voice cloning — verify if HeyGen native voice covers this)
+- **Tech — Publishing**: Ayrshare (single POST → 4 platforms); Buffer as fallback
+- **Tech — Database**: Supabase (Postgres + pgvector for anti-repetition)
+- **Tech — Storage**: Supabase Storage or S3 for video lifecycle management
+- **Tech — Scheduler**: APScheduler 3.10.x with Postgres job store (survives deploys)
+- **Tech — Telegram**: python-telegram-bot v21.x (async)
+- **Tech — HTTP client**: httpx (async — never requests in async context)
+- **Tech — Infrastructure**: Railway.app or Render (persistent worker, not serverless)
 - **Tech — Interface**: Telegram bot only — no web UI, no mobile app
 - **Performance**: Lip-sync must be 100% accurate; script auto-summarized if over 140 words
 - **Privacy**: Bot restricted to creator's Telegram user ID; all secrets in encrypted env vars
@@ -70,4 +76,4 @@ A hyper-realistic AI avatar video lands in Telegram every day, ready to approve 
 | Single user architecture | Simpler, faster to build; no auth/tenancy overhead | — Pending |
 
 ---
-*Last updated: 2026-02-19 after initialization*
+*Last updated: 2026-02-19 after tech stack confirmed and research complete*
