@@ -116,8 +116,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 **Coverage:**
 - v1 requirements: 26 total
 - Mapped to phases: 26
-- Unmapped: 0 ✓
+- Unmapped: 0
+- Note: Phase 7 (Hardening) verifies all 26 requirements end-to-end; it introduces no new functional requirements
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after initial definition*
+*Last updated: 2026-02-19 — traceability confirmed after roadmap creation*
