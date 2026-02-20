@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 2 (Script Generation) — Plan 3 of 5 complete
+**Current focus:** Phase 2 (Script Generation) — Plan 4 of 5 complete
 
 ## Current Position
 
 Phase: 2 of 7 (Script Generation) — IN PROGRESS
-Plan: 3 of 5 in current phase — COMPLETE
-Status: Phase 2 Plan 03 complete
-Last activity: 2026-02-20 — Plan 02-03 complete: Weekly mood collection system (MoodService, mood_flow handlers, weekly APScheduler jobs)
+Plan: 4 of 5 in current phase — COMPLETE
+Status: Phase 2 Plan 04 complete
+Last activity: 2026-02-20 — Plan 02-04 complete: ScriptGenerationService with 6-pillar Spanish script generation, auto-summarization, and rejection constraint injection
 
-Progress: [████░░░░░░] 24%
+Progress: [████░░░░░░] 26%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 3 min
-- Total execution time: 0.20 hours
+- Total plans completed: 6
+- Average duration: 2.5 min
+- Total execution time: 0.25 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
-| 02-script-generation | 3/5 | 9 min | 3 min |
+| 02-script-generation | 4/5 | 10 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3 min), 01-03 (3 min), 02-01 (2 min), 02-02 (3 min), 02-03 (4 min)
+- Last 5 plans: 01-03 (3 min), 02-01 (2 min), 02-02 (3 min), 02-03 (4 min), 02-04 (1 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -70,6 +70,10 @@ Recent decisions affecting current work:
 - [Phase 02-03]: CallbackQueryHandler with prefix matching used instead of ConversationHandler — bot-initiated flows cannot use ConversationHandler entry_points
 - [Phase 02-03]: await query.answer() called in all 3 handler steps — required to prevent Telegram loading spinner freezing on creator device
 - [Phase 02-03]: DURATION_WORD_COUNTS (short=70, medium=140, long=200) baked into MoodService — pipeline reads target_words directly without mapping
+- [Phase 02-04]: generate_topic_summary() pre-generates 15-word phrase BEFORE full script — cheaper similarity pre-check avoids paying for full Claude generation on topics that will be rejected
+- [Phase 02-04]: attempt=1 gives "same root/different angle" instruction; attempt>=2 gives "completely different topic" — distinct retry strategies for different similarity failure modes
+- [Phase 02-04]: summarize_if_needed() explicitly names 3 pillars to preserve (Philosophical Root, Emotional Anchor, Reflective CTA); Insight Flip section absorbs compression
+- [Phase 02-04]: Synchronous Anthropic client only — AsyncAnthropic incompatible with APScheduler ThreadPoolExecutor (no event loop)
 
 ### Pending Todos
 
@@ -86,5 +90,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 02-03-PLAN.md — Weekly mood collection system: MoodService, mood_flow handlers, weekly APScheduler jobs wired into Application and registry
+Stopped at: Completed 02-04-PLAN.md — ScriptGenerationService: 6-pillar Spanish script generation via synchronous Claude API, auto-summarization, rejection constraint injection
 Resume file: None
