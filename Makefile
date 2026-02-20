@@ -1,4 +1,4 @@
-.PHONY: dev dev-down dev-logs run
+.PHONY: dev dev-down dev-reset dev-logs run db-shell db-url
 
 # Start the local PostgreSQL + PostgREST containers
 dev:
@@ -6,8 +6,10 @@ dev:
 	docker compose up -d
 	@echo ""
 	@echo "Local stack ready:"
+	@echo "  App (after make run):    http://localhost:8000"
 	@echo "  PostgREST (supabase-py): http://localhost:3000"
-	@echo "  PostgreSQL (direct):     localhost:5432"
+	@echo "  Adminer (web GUI):       http://localhost:8080"
+	@echo "  PostgreSQL (direct):     localhost:5432  user=postgres  pass=postgres"
 	@echo ""
 	@echo "Next: make run"
 
@@ -22,6 +24,14 @@ dev-reset:
 # Stream container logs
 dev-logs:
 	docker compose logs -f
+
+# Open an interactive psql shell inside the running db container
+db-shell:
+	docker compose exec db psql -U postgres postgres
+
+# Print the connection string for GUI clients (TablePlus, DBeaver, DataGrip, etc.)
+db-url:
+	@echo "postgresql://postgres:postgres@localhost:5432/postgres"
 
 # Run the app locally against the local stack
 # Migrations run automatically on startup — no manual SQL needed.
