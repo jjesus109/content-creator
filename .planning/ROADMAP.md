@@ -32,7 +32,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. APScheduler with Postgres job store triggers a no-op test job at a scheduled time and continues firing correctly after a service restart
   4. The cost circuit breaker halts generation and sends a Telegram alert when the daily generation limit is hit
   5. The Telegram bot silently ignores a message from any user ID other than the configured creator ID and responds normally to the correct ID
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold (pyproject.toml, Dockerfile, railway.toml) + Pydantic settings/models + Supabase schema SQL
+- [ ] 01-02-PLAN.md — CircuitBreakerService (dual cost+count, midnight reset, escalation) + Telegram outbound-only service
+- [ ] 01-03-PLAN.md — FastAPI app with lifespan + APScheduler (heartbeat + cb_reset jobs) + deep health endpoint
 
 ### Phase 2: Script Generation
 **Goal**: The system generates a 140-word Spanish script daily, rejects semantically similar topics, learns from rejection feedback, and takes weekly mood direction from the creator
@@ -107,7 +112,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/3 | Not started | - |
 | 2. Script Generation | 0/TBD | Not started | - |
 | 3. Video Production | 0/TBD | Not started | - |
 | 4. Telegram Approval Loop | 0/TBD | Not started | - |
