@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 2 (Script Generation) — Plan 2 of 5 complete
+**Current focus:** Phase 2 (Script Generation) — Plan 3 of 5 complete
 
 ## Current Position
 
 Phase: 2 of 7 (Script Generation) — IN PROGRESS
-Plan: 2 of 5 in current phase — COMPLETE
-Status: Phase 2 Plan 02 complete
-Last activity: 2026-02-20 — Plan 02-02 complete: EmbeddingService (OpenAI text-embedding-3-small) and SimilarityService (pgvector RPC) created
+Plan: 3 of 5 in current phase — COMPLETE
+Status: Phase 2 Plan 03 complete
+Last activity: 2026-02-20 — Plan 02-03 complete: Weekly mood collection system (MoodService, mood_flow handlers, weekly APScheduler jobs)
 
-Progress: [████░░░░░░] 20%
+Progress: [████░░░░░░] 24%
 
 ## Performance Metrics
 
@@ -28,10 +28,10 @@ Progress: [████░░░░░░] 20%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
-| 02-script-generation | 2/5 | 5 min | 2.5 min |
+| 02-script-generation | 3/5 | 9 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 01-03 (3 min), 02-01 (2 min), 02-02 (3 min)
+- Last 5 plans: 01-02 (3 min), 01-03 (3 min), 02-01 (2 min), 02-02 (3 min), 02-03 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -67,6 +67,9 @@ Recent decisions affecting current work:
 - [Phase 02-02]: EmbeddingService returns (embedding, cost_usd) tuple so every caller can always report to CircuitBreakerService without recalculating
 - [Phase 02-02]: SimilarityService fails open (returns False) on DB RPC errors — content repetition preferable to pipeline outage
 - [Phase 02-02]: SimilarityService accepts optional supabase Client in __init__ for testability without live DB
+- [Phase 02-03]: CallbackQueryHandler with prefix matching used instead of ConversationHandler — bot-initiated flows cannot use ConversationHandler entry_points
+- [Phase 02-03]: await query.answer() called in all 3 handler steps — required to prevent Telegram loading spinner freezing on creator device
+- [Phase 02-03]: DURATION_WORD_COUNTS (short=70, medium=140, long=200) baked into MoodService — pipeline reads target_words directly without mapping
 
 ### Pending Todos
 
@@ -83,5 +86,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 02-02-PLAN.md — EmbeddingService and SimilarityService created, ready for daily pipeline job
+Stopped at: Completed 02-03-PLAN.md — Weekly mood collection system: MoodService, mood_flow handlers, weekly APScheduler jobs wired into Application and registry
 Resume file: None
