@@ -3,6 +3,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.scheduler.jobs.heartbeat import heartbeat_job
 from app.scheduler.jobs.cb_reset import cb_reset_job
+from app.scheduler.jobs.weekly_mood import weekly_mood_prompt_job, weekly_mood_reminder_job
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -44,3 +45,31 @@ def register_jobs(scheduler: BackgroundScheduler) -> None:
         replace_existing=True,
     )
     logger.info("Registered job: cb_midnight_reset at 00:00 %s", TIMEZONE)
+
+    # Weekly mood prompt — Monday 9 AM Mexico City (SCRP-04)
+    scheduler.add_job(
+        weekly_mood_prompt_job,
+        trigger="cron",
+        day_of_week="mon",
+        hour=9,
+        minute=0,
+        timezone=TIMEZONE,
+        id="weekly_mood_prompt",
+        name="Weekly mood profile prompt",
+        replace_existing=True,
+    )
+    logger.info("Registered job: weekly_mood_prompt at Mon 09:00 %s", TIMEZONE)
+
+    # 4-hour reminder — Monday 1 PM Mexico City (SCRP-04 fallback)
+    scheduler.add_job(
+        weekly_mood_reminder_job,
+        trigger="cron",
+        day_of_week="mon",
+        hour=13,
+        minute=0,
+        timezone=TIMEZONE,
+        id="weekly_mood_reminder",
+        name="Weekly mood profile reminder (4h fallback)",
+        replace_existing=True,
+    )
+    logger.info("Registered job: weekly_mood_reminder at Mon 13:00 %s", TIMEZONE)
