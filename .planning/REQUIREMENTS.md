@@ -20,9 +20,9 @@
 ### Script Generation
 
 - [ ] **SCRP-01**: System generates a 140-word max script in neutral Spanish using GPT-4o, structured as Aggressive Hook (0-3s) + Philosophical Development + Reflective CTA, governed by the 5-Pillar system prompt
-- [ ] **SCRP-02**: Creator can set weekly mood profile via Telegram (bot prompts once/week); profile feeds into script generation as contextual direction
+- [x] **SCRP-02**: Creator can set weekly mood profile via Telegram (bot prompts once/week); profile feeds into script generation as contextual direction
 - [ ] **SCRP-03**: Anti-repetition guard queries pgvector before generation — if proposed topic exceeds 0.85 cosine similarity to any past script, system generates a new thematic angle automatically
-- [ ] **SCRP-04**: Script is automatically summarized by AI if it exceeds 140 words before being submitted to HeyGen
+- [x] **SCRP-04**: Script is automatically summarized by AI if it exceeds 140 words before being submitted to HeyGen
 
 ### Video Production
 
@@ -93,9 +93,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRTY-01 | Phase 1 | Complete |
 | SCRTY-02 | Phase 1 | Complete |
 | SCRP-01 | Phase 2 | Pending |
-| SCRP-02 | Phase 2 | Pending |
+| SCRP-02 | Phase 2 | Complete |
 | SCRP-03 | Phase 2 | Pending |
-| SCRP-04 | Phase 2 | Pending |
+| SCRP-04 | Phase 2 | Complete |
 | VIDP-01 | Phase 3 | Pending |
 | VIDP-02 | Phase 3 | Pending |
 | VIDP-03 | Phase 3 | Pending |

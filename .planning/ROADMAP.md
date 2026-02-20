@@ -37,7 +37,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold (pyproject.toml, Dockerfile, railway.toml) + Pydantic settings/models + Supabase schema SQL
 - [x] 01-02-PLAN.md — CircuitBreakerService (dual cost+count, midnight reset, escalation) + Telegram outbound-only service
-- [ ] 01-03-PLAN.md — FastAPI app with lifespan + APScheduler (heartbeat + cb_reset jobs) + deep health endpoint
+- [x] 01-03-PLAN.md — FastAPI app with lifespan + APScheduler (heartbeat + cb_reset jobs) + deep health endpoint
 
 ### Phase 2: Script Generation
 **Goal**: The system generates a Spanish script daily using the 6-Pillar framework, rejects semantically similar topics, learns from rejection feedback, and takes weekly mood direction (pool, tone, duration) from the creator
@@ -48,7 +48,14 @@ Plans:
   2. When a proposed topic is more than 85% similar to any script in the history table, the system automatically generates a new angle without creator intervention
   3. When a script exceeds its target word count, it is automatically summarized before being passed downstream — the creator never sees an over-length script
   4. The bot prompts the creator once per week via Telegram for a mood profile (thematic pool + tone + duration); the creator's response is injected into the next generation as contextual direction
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [x] 02-01-PLAN.md — Install anthropic+openai, extend settings, migration 0002 (similarity function + rejection_constraints), Telegram polling Application wired into FastAPI lifespan
+- [ ] 02-02-PLAN.md — Topic generation service with embedding, anti-repetition guard via check_script_similarity
+- [ ] 02-03-PLAN.md — Mood flow Telegram handlers (callback queries, weekly prompt, profile persistence)
+- [ ] 02-04-PLAN.md — Script generation service (6-Pillar prompt, Claude Haiku, word count enforcement)
+- [ ] 02-05-PLAN.md — Pipeline orchestration and integration
 
 ### Phase 3: Video Production
 **Goal**: Every approved script becomes a rendered, re-hosted, audio-processed 9:16 avatar video stored at a stable S3 URL — the HeyGen signed URL is never the canonical reference
@@ -113,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-02-20 |
-| 2. Script Generation | 0/TBD | Not started | - |
+| 2. Script Generation | 1/5 | In Progress | - |
 | 3. Video Production | 0/TBD | Not started | - |
 | 4. Telegram Approval Loop | 0/TBD | Not started | - |
 | 5. Multi-Platform Publishing | 0/TBD | Not started | - |

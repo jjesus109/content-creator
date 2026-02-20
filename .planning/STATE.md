@@ -5,32 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 1 complete — ready for Phase 2 (Script Generation)
+**Current focus:** Phase 2 (Script Generation) — Plan 1 of 5 complete
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation) — COMPLETE
-Plan: 3 of 3 in current phase — COMPLETE
-Status: Phase 1 complete
-Last activity: 2026-02-20 — Plan 01-03 complete: FastAPI app + APScheduler lifespan wiring + /health endpoint
+Phase: 2 of 7 (Script Generation) — IN PROGRESS
+Plan: 1 of 5 in current phase — COMPLETE
+Status: Phase 2 Plan 01 complete
+Last activity: 2026-02-20 — Plan 02-01 complete: anthropic+openai installed, migration 0002, Telegram polling Application wired into FastAPI lifespan
 
-Progress: [███░░░░░░░] 14%
+Progress: [███░░░░░░░] 17%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 3 min
-- Total execution time: 0.15 hours
+- Total execution time: 0.17 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
+| 02-script-generation | 1/5 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 01-03 (3 min)
+- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 01-03 (3 min), 02-01 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -59,6 +60,10 @@ Recent decisions affecting current work:
 - [Phase 01-03]: Scheduler stored on app.state.scheduler — health endpoint inspects it via request.app.state without global variable
 - [Phase 01-03]: Health endpoint returns 503 (not 500) on dependency failure — Railway ON_FAILURE policy requires non-200 to trigger restart
 - [Phase 01-03]: register_jobs() centralizes all add_job() calls — single file for all scheduled job changes, replace_existing=True on every job
+- [Phase 02-01]: PTB Application replaces updater(None) singleton — polling required for Phase 2 mood flow callback queries
+- [Phase 02-01]: set_fastapi_app() pattern avoids circular imports between services/telegram.py and telegram/app.py
+- [Phase 02-01]: check_script_similarity uses 1-(embedding<=>query) to convert pgvector cosine DISTANCE to similarity — correct inversion, common pgvector bug avoided
+- [Phase 02-01]: rejection_constraints table created now (Phase 2 reads, Phase 4 writes) so queries return empty safely
 
 ### Pending Todos
 
@@ -66,13 +71,14 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Deployment]: .env file not yet populated with real credentials — service cannot start until Supabase/Telegram credentials added (see Plan 01-01 Summary for setup instructions)
+- [Deployment]: .env file not yet populated with real credentials — service cannot start until Supabase/Telegram/Anthropic/OpenAI credentials added
 - [Phase 3]: HeyGen API v2 endpoint structure, webhook retry policy, and Spanish TTS behavior are MEDIUM confidence — verify against live docs before writing integration code
 - [Phase 5]: Ayrshare TikTok content policy and plan tier limits are MEDIUM confidence — confirm before Phase 5 implementation
 - [Phase 2]: pgvector 0.85 cosine similarity threshold is uncalibrated for Spanish philosophical content — seed DB with example scripts and run calibration before going live
+- [Phase 2]: ANTHROPIC_API_KEY and OPENAI_API_KEY must be added to .env before service can start
 
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 01-03-PLAN.md — Phase 1 Foundation complete (all 3 plans done). Service is deployable once .env credentials added.
+Stopped at: Completed 02-01-PLAN.md — Phase 2 infrastructure ready (anthropic+openai, migration 0002, Telegram polling Application)
 Resume file: None
