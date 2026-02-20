@@ -13,7 +13,7 @@ Seven phases build the pipeline in strict dependency order: the daily video cann
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Persistent service, Supabase schema, secrets management, and security baseline running on Railway (completed 2026-02-20)
-- [ ] **Phase 2: Script Generation** - Daily scripts generated with 5-Pillar framework, anti-repetition guard, mood profiles, and rejection feedback loop
+- [x] **Phase 2: Script Generation** - Daily scripts generated with 5-Pillar framework, anti-repetition guard, mood profiles, and rejection feedback loop (completed 2026-02-20)
 - [ ] **Phase 3: Video Production** - HeyGen avatar video rendered, re-hosted to S3, audio post-processed, background variety enforced
 - [ ] **Phase 4: Telegram Approval Loop** - Creator receives daily video via Telegram with approve/reject inline keyboard and structured rejection flow
 - [ ] **Phase 5: Multi-Platform Publishing** - Approved video scheduled and published to TikTok, IG Reels, FB Reels, and YT Shorts via Ayrshare with publish verification
@@ -55,7 +55,7 @@ Plans:
 - [x] 02-02-PLAN.md — Topic generation service with embedding, anti-repetition guard via check_script_similarity
 - [x] 02-03-PLAN.md — Mood flow Telegram handlers (callback queries, weekly prompt, profile persistence)
 - [x] 02-04-PLAN.md — Script generation service (6-Pillar prompt, Claude Haiku, word count enforcement)
-- [x] 02-05-PLAN.md — Pipeline orchestration and integration (checkpoint pending human verification)
+- [x] 02-05-PLAN.md — Pipeline orchestration and integration (checkpoint approved 2026-02-20)
 
 ### Phase 3: Video Production
 **Goal**: Every approved script becomes a rendered, re-hosted, audio-processed 9:16 avatar video stored at a stable S3 URL — the HeyGen signed URL is never the canonical reference
@@ -120,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-02-20 |
-| 2. Script Generation | 5/5 | Checkpoint (human verify) |  |
+| 2. Script Generation | 5/5 | Complete | 2026-02-20 |
 | 3. Video Production | 0/TBD | Not started | - |
 | 4. Telegram Approval Loop | 0/TBD | Not started | - |
 | 5. Multi-Platform Publishing | 0/TBD | Not started | - |
