@@ -1,6 +1,6 @@
 # Phase 2: Script Generation - Context
 
-**Gathered:** 2026-02-20
+**Gathered:** 2026-02-20 (updated 2026-02-20)
 **Status:** Ready for planning
 
 <domain>
@@ -24,10 +24,15 @@ The system generates a 140-word Spanish script daily using the 5-Pillar framewor
 5. **Reflective CTA** — Asks the viewer to sit with one question or try one thing — no "follow for more"
 6. **Creator Archetype** — Scripts reflect "The Seeker" persona: actively questions, explores openly, admits uncertainty, invites the viewer to think along — not a teacher, a fellow traveler
 
-### Word structure
-- Flexible ratios within the 140-word limit — hook/development/CTA proportions vary by script
-- Pillar intent enforces structure, not word counts per section
-- Hard limit: 140 words total; over-length scripts auto-summarized before passing downstream
+### Script length (dynamic)
+- Creator picks target video duration in the weekly mood prompt (Step 3)
+- 3 duration options:
+  - **Short (30s)** → ~70 words — TikTok hook-only format, maximum completion rate
+  - **Medium (60s)** → ~140 words — default, all-platform safe
+  - **Long (90s)** → ~200 words — YT Shorts max, deeper philosophical development
+- Default when creator skips: Medium (60s / ~140 words)
+- Hook/Development/CTA proportions are flexible within the target word count — pillar intent governs structure, not fixed section ratios
+- Scripts that exceed their target word count are auto-summarized before passing downstream — creator never sees an over-length script
 
 ### Topic selection strategy
 - Hybrid model: weekly mood profile routes to one of 6 thematic pools; AI generates within selected pool
@@ -40,12 +45,13 @@ The system generates a 140-word Spanish script daily using the 5-Pillar framewor
   6. **The creative life** — Originality, expression, artistic struggle (Nietzsche, Wittgenstein)
 
 ### Mood profile interaction
-- Weekly Telegram prompt uses a two-step inline keyboard flow:
+- Weekly Telegram prompt uses a three-step inline keyboard flow:
   - Step 1: Creator picks which thematic pool for the week
   - Step 2: Creator picks tone for the week
+  - Step 3: Creator picks target video duration (30s / 60s / 90s)
 - 4 tone options: **Contemplative** / **Provocative** / **Hopeful** / **Raw**
-- No-response fallback: one reminder sent after 4 hours; if still no response, default to Contemplative tone + rotate to next pool in sequence
-- Mood selection is injected into the generation prompt as contextual direction
+- No-response fallback: one reminder sent after 4 hours; if still no response, default to Contemplative tone + rotate to next pool + Medium (60s) duration
+- Mood selection (pool + tone + duration) is injected into the generation prompt as contextual direction
 
 ### Anti-repetition behavior
 - Similarity threshold: 85% cosine similarity via pgvector (already established in Phase 1 schema)
