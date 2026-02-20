@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 2 (Script Generation) — Plan 4 of 5 complete
+**Current focus:** Phase 2 (Script Generation) — Plan 5 of 5 complete (awaiting human verification checkpoint)
 
 ## Current Position
 
-Phase: 2 of 7 (Script Generation) — IN PROGRESS
-Plan: 4 of 5 in current phase — COMPLETE
-Status: Phase 2 Plan 04 complete
-Last activity: 2026-02-20 — Plan 02-04 complete: ScriptGenerationService with 6-pillar Spanish script generation, auto-summarization, and rejection constraint injection
+Phase: 2 of 7 (Script Generation) — IN PROGRESS (checkpoint pending)
+Plan: 5 of 5 in current phase — CHECKPOINT
+Status: Phase 2 Plan 05 complete — awaiting human verification of full import chain and 4 scheduler jobs
+Last activity: 2026-02-20 — Plan 02-05 complete: daily_pipeline_job wires all Phase 2 services into daily orchestration loop
 
-Progress: [████░░░░░░] 26%
+Progress: [█████░░░░░] 29%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 2.5 min
-- Total execution time: 0.25 hours
+- Total plans completed: 7
+- Average duration: 2.6 min
+- Total execution time: 0.3 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
-| 02-script-generation | 4/5 | 10 min | 2.5 min |
+| 02-script-generation | 5/5 | 13 min | 2.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (3 min), 02-01 (2 min), 02-02 (3 min), 02-03 (4 min), 02-04 (1 min)
+- Last 5 plans: 02-01 (2 min), 02-02 (3 min), 02-03 (4 min), 02-04 (1 min), 02-05 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -74,6 +74,10 @@ Recent decisions affecting current work:
 - [Phase 02-04]: attempt=1 gives "same root/different angle" instruction; attempt>=2 gives "completely different topic" — distinct retry strategies for different similarity failure modes
 - [Phase 02-04]: summarize_if_needed() explicitly names 3 pillars to preserve (Philosophical Root, Emotional Anchor, Reflective CTA); Insight Flip section absorbs compression
 - [Phase 02-04]: Synchronous Anthropic client only — AsyncAnthropic incompatible with APScheduler ThreadPoolExecutor (no event loop)
+- [Phase 02-05]: MAX_RETRIES=2 (3 total attempts) — balances cost (~3 embed + ~3 topic gen calls max) vs freshness
+- [Phase 02-05]: Circuit breaker checked after topic_cost and embed_cost separately — mid-run trip halts pipeline with distinct alert per stage
+- [Phase 02-05]: summarize_if_needed CB call is non-fatal — script already generated; halting for word-count cost is disproportionate
+- [Phase 02-05]: DB write failure is fail-soft — send Telegram alert, do not re-raise; script was generated
 
 ### Pending Todos
 
@@ -90,5 +94,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 02-04-PLAN.md — ScriptGenerationService: 6-pillar Spanish script generation via synchronous Claude API, auto-summarization, rejection constraint injection
+Stopped at: Checkpoint 02-05-PLAN.md — daily_pipeline_job wired, awaiting human verification of full import chain and 4 scheduler jobs
 Resume file: None

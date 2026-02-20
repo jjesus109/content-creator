@@ -52,10 +52,10 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Install anthropic+openai, extend settings, migration 0002 (similarity function + rejection_constraints), Telegram polling Application wired into FastAPI lifespan
-- [ ] 02-02-PLAN.md — Topic generation service with embedding, anti-repetition guard via check_script_similarity
-- [ ] 02-03-PLAN.md — Mood flow Telegram handlers (callback queries, weekly prompt, profile persistence)
-- [ ] 02-04-PLAN.md — Script generation service (6-Pillar prompt, Claude Haiku, word count enforcement)
-- [ ] 02-05-PLAN.md — Pipeline orchestration and integration
+- [x] 02-02-PLAN.md — Topic generation service with embedding, anti-repetition guard via check_script_similarity
+- [x] 02-03-PLAN.md — Mood flow Telegram handlers (callback queries, weekly prompt, profile persistence)
+- [x] 02-04-PLAN.md — Script generation service (6-Pillar prompt, Claude Haiku, word count enforcement)
+- [x] 02-05-PLAN.md — Pipeline orchestration and integration (checkpoint pending human verification)
 
 ### Phase 3: Video Production
 **Goal**: Every approved script becomes a rendered, re-hosted, audio-processed 9:16 avatar video stored at a stable S3 URL — the HeyGen signed URL is never the canonical reference
@@ -120,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-02-20 |
-| 2. Script Generation | 2/5 | In Progress|  |
+| 2. Script Generation | 5/5 | Checkpoint (human verify) |  |
 | 3. Video Production | 0/TBD | Not started | - |
 | 4. Telegram Approval Loop | 0/TBD | Not started | - |
 | 5. Multi-Platform Publishing | 0/TBD | Not started | - |
