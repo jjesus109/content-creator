@@ -12,7 +12,7 @@ Seven phases build the pipeline in strict dependency order: the daily video cann
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Persistent service, Supabase schema, secrets management, and security baseline running on Railway
+- [x] **Phase 1: Foundation** - Persistent service, Supabase schema, secrets management, and security baseline running on Railway (completed 2026-02-20)
 - [ ] **Phase 2: Script Generation** - Daily scripts generated with 5-Pillar framework, anti-repetition guard, mood profiles, and rejection feedback loop
 - [ ] **Phase 3: Video Production** - HeyGen avatar video rendered, re-hosted to S3, audio post-processed, background variety enforced
 - [ ] **Phase 4: Telegram Approval Loop** - Creator receives daily video via Telegram with approve/reject inline keyboard and structured rejection flow
@@ -112,7 +112,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In Progress | - |
+| 1. Foundation | 3/3 | Complete   | 2026-02-20 |
 | 2. Script Generation | 0/TBD | Not started | - |
 | 3. Video Production | 0/TBD | Not started | - |
 | 4. Telegram Approval Loop | 0/TBD | Not started | - |

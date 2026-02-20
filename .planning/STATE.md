@@ -5,32 +5,32 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Phase 1 complete — ready for Phase 2 (Script Generation)
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation)
-Plan: 2 of 3 in current phase
-Status: In Progress
-Last activity: 2026-02-20 — Plan 01-02 complete: Supabase singleton, CircuitBreakerService, Telegram outbound bot
+Phase: 1 of 7 (Foundation) — COMPLETE
+Plan: 3 of 3 in current phase — COMPLETE
+Status: Phase 1 complete
+Last activity: 2026-02-20 — Plan 01-03 complete: FastAPI app + APScheduler lifespan wiring + /health endpoint
 
-Progress: [██░░░░░░░░] 10%
+Progress: [███░░░░░░░] 14%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 3
 - Average duration: 3 min
-- Total execution time: 0.10 hours
+- Total execution time: 0.15 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 2/3 | 6 min | 3 min |
+| 01-foundation | 3/3 | 9 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min)
+- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 01-03 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -55,6 +55,10 @@ Recent decisions affecting current work:
 - [Phase 01-02]: send_alert_sync uses run_coroutine_threadsafe when event loop is running — required for APScheduler thread pool compatibility
 - [Phase 01-02]: Telegram bot initialized with updater(None) — Phase 1 outbound-only; polling deferred to Phase 4
 - [Phase 01-02]: Rolling 7-day escalation window uses last_trip_at timestamp comparison, not week_start counter
+- [Phase 01-03]: BackgroundScheduler chosen over AsyncIOScheduler — runs in thread pool, no event loop contention with FastAPI
+- [Phase 01-03]: Scheduler stored on app.state.scheduler — health endpoint inspects it via request.app.state without global variable
+- [Phase 01-03]: Health endpoint returns 503 (not 500) on dependency failure — Railway ON_FAILURE policy requires non-200 to trigger restart
+- [Phase 01-03]: register_jobs() centralizes all add_job() calls — single file for all scheduled job changes, replace_existing=True on every job
 
 ### Pending Todos
 
@@ -62,6 +66,7 @@ None yet.
 
 ### Blockers/Concerns
 
+- [Deployment]: .env file not yet populated with real credentials — service cannot start until Supabase/Telegram credentials added (see Plan 01-01 Summary for setup instructions)
 - [Phase 3]: HeyGen API v2 endpoint structure, webhook retry policy, and Spanish TTS behavior are MEDIUM confidence — verify against live docs before writing integration code
 - [Phase 5]: Ayrshare TikTok content policy and plan tier limits are MEDIUM confidence — confirm before Phase 5 implementation
 - [Phase 2]: pgvector 0.85 cosine similarity threshold is uncalibrated for Spanish philosophical content — seed DB with example scripts and run calibration before going live
@@ -69,5 +74,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 01-02-PLAN.md — service layer complete, ready for Plan 03 (FastAPI + APScheduler wiring)
+Stopped at: Completed 01-03-PLAN.md — Phase 1 Foundation complete (all 3 plans done). Service is deployable once .env credentials added.
 Resume file: None
