@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     # Pipeline schedule (INFRA-03)
     pipeline_hour: int = 7           # 7 AM America/Mexico_City
 
+    # AI generation (SCRP-01, SCRP-02, SCRP-03)
+    anthropic_api_key: str
+    openai_api_key: str
+    claude_generation_model: str = "claude-haiku-3-5-20241022"  # configurable — upgrade to sonnet without redeploy
+
 
 @lru_cache
 def get_settings() -> Settings:
