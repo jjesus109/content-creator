@@ -4,6 +4,7 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
+from app.db.migrations import run_migrations
 from app.scheduler.setup import create_scheduler
 from app.scheduler.registry import register_jobs
 from app.routes.health import router as health_router
@@ -24,6 +25,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     # Startup
     logger.info("Starting up content-creation service.")
+    run_migrations()
     scheduler = create_scheduler()
     register_jobs(scheduler)
     scheduler.start()
