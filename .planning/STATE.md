@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 2 (Script Generation) — Plan 1 of 5 complete
+**Current focus:** Phase 2 (Script Generation) — Plan 2 of 5 complete
 
 ## Current Position
 
 Phase: 2 of 7 (Script Generation) — IN PROGRESS
-Plan: 1 of 5 in current phase — COMPLETE
-Status: Phase 2 Plan 01 complete
-Last activity: 2026-02-20 — Plan 02-01 complete: anthropic+openai installed, migration 0002, Telegram polling Application wired into FastAPI lifespan
+Plan: 2 of 5 in current phase — COMPLETE
+Status: Phase 2 Plan 02 complete
+Last activity: 2026-02-20 — Plan 02-02 complete: EmbeddingService (OpenAI text-embedding-3-small) and SimilarityService (pgvector RPC) created
 
-Progress: [███░░░░░░░] 17%
+Progress: [████░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 3 min
-- Total execution time: 0.17 hours
+- Total execution time: 0.20 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
-| 02-script-generation | 1/5 | 2 min | 2 min |
+| 02-script-generation | 2/5 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 01-03 (3 min), 02-01 (2 min)
+- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 01-03 (3 min), 02-01 (2 min), 02-02 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -64,6 +64,9 @@ Recent decisions affecting current work:
 - [Phase 02-01]: set_fastapi_app() pattern avoids circular imports between services/telegram.py and telegram/app.py
 - [Phase 02-01]: check_script_similarity uses 1-(embedding<=>query) to convert pgvector cosine DISTANCE to similarity — correct inversion, common pgvector bug avoided
 - [Phase 02-01]: rejection_constraints table created now (Phase 2 reads, Phase 4 writes) so queries return empty safely
+- [Phase 02-02]: EmbeddingService returns (embedding, cost_usd) tuple so every caller can always report to CircuitBreakerService without recalculating
+- [Phase 02-02]: SimilarityService fails open (returns False) on DB RPC errors — content repetition preferable to pipeline outage
+- [Phase 02-02]: SimilarityService accepts optional supabase Client in __init__ for testability without live DB
 
 ### Pending Todos
 
@@ -80,5 +83,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 02-01-PLAN.md — Phase 2 infrastructure ready (anthropic+openai, migration 0002, Telegram polling Application)
+Stopped at: Completed 02-02-PLAN.md — EmbeddingService and SimilarityService created, ready for daily pipeline job
 Resume file: None
