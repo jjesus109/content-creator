@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-The system generates a 140-word Spanish script daily using the 5-Pillar framework. It enforces anti-repetition via semantic similarity checking, takes weekly mood direction from the creator via Telegram, and injects rejection feedback from future approval phases into subsequent generations. Video rendering, Telegram approval, and publishing are separate phases.
+The system generates a Spanish script daily using the 6-Pillar framework. It enforces anti-repetition via semantic similarity checking, takes weekly mood direction from the creator via Telegram, and injects rejection feedback from future approval phases into subsequent generations. Video rendering, Telegram approval, and publishing are separate phases.
 
 </domain>
 

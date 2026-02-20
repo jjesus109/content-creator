@@ -40,14 +40,14 @@ Plans:
 - [ ] 01-03-PLAN.md — FastAPI app with lifespan + APScheduler (heartbeat + cb_reset jobs) + deep health endpoint
 
 ### Phase 2: Script Generation
-**Goal**: The system generates a 140-word Spanish script daily, rejects semantically similar topics, learns from rejection feedback, and takes weekly mood direction from the creator
+**Goal**: The system generates a Spanish script daily using the 6-Pillar framework, rejects semantically similar topics, learns from rejection feedback, and takes weekly mood direction (pool, tone, duration) from the creator
 **Depends on**: Phase 1
 **Requirements**: SCRP-01, SCRP-02, SCRP-03, SCRP-04
 **Success Criteria** (what must be TRUE):
-  1. A generated script is in neutral Spanish, does not exceed 140 words, and follows the Hook + Development + CTA structure governed by the 5-Pillar prompt
+  1. A generated script is in neutral Spanish, does not exceed the target word count (70, 140, or 200 words based on creator's duration selection), and follows the Hook + Development + CTA structure governed by the 6-Pillar prompt
   2. When a proposed topic is more than 85% similar to any script in the history table, the system automatically generates a new angle without creator intervention
-  3. When a script exceeds 140 words, it is automatically summarized before being passed to HeyGen — the creator never sees an over-length script
-  4. The bot prompts the creator once per week via Telegram for a mood profile; the creator's response is injected into the next generation as contextual direction
+  3. When a script exceeds its target word count, it is automatically summarized before being passed downstream — the creator never sees an over-length script
+  4. The bot prompts the creator once per week via Telegram for a mood profile (thematic pool + tone + duration); the creator's response is injected into the next generation as contextual direction
 **Plans**: TBD
 
 ### Phase 3: Video Production
