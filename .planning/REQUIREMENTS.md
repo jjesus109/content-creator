@@ -10,12 +10,12 @@
 - [x] **INFRA-01**: System runs as a persistent worker on Railway/Render with FastAPI health endpoint and env-based config
 - [x] **INFRA-02**: Supabase schema initialized with pipeline_runs table, content history table, and pgvector column for embeddings
 - [ ] **INFRA-03**: APScheduler with Postgres job store triggers daily content generation and survives deploys without missing jobs
-- [ ] **INFRA-04**: Cost circuit breaker enforces a hard daily generation limit to prevent runaway API spend
+- [x] **INFRA-04**: Cost circuit breaker enforces a hard daily generation limit to prevent runaway API spend
 
 ### Security
 
 - [x] **SCRTY-01**: All API keys (OpenAI, HeyGen, ElevenLabs, Ayrshare, Telegram) stored as encrypted environment variables — never hardcoded
-- [ ] **SCRTY-02**: Telegram bot responds only to the creator's configured user ID, silently ignores all other senders
+- [x] **SCRTY-02**: Telegram bot responds only to the creator's configured user ID, silently ignores all other senders
 
 ### Script Generation
 
@@ -89,9 +89,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Complete |
 | INFRA-03 | Phase 1 | Pending |
-| INFRA-04 | Phase 1 | Pending |
+| INFRA-04 | Phase 1 | Complete |
 | SCRTY-01 | Phase 1 | Complete |
-| SCRTY-02 | Phase 1 | Pending |
+| SCRTY-02 | Phase 1 | Complete |
 | SCRP-01 | Phase 2 | Pending |
 | SCRP-02 | Phase 2 | Pending |
 | SCRP-03 | Phase 2 | Pending |

@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 1 of 7 (Foundation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-20 — Plan 01-01 complete: project scaffold, Pydantic settings + models
+Last activity: 2026-02-20 — Plan 01-02 complete: Supabase singleton, CircuitBreakerService, Telegram outbound bot
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [██░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
+- Total plans completed: 2
 - Average duration: 3 min
-- Total execution time: 0.05 hours
+- Total execution time: 0.10 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 1/3 | 3 min | 3 min |
+| 01-foundation | 2/3 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min)
-- Trend: -
+- Last 5 plans: 01-01 (3 min), 01-02 (3 min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -51,6 +51,10 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: CircuitBreakerState includes last_trip_at column for rolling 7-day escalation window
 - [Phase 01-foundation]: settings.database_url requires postgresql+psycopg2:// sync driver on port 5432 for APScheduler SQLAlchemyJobStore
 - [Phase 01-foundation]: --workers 1 enforced in Dockerfile CMD and railway.toml startCommand — APScheduler must not be forked
+- [Phase 01-02]: Circular import between circuit_breaker.py and telegram.py resolved by local import inside _send_escalation_alert method body
+- [Phase 01-02]: send_alert_sync uses run_coroutine_threadsafe when event loop is running — required for APScheduler thread pool compatibility
+- [Phase 01-02]: Telegram bot initialized with updater(None) — Phase 1 outbound-only; polling deferred to Phase 4
+- [Phase 01-02]: Rolling 7-day escalation window uses last_trip_at timestamp comparison, not week_start counter
 
 ### Pending Todos
 
@@ -65,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 01-foundation-01-PLAN.md — awaiting user Supabase setup before Plan 02
+Stopped at: Completed 01-02-PLAN.md — service layer complete, ready for Plan 03 (FastAPI + APScheduler wiring)
 Resume file: None
