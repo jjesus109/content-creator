@@ -1,3 +1,5 @@
+# DEPRECATED in Phase 2: daily_pipeline_trigger now calls daily_pipeline_job.
+# This file is kept for reference only.
 import logging
 from datetime import datetime, timezone
 

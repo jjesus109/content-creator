@@ -1,7 +1,7 @@
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from app.scheduler.jobs.heartbeat import heartbeat_job
+from app.scheduler.jobs.daily_pipeline import daily_pipeline_job
 from app.scheduler.jobs.cb_reset import cb_reset_job
 from app.scheduler.jobs.weekly_mood import weekly_mood_prompt_job, weekly_mood_reminder_job
 from app.settings import get_settings
@@ -20,15 +20,15 @@ def register_jobs(scheduler: BackgroundScheduler) -> None:
     settings = get_settings()
     pipeline_hour = settings.pipeline_hour  # default 7
 
-    # Daily heartbeat / pipeline trigger at 7 AM Mexico City (INFRA-03)
+    # Daily pipeline trigger at 7 AM Mexico City (INFRA-03, SCRP-01–SCRP-04)
     scheduler.add_job(
-        heartbeat_job,
+        daily_pipeline_job,
         trigger="cron",
         hour=pipeline_hour,
         minute=0,
         timezone=TIMEZONE,
         id="daily_pipeline_trigger",      # stable ID — survives restarts
-        name="Daily pipeline trigger (heartbeat)",
+        name="Daily script generation pipeline",
         replace_existing=True,             # CRITICAL — never omit
     )
     logger.info("Registered job: daily_pipeline_trigger at %02d:00 %s", pipeline_hour, TIMEZONE)
