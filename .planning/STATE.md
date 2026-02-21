@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 3 (Video Production) — Plan 4 of 6 complete
+**Current focus:** Phase 3 (Video Production) — Plan 5 of 6 complete
 
 ## Current Position
 
 Phase: 3 of 7 (Video Production)
-Plan: 4 of 6 in current phase — DONE
-Status: 03-04 complete — webhook endpoint + APScheduler video poller (completion detection layer) committed
-Last activity: 2026-02-21 — 03-04 executed: models/video.py, routes/webhooks.py, scheduler/jobs/video_poller.py
+Plan: 5 of 6 in current phase — DONE
+Status: 03-05 complete — Phase 3 integration: _process_completed_render + daily pipeline HeyGen submission + /webhooks/heygen live
+Last activity: 2026-02-21 — 03-05 executed: heygen.py, daily_pipeline.py, registry.py, main.py
 
-Progress: [████████░░] 47%
+Progress: [█████████░] 50%
 
 ## Performance Metrics
 
@@ -96,6 +96,10 @@ Recent decisions affecting current work:
 - [Phase 03-video-production]: HMAC-SHA256 validated via compare_digest (timing-safe) in heygen webhook endpoint
 - [Phase 03-video-production]: Predictable job ID 'video_poller_{video_id}' allows webhook to cancel poller by ID without shared state
 - [Phase 03-video-production]: Lazy import of _process_completed_render inside handler body avoids circular import at module load time
+- [Phase 03-05]: double-processing guard in_() filter covers pending_render, pending_render_retry, AND rendering — one conditional UPDATE atomically claims processing; zero rows updated means skip
+- [Phase 03-05]: stable Supabase Storage URL written to video_url only — HeyGen signed URL is ephemeral and never persisted
+- [Phase 03-05]: scheduler closure via lambda in registry.py — APScheduler threads have no FastAPI Request context, cannot use request.app.state
+- [Phase 03-05]: HeyGen submission fail-soft in daily_pipeline_job — script saved without video fields, creator alerted, pipeline does not abort
 
 ### Pending Todos
 
@@ -112,5 +116,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 03-04-PLAN.md — webhook endpoint and APScheduler video poller implemented
+Stopped at: Completed 03-05-PLAN.md — Phase 3 integration wired: _process_completed_render, daily pipeline HeyGen submission, /webhooks/heygen live
 Resume file: None
