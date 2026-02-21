@@ -13,6 +13,8 @@ import logging
 import requests
 
 from app.settings import get_settings
+from app.services.database import get_supabase
+from app.services.telegram import send_alert_sync
 
 logger = logging.getLogger(__name__)
 
@@ -137,3 +139,78 @@ class HeyGenService:
 
         logger.info("HeyGen render submitted: video_id=%s", video_id)
         return video_id
+
+
+def _process_completed_render(video_id: str, heygen_signed_url: str) -> None:
+    """
+    Shared processing function called by webhook handler and poller on render completion.
+    Order: download video -> pick music -> ffmpeg EQ+mix -> upload to Supabase -> update DB.
+
+    Double-processing guard: only proceeds if video_status is 'pending_render' or 'rendering'.
+    Uses a conditional UPDATE (.eq + filter) — only one caller wins the status transition.
+    """
+    from app.services.audio_processing import AudioProcessingService
+    from app.services.video_storage import VideoStorageService
+    from app.models.video import VideoStatus
+
+    supabase = get_supabase()
+
+    # Double-processing guard: atomically transition to 'processing'
+    # Only rows with status pending_render or rendering are updated
+    # If 0 rows updated, another caller already claimed processing — return early
+    result = supabase.table("content_history").update(
+        {"video_status": VideoStatus.PROCESSING.value}
+    ).eq("heygen_job_id", video_id).in_("video_status", [
+        VideoStatus.PENDING_RENDER.value,
+        VideoStatus.PENDING_RENDER_RETRY.value,
+        VideoStatus.RENDERING.value,
+    ]).execute()
+
+    if not result.data:
+        logger.info(
+            "_process_completed_render: video_id=%s already processing or done — skipping",
+            video_id
+        )
+        return
+
+    try:
+        logger.info("Processing completed render: video_id=%s", video_id)
+
+        # ffmpeg: download video + music, apply EQ + mix, return processed bytes
+        audio_svc = AudioProcessingService()
+        processed_bytes = audio_svc.process_video_audio(video_url=heygen_signed_url)
+
+        # Upload to Supabase Storage — stable public URL (NOT the HeyGen signed URL)
+        storage_svc = VideoStorageService(supabase)
+        stable_url = storage_svc.upload(processed_bytes)
+
+        # Update DB: set stable URL and mark ready
+        supabase.table("content_history").update({
+            "video_url": stable_url,
+            "video_status": VideoStatus.READY.value,
+        }).eq("heygen_job_id", video_id).execute()
+
+        logger.info("Video ready: video_id=%s stable_url=%s", video_id, stable_url)
+        send_alert_sync(f"Video listo para revision: {stable_url}")
+
+    except Exception as exc:
+        logger.error("Error processing render video_id=%s: %s", video_id, exc)
+        supabase.table("content_history").update(
+            {"video_status": VideoStatus.FAILED.value}
+        ).eq("heygen_job_id", video_id).execute()
+        send_alert_sync(f"Error procesando video {video_id}: {exc}")
+        # Do not re-raise — caller (executor thread or poller) does not need exception propagation
+
+
+def _handle_render_failure(video_id: str, error_msg: str) -> None:
+    """Mark video_status=failed and alert creator. Called on HeyGen render failure."""
+    from app.models.video import VideoStatus
+    supabase = get_supabase()
+    supabase.table("content_history").update(
+        {"video_status": VideoStatus.FAILED.value}
+    ).eq("heygen_job_id", video_id).execute()
+    send_alert_sync(
+        f"Render HeyGen fallido para video_id={video_id}: {error_msg}. "
+        "Revisa manualmente o acepta saltarte el video de hoy."
+    )
+    logger.error("HeyGen render failed: video_id=%s error=%s", video_id, error_msg)
