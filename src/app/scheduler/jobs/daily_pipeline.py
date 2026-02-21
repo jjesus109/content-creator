@@ -13,9 +13,10 @@ MAX_RETRIES = 2      # 2 retries = 3 total attempts (original + angle retry + to
                      # Planner decision: balances cost (~3 embed + ~3 topic gen calls max) vs freshness
 
 
-def daily_pipeline_job() -> None:
+def daily_pipeline_job(scheduler) -> None:
     """
     Daily script generation pipeline — registered as 'daily_pipeline_trigger' in registry.py.
+    scheduler is passed via closure from registry.py at job registration time.
 
     Execution order:
     1. Circuit breaker check (abort if tripped)
@@ -26,7 +27,7 @@ def daily_pipeline_job() -> None:
        c. Check similarity against content_history — retry on hit
        d. (Pass) Generate full script — report cost to CB
        e. Summarize if over target word count — report cost to CB
-       f. Save to content_history with embedding
+       f. Submit to HeyGen, save to content_history with embedding + heygen_job_id, register poller
     4. If all retries exhausted — send creator alert
     """
     supabase = get_supabase()
@@ -111,26 +112,69 @@ def daily_pipeline_job() -> None:
             logger.info("Script summarized to fit target word count.")
             cb.record_attempt(sum_cost)  # summarization cost tracked (non-fatal if CB trips here)
 
-        # 4f: Save to content_history
-        _save_to_content_history(supabase, script, topic_summary, embedding, mood)
-        logger.info("Daily pipeline complete. Script saved to content_history.")
+        # 4f: Phase 3 — Submit to HeyGen after script is confirmed good
+        from app.services.heygen import HeyGenService, pick_background_url
+        from app.scheduler.jobs.video_poller import register_video_poller
+
+        # Pick background — read last-used URL from most recent content_history row
+        last_background_resp = supabase.table("content_history").select(
+            "background_url"
+        ).order("created_at", desc=True).limit(1).execute()
+        last_background = (
+            last_background_resp.data[0]["background_url"]
+            if last_background_resp.data else None
+        )
+        background_url = pick_background_url(last_used_url=last_background)
+
+        heygen_svc = HeyGenService()
+        try:
+            heygen_job_id = heygen_svc.submit(script_text=script, background_url=background_url)
+            logger.info("HeyGen job submitted: video_id=%s background=%s", heygen_job_id, background_url)
+        except Exception as exc:
+            logger.error("HeyGen submission failed: %s", exc)
+            send_alert_sync(f"Error al enviar a HeyGen: {exc}. Script guardado sin video.")
+            # Fail-soft: save script without HeyGen fields; do not abort pipeline
+            _save_to_content_history(supabase, script, topic_summary, embedding, mood)
+            return
+
+        # Save script + HeyGen job ID atomically
+        _save_to_content_history(
+            supabase, script, topic_summary, embedding, mood,
+            heygen_job_id=heygen_job_id,
+            background_url=background_url,
+        )
+
+        # Register APScheduler polling fallback — scheduler passed via closure from registry.py
+        register_video_poller(scheduler, heygen_job_id)
+
+        logger.info("Daily pipeline complete. Script saved. HeyGen render in progress: %s", heygen_job_id)
+        # Exit immediately — render happens asynchronously via webhook (primary) or poller (fallback)
         return  # Success
 
 
-def _save_to_content_history(supabase, script: str, topic_summary: str, embedding: list[float], mood: dict) -> None:
+def _save_to_content_history(
+    supabase, script: str, topic_summary: str, embedding: list[float], mood: dict,
+    heygen_job_id: str | None = None,
+    background_url: str | None = None,
+) -> None:
     """
     Persist the generated script with its embedding to content_history.
-    The embedding is stored so future similarity checks can compare against this script.
+    Phase 3 adds: heygen_job_id, video_status=pending_render, background_url.
     NOTE: mood_profile is NOT a column on content_history — do not insert it here.
     """
+    from app.models.video import VideoStatus
+    row = {
+        "script_text": script,
+        "topic_summary": topic_summary,
+        "embedding": embedding,          # list[float] — Supabase client handles vector serialization
+    }
+    if heygen_job_id:
+        row["heygen_job_id"] = heygen_job_id
+        row["video_status"] = VideoStatus.PENDING_RENDER.value
+        row["background_url"] = background_url
     try:
-        supabase.table("content_history").insert({
-            "script_text": script,
-            "topic_summary": topic_summary,
-            "embedding": embedding,          # list[float] — Supabase client handles vector serialization
-        }).execute()
+        supabase.table("content_history").insert(row).execute()
         logger.info("Saved script to content_history. topic: %s", topic_summary[:60])
     except Exception as e:
         logger.error("Failed to save script to content_history: %s", e)
-        # Do not re-raise — the script was generated; losing the DB write is preferable to alerting as failure
         send_alert_sync(f"Script generado pero no guardado en DB: {e}. Revisa manualmente.")

@@ -21,8 +21,9 @@ def register_jobs(scheduler: BackgroundScheduler) -> None:
     pipeline_hour = settings.pipeline_hour  # default 7
 
     # Daily pipeline trigger at 7 AM Mexico City (INFRA-03, SCRP-01–SCRP-04)
+    # scheduler passed via closure so daily_pipeline_job can register video pollers
     scheduler.add_job(
-        daily_pipeline_job,
+        lambda: daily_pipeline_job(scheduler),
         trigger="cron",
         hour=pipeline_hour,
         minute=0,
