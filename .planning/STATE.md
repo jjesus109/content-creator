@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 3 (Video Production) — Plan 3 of 6 complete
+**Current focus:** Phase 3 (Video Production) — Plan 4 of 6 complete
 
 ## Current Position
 
 Phase: 3 of 7 (Video Production)
-Plan: 3 of 6 in current phase — DONE
-Status: 03-03 complete — AudioProcessingService (ffmpeg voice EQ + ambient music mix) committed
-Last activity: 2026-02-21 — 03-03 executed: audio_processing.py
+Plan: 4 of 6 in current phase — DONE
+Status: 03-04 complete — webhook endpoint + APScheduler video poller (completion detection layer) committed
+Last activity: 2026-02-21 — 03-04 executed: models/video.py, routes/webhooks.py, scheduler/jobs/video_poller.py
 
-Progress: [███████░░░] 42%
+Progress: [████████░░] 47%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 2.6 min
+- Total plans completed: 8
+- Average duration: 2.4 min
 - Total execution time: 0.3 hours
 
 **By Phase:**
@@ -29,10 +29,10 @@ Progress: [███████░░░] 42%
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
 | 02-script-generation | 5/5 (complete) | 13 min | 2.6 min |
-| 03-video-production | 3/6 | 5 min | 1.7 min |
+| 03-video-production | 4/6 | 7 min | 1.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-04 (1 min), 02-05 (3 min), 03-01 (2 min), 03-02 (2 min), 03-03 (1 min)
+- Last 5 plans: 02-05 (3 min), 03-01 (2 min), 03-02 (2 min), 03-03 (1 min), 03-04 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -93,6 +93,9 @@ Recent decisions affecting current work:
 - [Phase 03-03]: frag_keyframe+empty_moov required for all piped MP4 output — fragmented header written progressively, no backward seek needed
 - [Phase 03-03]: pick_music_track() raises ValueError on empty URL pool — fail-fast preferable to silent failure
 - [Phase 03-02]: File path convention videos/YYYY-MM-DD.mp4 is locked — changing requires migrating existing URLs
+- [Phase 03-video-production]: HMAC-SHA256 validated via compare_digest (timing-safe) in heygen webhook endpoint
+- [Phase 03-video-production]: Predictable job ID 'video_poller_{video_id}' allows webhook to cancel poller by ID without shared state
+- [Phase 03-video-production]: Lazy import of _process_completed_render inside handler body avoids circular import at module load time
 
 ### Pending Todos
 
@@ -109,5 +112,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 03-03-PLAN.md — AudioProcessingService implemented
+Stopped at: Completed 03-04-PLAN.md — webhook endpoint and APScheduler video poller implemented
 Resume file: None
