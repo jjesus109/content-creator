@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 3 (Video Production) — Phase 2 complete, ready to plan Phase 3
+**Current focus:** Phase 3 (Video Production) — Plan 1 of 6 complete
 
 ## Current Position
 
-Phase: 2 of 7 (Script Generation) — COMPLETE
-Plan: 5 of 5 in current phase — DONE
-Status: Phase 2 complete — human checkpoint approved (all 5 import checks passed, 4 scheduler jobs confirmed)
-Last activity: 2026-02-20 — Phase 2 finalized: checkpoint approved, ready for Phase 3 (Video Production)
+Phase: 3 of 7 (Video Production)
+Plan: 1 of 6 in current phase — DONE
+Status: 03-01 complete — Phase 3 infrastructure foundation (migration, settings, Dockerfile) committed
+Last activity: 2026-02-21 — 03-01 executed: migration 0003, HeyGen settings, ffmpeg in Docker
 
-Progress: [██████░░░░] 34%
+Progress: [██████░░░░] 36%
 
 ## Performance Metrics
 
@@ -29,9 +29,10 @@ Progress: [██████░░░░] 34%
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
 | 02-script-generation | 5/5 (complete) | 13 min | 2.6 min |
+| 03-video-production | 1/6 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (2 min), 02-02 (3 min), 02-03 (4 min), 02-04 (1 min), 02-05 (3 min)
+- Last 5 plans: 02-02 (3 min), 02-03 (4 min), 02-04 (1 min), 02-05 (3 min), 03-01 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -78,6 +79,10 @@ Recent decisions affecting current work:
 - [Phase 02-05]: Circuit breaker checked after topic_cost and embed_cost separately — mid-run trip halts pipeline with distinct alert per stage
 - [Phase 02-05]: summarize_if_needed CB call is non-fatal — script already generated; halting for word-count cost is disproportionate
 - [Phase 02-05]: DB write failure is fail-soft — send Telegram alert, do not re-raise; script was generated
+- [Phase 03-01]: pending_render_retry is the video_status sentinel for retry-once logic — avoids adding a retry_count column
+- [Phase 03-01]: All 7 HeyGen fields required with no defaults — Pydantic raises at startup if any are missing
+- [Phase 03-01]: ffmpeg installed in final Docker stage only (not builder) — it is a runtime, not build, dependency
+- [Phase 03-01]: background_url stored in content_history to enable consecutive-background-repeat prevention
 
 ### Pending Todos
 
@@ -93,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Phase 2 complete — checkpoint approved, all 5 import checks passed, 4 scheduler jobs confirmed
+Last session: 2026-02-21
+Stopped at: Completed 03-01-PLAN.md — Phase 3 infrastructure foundation complete
 Resume file: None

@@ -26,10 +26,10 @@
 
 ### Video Production
 
-- [ ] **VIDP-01**: System submits script to HeyGen async, polls for completion, and downloads the rendered video before the signed URL expires
-- [ ] **VIDP-02**: HeyGen render uses dark aesthetic (high contrast, blacks/grays, 9:16 1080p) with bokeh background; system enforces no repeated background environment in consecutive videos
-- [ ] **VIDP-03**: Rendered video receives audio post-processing (dark ambient EQ/atmosphere via ffmpeg) before delivery
-- [ ] **VIDP-04**: Completed video is immediately re-hosted to Supabase Storage or S3 after HeyGen render — raw HeyGen URL is never stored as permanent reference
+- [x] **VIDP-01**: System submits script to HeyGen async, polls for completion, and downloads the rendered video before the signed URL expires
+- [x] **VIDP-02**: HeyGen render uses dark aesthetic (high contrast, blacks/grays, 9:16 1080p) with bokeh background; system enforces no repeated background environment in consecutive videos
+- [x] **VIDP-03**: Rendered video receives audio post-processing (dark ambient EQ/atmosphere via ffmpeg) before delivery
+- [x] **VIDP-04**: Completed video is immediately re-hosted to Supabase Storage or S3 after HeyGen render — raw HeyGen URL is never stored as permanent reference
 
 ### Telegram Approval
 
@@ -96,10 +96,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRP-02 | Phase 2 | Complete |
 | SCRP-03 | Phase 2 | Complete |
 | SCRP-04 | Phase 2 | Complete |
-| VIDP-01 | Phase 3 | Pending |
-| VIDP-02 | Phase 3 | Pending |
-| VIDP-03 | Phase 3 | Pending |
-| VIDP-04 | Phase 3 | Pending |
+| VIDP-01 | Phase 3 | Complete |
+| VIDP-02 | Phase 3 | Complete |
+| VIDP-03 | Phase 3 | Complete |
+| VIDP-04 | Phase 3 | Complete |
 | TGAP-01 | Phase 4 | Pending |
 | TGAP-02 | Phase 4 | Pending |
 | TGAP-03 | Phase 4 | Pending |
