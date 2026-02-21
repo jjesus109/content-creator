@@ -12,13 +12,24 @@ HEYGEN_STATUS_URL = "https://api.heygen.com/v1/video_status.get"
 POLL_TIMEOUT_MINUTES = 20
 POLLER_JOB_ID_PREFIX = "video_poller_"
 
+# Module-level scheduler reference — set by registry.py via set_scheduler() before any jobs run.
+# Required for APScheduler SQLAlchemyJobStore serialization: lambdas/closures are not picklable,
+# so the scheduler cannot be passed as a parameter or captured in a closure.
+_scheduler = None
 
-def video_poller_job(video_id: str, submitted_at: datetime, scheduler) -> None:
+
+def set_scheduler(scheduler) -> None:
+    """Called by registry.py before job registration to inject the scheduler reference."""
+    global _scheduler
+    _scheduler = scheduler
+
+
+def video_poller_job(video_id: str, submitted_at: datetime) -> None:
     """
     APScheduler interval job. Runs every 60 seconds.
     Checks HeyGen render status for video_id.
     Self-cancels when render is completed, failed, or exhausted retries.
-    scheduler reference is passed via closure in register_video_poller().
+    video_id and submitted_at are passed via APScheduler args= for pickle serializability.
     """
     settings = get_settings()
     elapsed = datetime.now(tz=timezone.utc) - submitted_at
@@ -29,7 +40,7 @@ def video_poller_job(video_id: str, submitted_at: datetime, scheduler) -> None:
             "HeyGen render timeout (20 min) for video_id=%s. Elapsed: %s",
             video_id, elapsed
         )
-        _retry_or_fail(video_id, scheduler)
+        _retry_or_fail(video_id)
         return
 
     try:
@@ -49,14 +60,14 @@ def video_poller_job(video_id: str, submitted_at: datetime, scheduler) -> None:
             logger.info("Poller: render complete for video_id=%s, triggering processing", video_id)
             from app.services.heygen import _process_completed_render
             _process_completed_render(video_id, signed_url)
-            _cancel_self(scheduler, video_id)
+            _cancel_self(video_id)
 
         elif status == "failed":
             error_msg = data.get("error") or "unknown"
             logger.error("Poller: HeyGen render failed for video_id=%s error=%s", video_id, error_msg)
             from app.services.heygen import _handle_render_failure
             _handle_render_failure(video_id, error_msg)
-            _cancel_self(scheduler, video_id)
+            _cancel_self(video_id)
 
         # pending / processing / waiting: do nothing — next interval will check again
 
@@ -65,7 +76,7 @@ def video_poller_job(video_id: str, submitted_at: datetime, scheduler) -> None:
         # Do NOT cancel — retry on next interval; transient network errors are recoverable
 
 
-def _retry_or_fail(video_id: str, scheduler) -> None:
+def _retry_or_fail(video_id: str) -> None:
     """
     Retry-once logic for 20-minute timeout (locked decision: retry once, then alert and skip).
 
@@ -86,7 +97,7 @@ def _retry_or_fail(video_id: str, scheduler) -> None:
 
     if not result.data:
         logger.error("_retry_or_fail: no row found for heygen_job_id=%s — cannot retry", video_id)
-        _cancel_self(scheduler, video_id)
+        _cancel_self(video_id)
         return
 
     current_status = result.data.get("video_status")
@@ -116,7 +127,7 @@ def _retry_or_fail(video_id: str, scheduler) -> None:
             }).eq("heygen_job_id", video_id).execute()
 
             # Register a new poller for the new job ID
-            register_video_poller(scheduler, new_job_id)
+            register_video_poller(new_job_id)
 
         except Exception as exc:
             logger.error("HeyGen retry submission failed for video_id=%s: %s", video_id, exc)
@@ -131,7 +142,7 @@ def _retry_or_fail(video_id: str, scheduler) -> None:
 
         finally:
             # Cancel the current poller regardless of outcome — new poller registered above
-            _cancel_self(scheduler, video_id)
+            _cancel_self(video_id)
 
     elif is_second_timeout:
         logger.error(
@@ -145,7 +156,7 @@ def _retry_or_fail(video_id: str, scheduler) -> None:
             f"Render HeyGen agotado (2 intentos, 40 min) para video_id={video_id}. "
             "Video del dia omitido."
         )
-        _cancel_self(scheduler, video_id)
+        _cancel_self(video_id)
 
     else:
         # Unexpected status (e.g., already processing/ready/failed) — cancel and do nothing
@@ -153,23 +164,22 @@ def _retry_or_fail(video_id: str, scheduler) -> None:
             "_retry_or_fail: unexpected status=%s for video_id=%s — cancelling poller",
             current_status, video_id,
         )
-        _cancel_self(scheduler, video_id)
+        _cancel_self(video_id)
 
 
-def register_video_poller(scheduler, video_id: str) -> None:
+def register_video_poller(video_id: str) -> None:
     """
     Register a 60-second interval job to poll HeyGen status for video_id.
     Uses predictable job_id so webhook can cancel by ID: f"video_poller_{video_id}".
+    video_id and submitted_at are passed via APScheduler args= — no closures, fully picklable.
     Called from daily_pipeline_job after HeyGen submission, and from _retry_or_fail on retry.
     """
     submitted_at = datetime.now(tz=timezone.utc)
 
-    def _poll():
-        video_poller_job(video_id, submitted_at, scheduler)
-
     from apscheduler.triggers.interval import IntervalTrigger
-    scheduler.add_job(
-        _poll,
+    _scheduler.add_job(
+        video_poller_job,
+        args=[video_id, submitted_at],
         trigger=IntervalTrigger(seconds=60),
         id=f"{POLLER_JOB_ID_PREFIX}{video_id}",
         name=f"HeyGen poller for {video_id}",
@@ -178,9 +188,9 @@ def register_video_poller(scheduler, video_id: str) -> None:
     logger.info("Registered video poller for video_id=%s", video_id)
 
 
-def _cancel_self(scheduler, video_id: str) -> None:
+def _cancel_self(video_id: str) -> None:
     """Cancel the poller job by predictable ID."""
     try:
-        scheduler.remove_job(f"{POLLER_JOB_ID_PREFIX}{video_id}")
+        _scheduler.remove_job(f"{POLLER_JOB_ID_PREFIX}{video_id}")
     except Exception:
         pass  # Already removed (webhook fired first) — not an error

@@ -13,10 +13,9 @@ MAX_RETRIES = 2      # 2 retries = 3 total attempts (original + angle retry + to
                      # Planner decision: balances cost (~3 embed + ~3 topic gen calls max) vs freshness
 
 
-def daily_pipeline_job(scheduler) -> None:
+def daily_pipeline_job() -> None:
     """
     Daily script generation pipeline — registered as 'daily_pipeline_trigger' in registry.py.
-    scheduler is passed via closure from registry.py at job registration time.
 
     Execution order:
     1. Circuit breaker check (abort if tripped)
@@ -144,8 +143,8 @@ def daily_pipeline_job(scheduler) -> None:
             background_url=background_url,
         )
 
-        # Register APScheduler polling fallback — scheduler passed via closure from registry.py
-        register_video_poller(scheduler, heygen_job_id)
+        # Register APScheduler polling fallback
+        register_video_poller(heygen_job_id)
 
         logger.info("Daily pipeline complete. Script saved. HeyGen render in progress: %s", heygen_job_id)
         # Exit immediately — render happens asynchronously via webhook (primary) or poller (fallback)
