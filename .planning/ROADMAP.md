@@ -58,15 +58,23 @@ Plans:
 - [x] 02-05-PLAN.md — Pipeline orchestration and integration (checkpoint approved 2026-02-20)
 
 ### Phase 3: Video Production
-**Goal**: Every approved script becomes a rendered, re-hosted, audio-processed 9:16 avatar video stored at a stable S3 URL — the HeyGen signed URL is never the canonical reference
+**Goal**: Every approved script becomes a rendered, re-hosted, audio-processed 9:16 avatar video stored at a stable Supabase Storage URL — the HeyGen signed URL is never the canonical reference
 **Depends on**: Phase 2
 **Requirements**: VIDP-01, VIDP-02, VIDP-03, VIDP-04
 **Success Criteria** (what must be TRUE):
   1. After script generation, the system submits to HeyGen, polls for completion (with exponential backoff fallback if webhook fails), and downloads the video before the HeyGen signed URL expires
   2. The rendered video is in 9:16 1080p dark aesthetic with bokeh background, and the system prevents the same background environment from appearing in two consecutive videos
   3. The video receives dark ambient audio post-processing via ffmpeg before delivery — the raw HeyGen audio is not what the creator hears
-  4. The video is immediately re-hosted to Supabase Storage or S3 upon render completion and the stable self-hosted URL is the only reference stored in the database
-**Plans**: TBD
+  4. The video is immediately re-hosted to Supabase Storage upon render completion and the stable self-hosted URL is the only reference stored in the database
+**Plans**: 6 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Migration 0003 (heygen_job_id, video_url, video_status, background_url) + HeyGen/audio settings + ffmpeg in Dockerfile
+- [ ] 03-02-PLAN.md — HeyGenService (submit to v2 API, portrait dimensions, background URL) + VideoStorageService (Supabase Storage upsert) + pick_background_url
+- [ ] 03-03-PLAN.md — AudioProcessingService (ffmpeg low-shelf EQ + ambient music mix, subprocess pipe with frag_keyframe+empty_moov)
+- [ ] 03-04-PLAN.md — VideoStatus models + POST /webhooks/heygen (HMAC validation, executor offload, poller cancel) + video_poller_job (60s interval, 20-min timeout, self-cancel)
+- [ ] 03-05-PLAN.md — Integration: _process_completed_render orchestrator + daily_pipeline_job HeyGen submission + webhook router wired into main.py
+- [ ] 03-06-PLAN.md — Smoke tests (import chain, route registration, migration, ffmpeg) + human verification checkpoint + Railway env var checklist
 
 ### Phase 4: Telegram Approval Loop
 **Goal**: The creator receives a presigned video URL, post copy, and approve/reject buttons in Telegram every day — one tap approves, structured rejection captures cause and stores it for the next generation
@@ -121,7 +129,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-02-20 |
 | 2. Script Generation | 5/5 | Complete | 2026-02-20 |
-| 3. Video Production | 0/TBD | Not started | - |
+| 3. Video Production | 0/6 | Not started | - |
 | 4. Telegram Approval Loop | 0/TBD | Not started | - |
 | 5. Multi-Platform Publishing | 0/TBD | Not started | - |
 | 6. Analytics and Storage | 0/TBD | Not started | - |
