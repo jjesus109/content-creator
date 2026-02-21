@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 3 (Video Production) — Plan 1 of 6 complete
+**Current focus:** Phase 3 (Video Production) — Plan 2 of 6 complete
 
 ## Current Position
 
 Phase: 3 of 7 (Video Production)
-Plan: 1 of 6 in current phase — DONE
-Status: 03-01 complete — Phase 3 infrastructure foundation (migration, settings, Dockerfile) committed
-Last activity: 2026-02-21 — 03-01 executed: migration 0003, HeyGen settings, ffmpeg in Docker
+Plan: 2 of 6 in current phase — DONE
+Status: 03-02 complete — HeyGenService (submit + background selector) and VideoStorageService (Supabase Storage upload with stable public URL) committed
+Last activity: 2026-02-21 — 03-02 executed: heygen.py, video_storage.py
 
-Progress: [██████░░░░] 36%
+Progress: [██████░░░░] 38%
 
 ## Performance Metrics
 
@@ -29,10 +29,10 @@ Progress: [██████░░░░] 36%
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
 | 02-script-generation | 5/5 (complete) | 13 min | 2.6 min |
-| 03-video-production | 1/6 | 2 min | 2 min |
+| 03-video-production | 2/6 | 4 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (3 min), 02-03 (4 min), 02-04 (1 min), 02-05 (3 min), 03-01 (2 min)
+- Last 5 plans: 02-03 (4 min), 02-04 (1 min), 02-05 (3 min), 03-01 (2 min), 03-02 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -83,6 +83,12 @@ Recent decisions affecting current work:
 - [Phase 03-01]: All 7 HeyGen fields required with no defaults — Pydantic raises at startup if any are missing
 - [Phase 03-01]: ffmpeg installed in final Docker stage only (not builder) — it is a runtime, not build, dependency
 - [Phase 03-01]: background_url stored in content_history to enable consecutive-background-repeat prevention
+- [Phase 03-02]: Synchronous requests used for HeyGen HTTP call — httpx async incompatible with APScheduler ThreadPoolExecutor (no event loop)
+- [Phase 03-02]: pick_background_url falls back to full pool if filtered pool is empty — defensive against single-URL edge case
+- [Phase 03-02]: VideoStorageService accepts optional supabase client in __init__ for testability without live DB
+- [Phase 03-02]: upsert='true' as string in file_options — Supabase Python client expects string, not bool
+- [Phase 03-02]: cache-control=31536000 (1 year) on uploaded videos — content is permanent once approved
+- [Phase 03-02]: File path convention videos/YYYY-MM-DD.mp4 is locked — changing requires migrating existing URLs
 
 ### Pending Todos
 
@@ -99,5 +105,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 03-01-PLAN.md — Phase 3 infrastructure foundation complete
+Stopped at: Completed 03-02-PLAN.md — HeyGenService and VideoStorageService implemented
 Resume file: None
