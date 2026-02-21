@@ -33,7 +33,17 @@ class Settings(BaseSettings):
     # AI generation (SCRP-01, SCRP-02, SCRP-03)
     anthropic_api_key: str
     openai_api_key: str
-    claude_generation_model: str = "claude-haiku-3-5-20241022"  # configurable — upgrade to sonnet without redeploy
+    claude_generation_model: str = "claude-sonnet-4-5-20250929"  # configurable — upgrade to sonnet without redeploy
+
+    # HeyGen video production (VIDP-01, VIDP-02)
+    heygen_api_key: str                         # API key — HeyGen dashboard → Settings → API
+    heygen_avatar_id: str                       # Portrait-trained avatar ID (pre-flight: verify in HeyGen dashboard)
+    heygen_voice_id: str                        # Fixed voice ID — consistent brand voice, no rotation
+    heygen_webhook_url: str                     # Public URL of /webhooks/heygen route on Railway (e.g. https://yourapp.railway.app/webhooks/heygen)
+    heygen_webhook_secret: str                  # HMAC-SHA256 signing secret from HeyGen webhook config
+    heygen_dark_backgrounds: str                # Comma-separated Supabase Storage public URLs for dark cinematic images (min 2)
+                                                # Note: HeyGen API v2 has NO built-in scene_id system — custom image URLs required
+    heygen_ambient_music_urls: str              # Comma-separated Supabase Storage public URLs for ambient music tracks (2-4 tracks)
 
 
 @lru_cache
