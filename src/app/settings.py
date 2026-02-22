@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     heygen_avatar_id: str                       # Portrait-trained avatar ID (pre-flight: verify in HeyGen dashboard)
     heygen_voice_id: str                        # Fixed voice ID — consistent brand voice, no rotation
     heygen_webhook_url: str                     # Public URL of /webhooks/heygen route on Railway (e.g. https://yourapp.railway.app/webhooks/heygen)
-    heygen_webhook_secret: str                  # HMAC-SHA256 signing secret from HeyGen webhook config
+    heygen_webhook_secret: str = ""             # HMAC-SHA256 signing secret from HeyGen webhook config (empty = skip validation, e.g. free plan)
     heygen_dark_backgrounds: str                # Comma-separated Supabase Storage public URLs for dark cinematic images (min 2)
                                                 # Note: HeyGen API v2 has NO built-in scene_id system — custom image URLs required
     heygen_ambient_music_urls: str              # Comma-separated Supabase Storage public URLs for ambient music tracks (2-4 tracks)

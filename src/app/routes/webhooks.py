@@ -20,24 +20,27 @@ async def heygen_webhook(request: Request, payload: HeyGenWebhookPayload) -> dic
     HMAC-SHA256 signature required in 'Signature' header.
     """
     # 1. Validate HMAC-SHA256 signature (timing-safe)
-    signature = request.headers.get("Signature", "")
-    # Strip "sha256=" prefix if HeyGen sends it (some providers use this format)
-    if signature.startswith("sha256="):
-        signature = signature[7:]
-    body_bytes = await request.body()
+    # Skip validation if no secret configured (e.g. HeyGen free plan doesn't provide one)
     settings = get_settings()
-    expected = hmac.new(
-        settings.heygen_webhook_secret.encode(),
-        body_bytes,
-        hashlib.sha256,
-    ).hexdigest()
-    if not hmac.compare_digest(signature, expected):
-        logger.warning(
-            "HeyGen webhook: HMAC mismatch — received_headers=%s signature_present=%s",
-            list(request.headers.keys()),
-            bool(request.headers.get("Signature")),
-        )
-        raise HTTPException(status_code=401, detail="Invalid signature")
+    if settings.heygen_webhook_secret:
+        signature = request.headers.get("Signature", "")
+        if signature.startswith("sha256="):
+            signature = signature[7:]
+        body_bytes = await request.body()
+        expected = hmac.new(
+            settings.heygen_webhook_secret.encode(),
+            body_bytes,
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(signature, expected):
+            logger.warning(
+                "HeyGen webhook: HMAC mismatch — received_headers=%s signature_present=%s",
+                list(request.headers.keys()),
+                bool(request.headers.get("Signature")),
+            )
+            raise HTTPException(status_code=401, detail="Invalid signature")
+    else:
+        logger.debug("HeyGen webhook: signature validation skipped (no secret configured)")
 
     video_id = payload.event_data.video_id
 
