@@ -42,9 +42,14 @@ async def send_alert(message: str) -> None:
     """
     Send a text alert to the creator's Telegram chat.
     Used by: circuit breaker escalation, future pipeline error handlers.
+    Falls back to a direct Bot instance if the FastAPI app isn't initialized yet
+    (e.g. APScheduler jobs firing before lifespan completes, or manual test runs).
     """
     settings = get_settings()
-    bot = get_telegram_bot()
+    try:
+        bot = get_telegram_bot()
+    except RuntimeError:
+        bot = Bot(token=settings.telegram_bot_token)
     try:
         await bot.send_message(chat_id=settings.telegram_creator_id, text=message)
         logger.info("Telegram alert sent to creator.")
