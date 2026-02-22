@@ -85,7 +85,14 @@ Plans:
   2. Tapping Approve triggers the publish pipeline — the pipeline state is read from the database so approval works correctly even after a server restart between video delivery and creator response
   3. Tapping Reject with Cause opens a structured menu (Script Error / Visual Error / Technical Error) — the creator never types free-form rejection text
   4. The selected rejection cause is stored in the database and injected into the next generation iteration as a constraint — the system does not repeat the same class of error
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Migration 0004 (approval_events table + post_copy column on content_history)
+- [ ] 04-02-PLAN.md — PostCopyService (Claude Haiku, Spanish Hook+body+hashtags) + ApprovalService (DB-backed approval state, idempotency, rejection constraints)
+- [ ] 04-03-PLAN.md — approval_flow.py handlers (appr_approve:, appr_reject:, appr_cause: prefixes) + register_approval_handlers in telegram/app.py
+- [ ] 04-04-PLAN.md — send_approval_message delivery (photo + post copy + buttons) wired into _process_completed_render + trigger_immediate_rerun for rejection retry
+- [ ] 04-05-PLAN.md — Phase 4 smoke tests (8 checks) + human verification checkpoint
 
 ### Phase 5: Multi-Platform Publishing
 **Goal**: Approved content is published to all four platforms at peak engagement hours, publication success is verified, and a Telegram fallback fires automatically if Ayrshare fails
@@ -130,7 +137,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. Foundation | 3/3 | Complete   | 2026-02-20 |
 | 2. Script Generation | 5/5 | Complete | 2026-02-20 |
 | 3. Video Production | 6/6 | Complete   | 2026-02-22 |
-| 4. Telegram Approval Loop | 0/TBD | Not started | - |
+| 4. Telegram Approval Loop | 0/5 | Not started | - |
 | 5. Multi-Platform Publishing | 0/TBD | Not started | - |
 | 6. Analytics and Storage | 0/TBD | Not started | - |
 | 7. Hardening | 0/TBD | Not started | - |
