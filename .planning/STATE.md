@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 3 (Video Production) — COMPLETE — Phase 4 (Approval Flow) next
+**Current focus:** Phase 4 (Telegram Approval Loop) — IN PROGRESS — Plan 1 of 5 complete
 
 ## Current Position
 
-Phase: 3 of 7 (Video Production) — COMPLETE
-Plan: 6 of 6 in current phase — DONE
-Status: 03-06 complete — Phase 3 code-complete: all 8 smoke tests pass, human checkpoint approved
-Last activity: 2026-02-22 — 03-06 executed: Phase 3 verification + human approval
+Phase: 4 of 7 (Telegram Approval Loop) — IN PROGRESS
+Plan: 1 of 5 in current phase — 04-01 complete
+Status: 04-01 complete — approval_events migration created
+Last activity: 2026-02-22 — 04-01 executed: approval_events table + post_copy column migration
 
-Progress: [██████████] 57% (Phase 3 of 7 complete)
+Progress: [████████████] 57% (Phase 3 of 7 complete, Phase 4 started)
 
 ## Performance Metrics
 
@@ -36,6 +36,7 @@ Progress: [██████████] 57% (Phase 3 of 7 complete)
 - Trend: stable
 
 *Updated after each plan completion*
+| Phase 04-telegram-approval-loop P01 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,9 @@ Recent decisions affecting current work:
 - [Phase 03-05]: scheduler closure via lambda in registry.py — APScheduler threads have no FastAPI Request context, cannot use request.app.state
 - [Phase 03-05]: HeyGen submission fail-soft in daily_pipeline_job — script saved without video fields, creator alerted, pipeline does not abort
 - [Phase 03-video-production]: ffmpeg local unavailability is expected on macOS dev machine — Check 6 (Dockerfile) confirms ffmpeg in final Docker stage for Railway runtime
+- [Phase 04-01]: cause_code CHECK constraint added on column (not just rejection_requires_cause) to restrict values to 4 defined codes even for direct DB inserts
+- [Phase 04-01]: post_copy stored on content_history (not approval_events) — belongs to content record, Phase 5 reads it at publish time
+- [Phase 04-01]: No mood_profile_id FK added to content_history — simpler query-by-week_start approach preferred; Phase 5 can add FK if needed
 
 ### Pending Todos
 
@@ -117,5 +121,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 03-06-PLAN.md — Phase 3 code-complete: all 8 smoke tests pass, human checkpoint approved
+Stopped at: Completed 04-01-PLAN.md — approval_events table and post_copy column migration
 Resume file: None

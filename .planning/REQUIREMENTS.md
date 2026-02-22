@@ -33,10 +33,10 @@
 
 ### Telegram Approval
 
-- [ ] **TGAP-01**: Bot delivers daily video to creator via presigned S3/Supabase URL (not file upload) with generated post copy
+- [x] **TGAP-01**: Bot delivers daily video to creator via presigned S3/Supabase URL (not file upload) with generated post copy
 - [ ] **TGAP-02**: Bot presents inline [Approve] and [Reject with Cause] buttons; approval triggers publish pipeline, rejection suspends the run
 - [ ] **TGAP-03**: Rejection opens a structured cause menu: Script Error / Visual Error / Technical Error
-- [ ] **TGAP-04**: Rejection cause is stored as negative context and injected into the next generation iteration as a constraint
+- [x] **TGAP-04**: Rejection cause is stored as negative context and injected into the next generation iteration as a constraint
 
 ### Publishing
 
@@ -100,10 +100,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VIDP-02 | Phase 3 | Complete |
 | VIDP-03 | Phase 3 | Complete |
 | VIDP-04 | Phase 3 | Complete |
-| TGAP-01 | Phase 4 | Pending |
+| TGAP-01 | Phase 4 | Complete |
 | TGAP-02 | Phase 4 | Pending |
 | TGAP-03 | Phase 4 | Pending |
-| TGAP-04 | Phase 4 | Pending |
+| TGAP-04 | Phase 4 | Complete |
 | PUBL-01 | Phase 5 | Pending |
 | PUBL-02 | Phase 5 | Pending |
 | PUBL-03 | Phase 5 | Pending |
