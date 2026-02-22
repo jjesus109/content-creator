@@ -47,7 +47,7 @@ key-decisions:
 
 patterns-established:
   - "Shared orchestrator: single function handles post-render processing regardless of how completion was detected (webhook vs. poller)"
-  - "Closure scheduler injection: all jobs needing scheduler access receive it at registration time via lambda, not via global"
+  - "Module-level scheduler injection: set_scheduler(scheduler) in video_poller.py called from registry.py before job registration — replaces lambda closure approach to fix APScheduler SQLAlchemyJobStore pickle serialization error"
 
 requirements-completed: [VIDP-01, VIDP-02, VIDP-03, VIDP-04]
 
@@ -81,7 +81,7 @@ Each task was committed atomically:
 1. **Task 1: Add _process_completed_render and _handle_render_failure to heygen.py** - `3297f85` (feat)
 2. **Task 2: Extend daily_pipeline_job with HeyGen submission and wire webhook router** - `ae78e10` (feat)
 
-**Plan metadata:** (docs commit follows)
+**Plan metadata:** `ec2fe1a` (docs: complete plan)
 
 ## Files Created/Modified
 - `src/app/services/heygen.py` - Added _process_completed_render and _handle_render_failure with module-level get_supabase/send_alert_sync imports; local AudioProcessingService/VideoStorageService/VideoStatus imports inside function bodies to prevent circular imports
@@ -97,7 +97,7 @@ Each task was committed atomically:
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+- **Scheduler injection pattern** — plan specified scheduler passed to `daily_pipeline_job(scheduler)` via lambda closure in registry.py. Post-execution, this caused a `ValueError: This Job cannot be serialized` crash on Railway because APScheduler's SQLAlchemyJobStore uses pickle and lambdas are not picklable. Fixed by: (1) storing scheduler in a module-level `_scheduler` var in `video_poller.py` via `set_scheduler()` called from registry.py, (2) removing the `scheduler` parameter from `daily_pipeline_job()` and `register_video_poller()`, (3) passing `video_id` and `submitted_at` to `video_poller_job` via APScheduler's `args=` parameter. Net effect is identical — the scheduler is available wherever needed.
 
 ## Issues Encountered
 

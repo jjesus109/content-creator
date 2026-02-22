@@ -38,7 +38,7 @@ key-files:
 
 key-decisions:
   - "pending_render_retry is the video_status sentinel for retry-once logic — avoids adding a retry_count column"
-  - "All 7 HeyGen fields required with no defaults — Pydantic raises at startup if any are missing"
+  - "heygen_webhook_secret defaults to empty string to support HeyGen free plan (no signing secret provided); webhook handler skips HMAC validation when empty — intentional post-execution change"
   - "ffmpeg installed in final Docker stage only (not builder) — it is a runtime, not build, dependency"
   - "background_url stored in content_history to enable consecutive-background-repeat prevention"
 
@@ -93,7 +93,7 @@ Each task was committed atomically:
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+- **heygen_webhook_secret** — plan specified all 7 HeyGen fields required with no defaults. Post-execution, `heygen_webhook_secret` was given a default of `""` to support HeyGen free plan users who are not provided a signing secret. The webhook handler skips HMAC validation when the secret is empty and enforces it when set. This is intentional and preserves security for paid-plan users.
 
 ## Issues Encountered
 
