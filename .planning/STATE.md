@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 3 (Video Production) — Plan 5 of 6 complete
+**Current focus:** Phase 3 (Video Production) — COMPLETE — Phase 4 (Approval Flow) next
 
 ## Current Position
 
-Phase: 3 of 7 (Video Production)
-Plan: 5 of 6 in current phase — DONE
-Status: 03-05 complete — Phase 3 integration: _process_completed_render + daily pipeline HeyGen submission + /webhooks/heygen live
-Last activity: 2026-02-21 — 03-05 executed: heygen.py, daily_pipeline.py, registry.py, main.py
+Phase: 3 of 7 (Video Production) — COMPLETE
+Plan: 6 of 6 in current phase — DONE
+Status: 03-06 complete — Phase 3 code-complete: all 8 smoke tests pass, human checkpoint approved
+Last activity: 2026-02-22 — 03-06 executed: Phase 3 verification + human approval
 
-Progress: [█████████░] 50%
+Progress: [██████████] 57% (Phase 3 of 7 complete)
 
 ## Performance Metrics
 
@@ -29,10 +29,10 @@ Progress: [█████████░] 50%
 |-------|-------|-------|----------|
 | 01-foundation | 3/3 | 9 min | 3 min |
 | 02-script-generation | 5/5 (complete) | 13 min | 2.6 min |
-| 03-video-production | 4/6 | 7 min | 1.75 min |
+| 03-video-production | 6/6 (complete) | 12 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-05 (3 min), 03-01 (2 min), 03-02 (2 min), 03-03 (1 min), 03-04 (2 min)
+- Last 5 plans: 03-02 (2 min), 03-03 (1 min), 03-04 (2 min), 03-05 (2 min), 03-06 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -100,6 +100,7 @@ Recent decisions affecting current work:
 - [Phase 03-05]: stable Supabase Storage URL written to video_url only — HeyGen signed URL is ephemeral and never persisted
 - [Phase 03-05]: scheduler closure via lambda in registry.py — APScheduler threads have no FastAPI Request context, cannot use request.app.state
 - [Phase 03-05]: HeyGen submission fail-soft in daily_pipeline_job — script saved without video fields, creator alerted, pipeline does not abort
+- [Phase 03-video-production]: ffmpeg local unavailability is expected on macOS dev machine — Check 6 (Dockerfile) confirms ffmpeg in final Docker stage for Railway runtime
 
 ### Pending Todos
 
@@ -115,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-21
-Stopped at: Completed 03-05-PLAN.md — Phase 3 integration wired: _process_completed_render, daily pipeline HeyGen submission, /webhooks/heygen live
+Last session: 2026-02-22
+Stopped at: Completed 03-06-PLAN.md — Phase 3 code-complete: all 8 smoke tests pass, human checkpoint approved
 Resume file: None

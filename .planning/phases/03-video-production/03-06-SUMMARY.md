@@ -11,6 +11,7 @@ requires:
 provides:
   - "Verified Phase 3 smoke tests: all 8 checks pass — import chain, routes, migration, settings, Dockerfile, VideoStatus enum, retry logic"
   - "Railway env var checklist with 7 HeyGen variables and 5-step pre-flight checklist"
+  - "Human code review approved — Phase 3 declared code-complete"
 affects: [railway-deployment, phase-4-approval-flow]
 
 # Tech tracking
@@ -34,21 +35,21 @@ requirements-completed: [VIDP-01, VIDP-02, VIDP-03, VIDP-04]
 
 # Metrics
 duration: 5min
-completed: 2026-02-21
+completed: 2026-02-22
 ---
 
 # Phase 3 Plan 06: Smoke Tests and Human Verification Summary
 
-**8/8 automated Phase 3 smoke tests pass — import chain, webhook route, migration columns, VideoStatus enum, settings fields, Dockerfile ffmpeg, and retry-once logic all verified — awaiting human code review and Railway pre-flight approval**
+**8/8 automated Phase 3 smoke tests pass — import chain, webhook route, migration columns, VideoStatus enum, settings fields, Dockerfile ffmpeg, and retry-once logic all verified — human code review APPROVED — Phase 3 code-complete**
 
-## Status: PARTIAL — Stopped at human checkpoint (Task 2)
+## Status: COMPLETE
 
 ## Performance
 
-- **Duration:** ~5 min (Task 1 complete)
+- **Duration:** ~5 min
 - **Started:** 2026-02-21T06:52:44Z
-- **Completed:** In progress (human checkpoint reached)
-- **Tasks:** 1 of 2 complete
+- **Completed:** 2026-02-22T16:34:11Z
+- **Tasks:** 2 of 2 complete
 - **Files modified:** 0 (read-only verification)
 
 ## Accomplishments
@@ -62,10 +63,12 @@ completed: 2026-02-21
 - Check 6 (Dockerfile): ffmpeg installation confirmed in final Dockerfile stage (multi-stage build)
 - Check 7 (VideoStatus): All 6 enum values confirmed present in migration CHECK constraint: `['pending_render', 'pending_render_retry', 'rendering', 'processing', 'ready', 'failed']`
 - Check 8 (retry logic): `_retry_or_fail()` confirmed to reference `pending_render_retry` sentinel, `HeyGenService`, and `register_video_poller`
+- Human code review completed and APPROVED — Phase 3 declared code-complete
 
 ## Task Commits
 
-1. **Task 1: Smoke tests — import chain, routes, migration, ffmpeg** - `(see below)` (chore)
+1. **Task 1: Smoke tests — import chain, routes, migration, ffmpeg** - `dca888b` (chore)
+2. **Task 2: Human verification checkpoint** - APPROVED (no commit — checkpoint approval)
 
 ## Smoke Test Results Summary
 
@@ -104,11 +107,12 @@ The following must be added to Railway before deploying Phase 3:
 
 ## Files Created/Modified
 
-None — Task 1 is read-only verification.
+None — both tasks are read-only verification and checkpoint approval.
 
 ## Decisions Made
 
 - ffmpeg not installed on local macOS dev machine is expected behavior: AudioProcessingService runs in Docker container on Railway, not locally. Check 6 (Dockerfile) confirms the runtime dependency is properly installed.
+- Human code review approved after confirming: HeyGen signed URL never stored (only stable Supabase URL written to video_url), double-processing guard covers all 3 non-terminal statuses, retry-once logic correctly uses pending_render_retry sentinel.
 
 ## Deviations from Plan
 
@@ -118,23 +122,18 @@ None - smoke tests executed exactly as written. Note on Check 4: plan states "co
 
 - System `python` command not found on macOS — used `.venv/bin/python3` from project virtual environment instead. All checks passed identically.
 
-## User Setup Required
+## Phase 3 Completion
 
-**Human verification required.** See Task 2 checkpoint details:
-- Code review of `_process_completed_render` in `src/app/services/heygen.py` (confirm HeyGen signed URL never stored)
-- Code review of double-processing guard UPDATE condition
-- Code review of retry-once logic in `src/app/scheduler/jobs/video_poller.py`
-- Railway env var readiness confirmation
-- Pre-flight checklist acknowledgement
+Phase 3 (Video Production) is now code-complete. All 6 plans (03-01 through 03-06) executed and verified. Requirements VIDP-01 through VIDP-04 implemented and confirmed.
 
-Type "approved" to mark Phase 3 complete.
+**Next phase:** Phase 4 (Approval Flow) — Telegram inline approval buttons, content approval/rejection workflow, rejection_constraints write path.
 
-## Next Phase Readiness
+## Self-Check: PASSED
 
-- Pending human checkpoint approval (Task 2)
-- After approval: Phase 3 declared code-complete, Phase 4 (Approval Flow) can begin
-- All VIDP-01 through VIDP-04 requirements confirmed implemented
+- SUMMARY.md: FOUND at `.planning/phases/03-video-production/03-06-SUMMARY.md`
+- Task 1 commit dca888b: FOUND (chore(03-06): run Phase 3 smoke tests — 8/8 checks pass)
+- Task 2 checkpoint: APPROVED by human
 
 ---
 *Phase: 03-video-production*
-*Completed: 2026-02-21 (partial — at human checkpoint)*
+*Completed: 2026-02-22*
