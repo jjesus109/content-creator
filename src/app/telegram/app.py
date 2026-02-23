@@ -3,6 +3,7 @@ import logging
 from telegram.ext import Application, ApplicationBuilder
 from app.settings import get_settings
 from app.telegram.handlers.mood_flow import register_mood_handlers
+from app.telegram.handlers.approval_flow import register_approval_handlers
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ def build_telegram_app() -> Application:
     settings = get_settings()
     app = ApplicationBuilder().token(settings.telegram_bot_token).build()
     register_mood_handlers(app)
+    register_approval_handlers(app)  # Phase 4: approval flow callbacks
     return app
 
 
