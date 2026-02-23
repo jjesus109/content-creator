@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 4 (Telegram Approval Loop) — IN PROGRESS — Plan 2 of 5 complete
+**Current focus:** Phase 4 (Telegram Approval Loop) — IN PROGRESS — Plan 3 of 5 complete
 
 ## Current Position
 
 Phase: 4 of 7 (Telegram Approval Loop) — IN PROGRESS
-Plan: 2 of 5 in current phase — 04-02 complete
-Status: 04-02 complete — PostCopyService and ApprovalService created
-Last activity: 2026-02-23 — 04-02 executed: PostCopyService (Spanish copy gen) + ApprovalService (6 DB-backed methods)
+Plan: 3 of 5 in current phase — 04-03 complete
+Status: 04-03 complete — Telegram CBQ approval handlers created and wired
+Last activity: 2026-02-23 — 04-03 executed: approval_flow.py (handle_approve, handle_reject, handle_cause) + wired into app.py
 
 Progress: [████████████] 57% (Phase 3 of 7 complete, Phase 4 started)
 
@@ -38,6 +38,7 @@ Progress: [████████████] 57% (Phase 3 of 7 complete, Pha
 *Updated after each plan completion*
 | Phase 04-telegram-approval-loop P01 | 1 | 1 tasks | 1 files |
 | Phase 04-telegram-approval-loop P02 | 3 | 2 tasks | 2 files |
+| Phase 04-telegram-approval-loop P03 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,10 @@ Recent decisions affecting current work:
 - [Phase 04-02]: extract_thumbnail() is module-level function (not class method) — thread-pool-only constraint visible at call site; docstring warns against async handler use
 - [Phase 04-02]: ApprovalService.get_today_rejection_count() reads from DB on every call — no module-level counter — restart-safe after pod restart or re-deployment
 - [Phase 04-02]: clear_constraints_for_approved_run() queries ALL today's rejections (not just approved content_history_id) — daily rejections share cause categories across session
+- [Phase 04-03]: Original approval message preserved unchanged — no edit_message_reply_markup calls; only new messages via effective_chat.send_message()
+- [Phase 04-03]: handle_cause imports trigger_immediate_rerun lazily — function defined in plan 04-04; lazy import avoids NameError at module load time
+- [Phase 04-03]: Daily limit message uses get_settings().pipeline_hour dynamically — not hardcoded
+- [Phase 04-03]: Cause keyboard each button on its own row (not side-by-side) for single-tap mobile UX
 
 ### Pending Todos
 
@@ -126,5 +131,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 04-02-PLAN.md — PostCopyService (Spanish copy gen) and ApprovalService (6 DB-backed methods)
+Stopped at: Completed 04-03-PLAN.md — Telegram CBQ approval handlers (handle_approve, handle_reject, handle_cause) wired into build_telegram_app()
 Resume file: None
