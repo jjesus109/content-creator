@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 4 (Telegram Approval Loop) — IN PROGRESS — Plan 1 of 5 complete
+**Current focus:** Phase 4 (Telegram Approval Loop) — IN PROGRESS — Plan 2 of 5 complete
 
 ## Current Position
 
 Phase: 4 of 7 (Telegram Approval Loop) — IN PROGRESS
-Plan: 1 of 5 in current phase — 04-01 complete
-Status: 04-01 complete — approval_events migration created
-Last activity: 2026-02-22 — 04-01 executed: approval_events table + post_copy column migration
+Plan: 2 of 5 in current phase — 04-02 complete
+Status: 04-02 complete — PostCopyService and ApprovalService created
+Last activity: 2026-02-23 — 04-02 executed: PostCopyService (Spanish copy gen) + ApprovalService (6 DB-backed methods)
 
 Progress: [████████████] 57% (Phase 3 of 7 complete, Phase 4 started)
 
@@ -37,6 +37,7 @@ Progress: [████████████] 57% (Phase 3 of 7 complete, Pha
 
 *Updated after each plan completion*
 | Phase 04-telegram-approval-loop P01 | 1 | 1 tasks | 1 files |
+| Phase 04-telegram-approval-loop P02 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,10 @@ Recent decisions affecting current work:
 - [Phase 04-01]: cause_code CHECK constraint added on column (not just rejection_requires_cause) to restrict values to 4 defined codes even for direct DB inserts
 - [Phase 04-01]: post_copy stored on content_history (not approval_events) — belongs to content record, Phase 5 reads it at publish time
 - [Phase 04-01]: No mood_profile_id FK added to content_history — simpler query-by-week_start approach preferred; Phase 5 can add FK if needed
+- [Phase 04-02]: PostCopyService uses synchronous Anthropic client only — APScheduler ThreadPoolExecutor has no event loop; AsyncAnthropic would raise RuntimeError
+- [Phase 04-02]: extract_thumbnail() is module-level function (not class method) — thread-pool-only constraint visible at call site; docstring warns against async handler use
+- [Phase 04-02]: ApprovalService.get_today_rejection_count() reads from DB on every call — no module-level counter — restart-safe after pod restart or re-deployment
+- [Phase 04-02]: clear_constraints_for_approved_run() queries ALL today's rejections (not just approved content_history_id) — daily rejections share cause categories across session
 
 ### Pending Todos
 
@@ -120,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-22
-Stopped at: Completed 04-01-PLAN.md — approval_events table and post_copy column migration
+Last session: 2026-02-23
+Stopped at: Completed 04-02-PLAN.md — PostCopyService (Spanish copy gen) and ApprovalService (6 DB-backed methods)
 Resume file: None
