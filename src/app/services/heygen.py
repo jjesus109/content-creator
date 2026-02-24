@@ -191,7 +191,11 @@ def _process_completed_render(video_id: str, heygen_signed_url: str) -> None:
         }).eq("heygen_job_id", video_id).execute()
 
         logger.info("Video ready: video_id=%s stable_url=%s", video_id, stable_url)
-        send_alert_sync(f"Video listo para revision: {stable_url}")
+        # Retrieve the content_history id for the approval message callback_data
+        id_result = supabase.table("content_history").select("id").eq("heygen_job_id", video_id).single().execute()
+        content_history_id = id_result.data["id"]
+        from app.services.telegram import send_approval_message_sync
+        send_approval_message_sync(content_history_id=content_history_id, video_url=stable_url)
 
     except Exception as exc:
         logger.error("Error processing render video_id=%s: %s", video_id, exc)

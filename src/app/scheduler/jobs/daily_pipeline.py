@@ -177,3 +177,28 @@ def _save_to_content_history(
     except Exception as e:
         logger.error("Failed to save script to content_history: %s", e)
         send_alert_sync(f"Script generado pero no guardado en DB: {e}. Revisa manualmente.")
+
+
+def trigger_immediate_rerun() -> None:
+    """
+    Schedule an immediate pipeline re-run after rejection.
+    Uses APScheduler DateTrigger (one-shot job, fires 30 seconds from now).
+    The 30-second delay gives APScheduler time to register the job before it fires.
+    replace_existing=True ensures only one re-run is queued at a time.
+
+    Called from: telegram/handlers/approval_flow.handle_cause() after rejection recorded.
+    Uses _scheduler from video_poller module (already injected by registry.py at startup).
+    """
+    from apscheduler.triggers.date import DateTrigger
+    from datetime import datetime, timedelta, timezone
+    from app.scheduler.jobs.video_poller import _scheduler
+
+    run_at = datetime.now(tz=timezone.utc) + timedelta(seconds=30)
+    _scheduler.add_job(
+        daily_pipeline_job,
+        trigger=DateTrigger(run_date=run_at),
+        id="rejection_rerun",
+        name="Rejection-triggered pipeline re-run",
+        replace_existing=True,
+    )
+    logger.info("Rejection re-run scheduled for %s", run_at.isoformat())
