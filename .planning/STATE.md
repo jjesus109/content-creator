@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 4 (Telegram Approval Loop) — IN PROGRESS — Plan 3 of 5 complete
+**Current focus:** Phase 4 (Telegram Approval Loop) — IN PROGRESS — Plan 4 of 5 complete
 
 ## Current Position
 
 Phase: 4 of 7 (Telegram Approval Loop) — IN PROGRESS
-Plan: 3 of 5 in current phase — 04-03 complete
-Status: 04-03 complete — Telegram CBQ approval handlers created and wired
-Last activity: 2026-02-23 — 04-03 executed: approval_flow.py (handle_approve, handle_reject, handle_cause) + wired into app.py
+Plan: 4 of 5 in current phase — 04-04 complete
+Status: 04-04 complete — Video delivery wired; send_approval_message_sync + trigger_immediate_rerun added
+Last activity: 2026-02-23 — 04-04 executed: send_approval_message()/sync in telegram.py, heygen.py wired to send_approval_message_sync, trigger_immediate_rerun in daily_pipeline.py
 
 Progress: [████████████] 57% (Phase 3 of 7 complete, Phase 4 started)
 
@@ -39,6 +39,7 @@ Progress: [████████████] 57% (Phase 3 of 7 complete, Pha
 | Phase 04-telegram-approval-loop P01 | 1 | 1 tasks | 1 files |
 | Phase 04-telegram-approval-loop P02 | 3 | 2 tasks | 2 files |
 | Phase 04-telegram-approval-loop P03 | 2 | 2 tasks | 2 files |
+| Phase 04-telegram-approval-loop P04 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,11 @@ Recent decisions affecting current work:
 - [Phase 04-03]: handle_cause imports trigger_immediate_rerun lazily — function defined in plan 04-04; lazy import avoids NameError at module load time
 - [Phase 04-03]: Daily limit message uses get_settings().pipeline_hour dynamically — not hardcoded
 - [Phase 04-03]: Cause keyboard each button on its own row (not side-by-side) for single-tap mobile UX
+- [Phase 04-04]: send_approval_message_sync mirrors send_alert_sync pattern exactly — run_coroutine_threadsafe when event loop running, run_until_complete otherwise, asyncio.run() as RuntimeError fallback
+- [Phase 04-04]: content_history_id retrieved via separate SELECT after READY DB update in _process_completed_render — same supabase client, heygen_job_id as key
+- [Phase 04-04]: trigger_immediate_rerun uses DateTrigger 30s from now with replace_existing=True — prevents duplicate re-runs if rejection fires twice
+- [Phase 04-04]: mood_profiles query uses order(created_at desc).limit(1) — no FK needed, latest row always wins; truncated to 40 chars for caption space
+- [Phase 04-04]: Caption truncated to 1024 chars total — Telegram photo caption limit
 
 ### Pending Todos
 
@@ -131,5 +137,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 04-03-PLAN.md — Telegram CBQ approval handlers (handle_approve, handle_reject, handle_cause) wired into build_telegram_app()
+Stopped at: Completed 04-04-PLAN.md — Video delivery wired (send_approval_message_sync in telegram.py, heygen.py wired, trigger_immediate_rerun in daily_pipeline.py)
 Resume file: None
