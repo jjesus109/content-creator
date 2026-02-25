@@ -45,6 +45,7 @@ Progress: [██████████████████] 66% (Phases 1
 | Phase 05-multi-platform-publishing P02 | 2 | 2 tasks | 2 files |
 | Phase 05 P03 | 2 | 2 tasks | 4 files |
 | Phase 05 P04 | 1 | 2 tasks | 2 files |
+| Phase 05 P05 | 4 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,8 @@ Recent decisions affecting current work:
 - [Phase 05-04]: handle_approve fetches video_url from content_history via supabase inside handler body — same DB client pattern as other handlers
 - [Phase 05-04]: scheduler accessed via _fastapi_app.state.scheduler inside handler body — no new global variable, consistent with existing _fastapi_app pattern in telegram.py
 - [Phase 05-04]: set_publish_scheduler aliased from set_scheduler import in registry.py — avoids name collision with video_poller set_scheduler
+- [Phase 05]: 12 smoke tests use inspect.getsource() to verify logic contracts without executing code
+- [Phase 05]: Checkpoint task (migration + Railway env) requires human action — not automatable
 
 ### Pending Todos
 
