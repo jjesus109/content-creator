@@ -77,8 +77,35 @@ async def handle_approve(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     approval_svc.record_approve(content_history_id)
     approval_svc.clear_constraints_for_approved_run(content_history_id)
 
-    await update.effective_chat.send_message("✅ Aprobado — en cola para publicacion")
-    logger.info("Approved: content_history_id=%s", content_history_id)
+    # Schedule platform publish jobs (PUBL-01, PUBL-02)
+    # Retrieve video_url and scheduler from app state
+    from app.services.publishing import schedule_platform_publishes
+    from app.services.telegram import send_publish_confirmation_sync
+    from app.services.database import get_supabase
+    from datetime import datetime, timezone as tz_module
+
+    supabase = get_supabase()
+    video_row = supabase.table("content_history").select(
+        "video_url"
+    ).eq("id", content_history_id).single().execute()
+    video_url = video_row.data.get("video_url", "")
+
+    # Get scheduler from FastAPI app state (same pattern as registry.py)
+    from app.services.telegram import _fastapi_app
+    scheduler = _fastapi_app.state.scheduler
+
+    approval_time = datetime.now(tz=tz_module.utc)
+    scheduled_times = schedule_platform_publishes(
+        scheduler=scheduler,
+        content_history_id=content_history_id,
+        video_url=video_url,
+        approval_time=approval_time,
+    )
+
+    # Confirmation message: separate message (CONTEXT.md: original approval message stays unchanged)
+    send_publish_confirmation_sync(content_history_id, scheduled_times)
+
+    logger.info("Approved and publish jobs scheduled: content_history_id=%s", content_history_id)
 
 
 async def handle_reject(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
