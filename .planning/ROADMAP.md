@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Persistent service, Supabase schema, secrets management, and security baseline running on Railway (completed 2026-02-20)
 - [x] **Phase 2: Script Generation** - Daily scripts generated with 5-Pillar framework, anti-repetition guard, mood profiles, and rejection feedback loop (completed 2026-02-20)
 - [x] **Phase 3: Video Production** - HeyGen avatar video rendered, re-hosted to S3, audio post-processed, background variety enforced (completed 2026-02-22)
-- [ ] **Phase 4: Telegram Approval Loop** - Creator receives daily video via Telegram with approve/reject inline keyboard and structured rejection flow
+- [x] **Phase 4: Telegram Approval Loop** - Creator receives daily video via Telegram with approve/reject inline keyboard and structured rejection flow (completed 2026-02-25)
 - [ ] **Phase 5: Multi-Platform Publishing** - Approved video scheduled and published to TikTok, IG Reels, FB Reels, and YT Shorts via Ayrshare with publish verification
 - [ ] **Phase 6: Analytics and Storage** - 48-hour metrics harvest, virality alerts, Sunday weekly reports, and tiered storage lifecycle management
 - [ ] **Phase 7: Hardening** - End-to-end integration tests, timeout handling, circuit breakers verified, and system cleared for unattended autonomous operation
@@ -88,11 +88,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Migration 0004 (approval_events table + post_copy column on content_history)
-- [ ] 04-02-PLAN.md — PostCopyService (Claude Haiku, Spanish Hook+body+hashtags) + ApprovalService (DB-backed approval state, idempotency, rejection constraints)
-- [ ] 04-03-PLAN.md — approval_flow.py handlers (appr_approve:, appr_reject:, appr_cause: prefixes) + register_approval_handlers in telegram/app.py
-- [ ] 04-04-PLAN.md — send_approval_message delivery (photo + post copy + buttons) wired into _process_completed_render + trigger_immediate_rerun for rejection retry
-- [ ] 04-05-PLAN.md — Phase 4 smoke tests (8 checks) + human verification checkpoint
+- [x] 04-01-PLAN.md — Migration 0004 (approval_events table + post_copy column on content_history)
+- [x] 04-02-PLAN.md — PostCopyService (Claude Haiku, Spanish Hook+body+hashtags) + ApprovalService (DB-backed approval state, idempotency, rejection constraints)
+- [x] 04-03-PLAN.md — approval_flow.py handlers (appr_approve:, appr_reject:, appr_cause: prefixes) + register_approval_handlers in telegram/app.py
+- [x] 04-04-PLAN.md — send_approval_message delivery (photo + post copy + buttons) wired into _process_completed_render + trigger_immediate_rerun for rejection retry
+- [x] 04-05-PLAN.md — Phase 4 smoke tests (8 checks) + human verification checkpoint
 
 ### Phase 5: Multi-Platform Publishing
 **Goal**: Approved content is published to all four platforms at peak engagement hours, publication success is verified, and a Telegram fallback fires automatically if Ayrshare fails
@@ -137,7 +137,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. Foundation | 3/3 | Complete   | 2026-02-20 |
 | 2. Script Generation | 5/5 | Complete | 2026-02-20 |
 | 3. Video Production | 6/6 | Complete   | 2026-02-22 |
-| 4. Telegram Approval Loop | 4/5 | In Progress|  |
+| 4. Telegram Approval Loop | 5/5 | Complete   | 2026-02-25 |
 | 5. Multi-Platform Publishing | 0/TBD | Not started | - |
 | 6. Analytics and Storage | 0/TBD | Not started | - |
 | 7. Hardening | 0/TBD | Not started | - |

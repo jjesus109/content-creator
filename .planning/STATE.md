@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 4 (Telegram Approval Loop) — IN PROGRESS — Plan 4 of 5 complete
+**Current focus:** Phase 4 (Telegram Approval Loop) — COMPLETE — All 5 plans done; Phase 5 (Multi-Platform Publishing) is next
 
 ## Current Position
 
-Phase: 4 of 7 (Telegram Approval Loop) — IN PROGRESS
-Plan: 4 of 5 in current phase — 04-04 complete
-Status: 04-04 complete — Video delivery wired; send_approval_message_sync + trigger_immediate_rerun added
-Last activity: 2026-02-23 — 04-04 executed: send_approval_message()/sync in telegram.py, heygen.py wired to send_approval_message_sync, trigger_immediate_rerun in daily_pipeline.py
+Phase: 4 of 7 (Telegram Approval Loop) — COMPLETE
+Plan: 5 of 5 in current phase — 04-05 complete
+Status: 04-05 complete — 8 smoke tests pass, human code review approved, migration 0004 confirmed applied to Supabase
+Last activity: 2026-02-25 — 04-05 executed: smoke tests written and passing, human checkpoint approved
 
-Progress: [████████████] 57% (Phase 3 of 7 complete, Phase 4 started)
+Progress: [██████████████] 57% (Phases 1-4 of 7 complete, Phase 5 next)
 
 ## Performance Metrics
 
@@ -40,6 +40,7 @@ Progress: [████████████] 57% (Phase 3 of 7 complete, Pha
 | Phase 04-telegram-approval-loop P02 | 3 | 2 tasks | 2 files |
 | Phase 04-telegram-approval-loop P03 | 2 | 2 tasks | 2 files |
 | Phase 04-telegram-approval-loop P04 | 2 | 2 tasks | 3 files |
+| Phase 04-telegram-approval-loop P05 | 5 | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -121,6 +122,9 @@ Recent decisions affecting current work:
 - [Phase 04-04]: trigger_immediate_rerun uses DateTrigger 30s from now with replace_existing=True — prevents duplicate re-runs if rejection fires twice
 - [Phase 04-04]: mood_profiles query uses order(created_at desc).limit(1) — no FK needed, latest row always wins; truncated to 40 chars for caption space
 - [Phase 04-04]: Caption truncated to 1024 chars total — Telegram photo caption limit
+- [Phase 04-05]: pytest added to dependency-groups.dev (PEP 735) — test runner is dev-only; no prod impact
+- [Phase 04-05]: smoke tests use inspect/import only — no live DB or API calls; fast, side-effect-free
+- [Phase 04-05]: tests/ directory created at project root — mirrors standard Python project layout
 
 ### Pending Todos
 
@@ -136,6 +140,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-23
-Stopped at: Completed 04-04-PLAN.md — Video delivery wired (send_approval_message_sync in telegram.py, heygen.py wired, trigger_immediate_rerun in daily_pipeline.py)
+Last session: 2026-02-25
+Stopped at: Completed 04-05-PLAN.md — Phase 4 smoke tests (8/8 pass), human checkpoint approved, migration 0004 confirmed applied
 Resume file: None
