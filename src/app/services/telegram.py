@@ -203,3 +203,125 @@ def send_approval_message_sync(content_history_id: str, video_url: str) -> None:
             loop.run_until_complete(send_approval_message(content_history_id, video_url))
     except RuntimeError:
         asyncio.run(send_approval_message(content_history_id, video_url))
+
+
+async def send_publish_confirmation(
+    content_history_id: str,
+    scheduled_times: dict,
+) -> None:
+    """
+    Send a separate follow-up message after creator approves listing per-platform schedule times.
+    scheduled_times: dict mapping platform -> UTC datetime of scheduled publish.
+    (CONTEXT.md locked decision: original approval message is not edited — this is a new message.)
+    """
+    from app.settings import get_settings
+    from datetime import timezone as tz_module
+    import pytz
+
+    bot = get_telegram_bot()
+    settings = get_settings()
+    audience_tz = pytz.timezone(settings.audience_timezone)
+
+    PLATFORM_EMOJI = {
+        "tiktok": "🎵 TikTok",
+        "instagram": "📷 Instagram",
+        "facebook": "🟦 Facebook",
+        "youtube": "▶️ YouTube",
+    }
+
+    lines = ["✅ Aprobado. Publicaciones programadas:\n"]
+    for platform in ["tiktok", "instagram", "facebook", "youtube"]:
+        if platform in scheduled_times:
+            sched_utc = scheduled_times[platform]
+            sched_local = sched_utc.astimezone(audience_tz)
+            label = PLATFORM_EMOJI.get(platform, platform)
+            day = "Hoy" if sched_local.date() == sched_local.today().date() else "Mañana"
+            lines.append(f"{label}: {day} {sched_local.strftime('%I:%M %p')}")
+
+    lines.append(f"\n(Hora en {settings.audience_timezone})")
+    message = "\n".join(lines)
+
+    await bot.send_message(chat_id=settings.telegram_creator_id, text=message)
+    logger.info("Publish confirmation sent for content_history_id=%s", content_history_id)
+
+
+def send_publish_confirmation_sync(content_history_id: str, scheduled_times: dict) -> None:
+    """Sync wrapper for APScheduler/async approval handler context."""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.run_coroutine_threadsafe(
+                send_publish_confirmation(content_history_id, scheduled_times), loop
+            )
+        else:
+            loop.run_until_complete(send_publish_confirmation(content_history_id, scheduled_times))
+    except RuntimeError:
+        asyncio.run(send_publish_confirmation(content_history_id, scheduled_times))
+
+
+async def send_platform_success(platform: str, content_history_id: str) -> None:
+    """Notify creator when a single platform publish succeeds."""
+    PLATFORM_EMOJI = {
+        "tiktok": "🎵", "instagram": "📷", "facebook": "🟦", "youtube": "▶️"
+    }
+    emoji = PLATFORM_EMOJI.get(platform, "")
+    bot = get_telegram_bot()
+    settings = get_settings()
+    await bot.send_message(
+        chat_id=settings.telegram_creator_id,
+        text=f"{emoji} Publicado en {platform.upper()} correctamente.",
+    )
+
+
+def send_platform_success_sync(platform: str, content_history_id: str) -> None:
+    """Sync wrapper for APScheduler thread context."""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.run_coroutine_threadsafe(send_platform_success(platform, content_history_id), loop)
+        else:
+            loop.run_until_complete(send_platform_success(platform, content_history_id))
+    except RuntimeError:
+        asyncio.run(send_platform_success(platform, content_history_id))
+
+
+async def send_platform_failure(
+    platform: str,
+    video_url: str,
+    post_copy: str,
+    error_message: str,
+) -> None:
+    """
+    Send Telegram fallback when Ayrshare publish fails after retries.
+    Sends Supabase Storage URL (link-based, not file upload) + platform copy.
+    (CONTEXT.md locked decision: fallback is link-based only.)
+    """
+    bot = get_telegram_bot()
+    settings = get_settings()
+    message = (
+        f"PUBLICACION FALLIDA: {platform.upper()}\n\n"
+        f"Video: {video_url}\n\n"
+        f"Copy para {platform}:\n{post_copy}\n\n"
+        f"Error: {error_message[:200]}\n\n"
+        "Por favor publica manualmente."
+    )
+    await bot.send_message(chat_id=settings.telegram_creator_id, text=message)
+
+
+def send_platform_failure_sync(
+    platform: str,
+    video_url: str,
+    post_copy: str,
+    error_message: str,
+) -> None:
+    """Sync wrapper for APScheduler thread context."""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.run_coroutine_threadsafe(
+                send_platform_failure(platform, video_url, post_copy, error_message), loop
+            )
+        else:
+            loop.run_until_complete(send_platform_failure(platform, video_url, post_copy, error_message))
+    except RuntimeError:
+        asyncio.run(send_platform_failure(platform, video_url, post_copy, error_message))
