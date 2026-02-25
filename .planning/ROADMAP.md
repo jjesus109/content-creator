@@ -103,7 +103,14 @@ Plans:
   2. Publication is scheduled at platform-specific peak engagement hours, not immediately on approval — the creator sees a confirmation of the scheduled time in Telegram
   3. Thirty minutes after the scheduled publish time, the system checks publish status on each platform and logs the result — failures are surfaced to the creator
   4. If Ayrshare publish fails, the system automatically sends the original video file and post copy to the creator's Telegram as a manual posting fallback
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Migration 0005 (publish_events table + 4 platform copy columns) + Settings extension (ayrshare_api_key, audience_timezone, peak_hour_*) + tenacity dependency
+- [ ] 05-02-PLAN.md — PostCopyService.generate_platform_variants() + send_approval_message showing all 4 platform copy variants with platform labels
+- [ ] 05-03-PLAN.md — PublishingService (Ayrshare wrapper + tenacity retry) + platform_publish job + publish_verify job + Telegram publish helpers
+- [ ] 05-04-PLAN.md — Wire handle_approve to schedule_platform_publishes() + send_publish_confirmation_sync() + registry.py scheduler injection
+- [ ] 05-05-PLAN.md — Phase 5 smoke tests (12 checks) + human verification checkpoint (migration + code review)
 
 ### Phase 6: Analytics and Storage
 **Goal**: The system measures every video's performance, alerts the creator to viral breakouts, delivers weekly reports, and automatically manages storage costs through tiered lifecycle rules
@@ -138,6 +145,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Script Generation | 5/5 | Complete | 2026-02-20 |
 | 3. Video Production | 6/6 | Complete   | 2026-02-22 |
 | 4. Telegram Approval Loop | 5/5 | Complete   | 2026-02-25 |
-| 5. Multi-Platform Publishing | 0/TBD | Not started | - |
+| 5. Multi-Platform Publishing | 0/5 | Not started | - |
 | 6. Analytics and Storage | 0/TBD | Not started | - |
 | 7. Hardening | 0/TBD | Not started | - |
