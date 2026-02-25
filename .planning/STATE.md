@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 5 (Multi-Platform Publishing) — In Progress — 3/5 plans done
+**Current focus:** Phase 5 (Multi-Platform Publishing) — In Progress — 4/5 plans done
 
 ## Current Position
 
 Phase: 5 of 7 (Multi-Platform Publishing) — In Progress
-Plan: 3 of 5 in current phase — 05-03 complete
-Status: 05-03 complete — PublishingService (Ayrshare + tenacity retry), platform_publish job, publish_verify job, 6 Telegram publish helpers
-Last activity: 2026-02-25 — 05-03 executed: publishing engine (PublishingService, publish job, verify job, Telegram helpers)
+Plan: 4 of 5 in current phase — 05-04 complete
+Status: 05-04 complete — handle_approve wired to schedule 4 platform publish jobs + send confirmation; registry.py injects _scheduler into platform_publish at startup
+Last activity: 2026-02-25 — 05-04 executed: approval handler publish wiring and scheduler injection
 
-Progress: [█████████████████] 64% (Phases 1-4 complete, Phase 5 started 3/5 plans)
+Progress: [██████████████████] 66% (Phases 1-4 complete, Phase 5 started 4/5 plans)
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [█████████████████] 64% (Phases 1-4 
 | Phase 05-multi-platform-publishing P01 | 2 | 2 tasks | 3 files |
 | Phase 05-multi-platform-publishing P02 | 2 | 2 tasks | 2 files |
 | Phase 05 P03 | 2 | 2 tasks | 4 files |
+| Phase 05 P04 | 1 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,9 @@ Recent decisions affecting current work:
 - [Phase 05-03]: publish_to_platform_job does not re-raise exceptions — APScheduler already logs; creator notified via Telegram fallback
 - [Phase 05-03]: verify_publish_job is silent on success — only surfaces failures to creator; no retry on verify failure
 - [Phase 05-03]: send_publish_confirmation sends new Telegram message (not edit) — preserves approval message immutability (CONTEXT.md locked)
+- [Phase 05-04]: handle_approve fetches video_url from content_history via supabase inside handler body — same DB client pattern as other handlers
+- [Phase 05-04]: scheduler accessed via _fastapi_app.state.scheduler inside handler body — no new global variable, consistent with existing _fastapi_app pattern in telegram.py
+- [Phase 05-04]: set_publish_scheduler aliased from set_scheduler import in registry.py — avoids name collision with video_poller set_scheduler
 
 ### Pending Todos
 
@@ -155,5 +159,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 05-03-PLAN.md — PublishingService, platform_publish job, publish_verify job, 6 Telegram publish helpers
+Stopped at: Completed 05-04-PLAN.md — handle_approve publish wiring and registry.py scheduler injection
 Resume file: None
