@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 5 (Multi-Platform Publishing) — In Progress — 1/5 plans done
+**Current focus:** Phase 5 (Multi-Platform Publishing) — In Progress — 2/5 plans done
 
 ## Current Position
 
 Phase: 5 of 7 (Multi-Platform Publishing) — In Progress
-Plan: 1 of 5 in current phase — 05-01 complete
-Status: 05-01 complete — migration 0005 written, Settings extended with 6 publishing fields, tenacity added to production deps
-Last activity: 2026-02-25 — 05-01 executed: publish_events table, platform copy columns, Ayrshare settings foundation
+Plan: 2 of 5 in current phase — 05-02 complete
+Status: 05-02 complete — generate_platform_variants() added to PostCopyService, send_approval_message extended with 4 platform copy variants stacked in caption
+Last activity: 2026-02-25 — 05-02 executed: generate_platform_variants() + send_approval_message 4-platform copy
 
-Progress: [████████████████] 61% (Phases 1-4 complete, Phase 5 started 1/5 plans)
+Progress: [████████████████] 61% (Phases 1-4 complete, Phase 5 started 2/5 plans)
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Progress: [████████████████] 61% (Phases 1-4 com
 | Phase 04-telegram-approval-loop P04 | 2 | 2 tasks | 3 files |
 | Phase 04-telegram-approval-loop P05 | 5 | 1 tasks | 3 files |
 | Phase 05-multi-platform-publishing P01 | 2 | 2 tasks | 3 files |
+| Phase 05-multi-platform-publishing P02 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -129,6 +130,10 @@ Recent decisions affecting current work:
 - [Phase 05-multi-platform-publishing]: publish_events is append-only — verification job inserts new verified/verify_failed rows; no UPDATE pattern; full audit trail preserved
 - [Phase 05-multi-platform-publishing]: ayrshare_api_key has no default — Pydantic raises ValidationError at startup if AYRSHARE_API_KEY env var not set
 - [Phase 05-multi-platform-publishing]: tenacity added to [project].dependencies (production) — used by PublishJob retry logic at runtime
+- [Phase 05-multi-platform-publishing]: generate_platform_variants uses max_tokens=1500 — 4 variants need more output space than single generate() at 300 tokens
+- [Phase 05-multi-platform-publishing]: JSON extraction uses re.search DOTALL pattern for Anthropic structured responses — handles markdown code fence wrapping
+- [Phase 05-multi-platform-publishing]: has_all_variants guard avoids redundant Anthropic call if post_copy_tiktok/instagram/facebook/youtube already populated in content_history
+- [Phase 05-multi-platform-publishing]: Caption 1024-char truncation applies to full combined caption including all 4 platform variant sections stacked
 
 ### Pending Todos
 
@@ -145,5 +150,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 05-01-PLAN.md — publishing schema foundation: migration 0005, Settings extension, tenacity prod dep
+Stopped at: Completed 05-02-PLAN.md — generate_platform_variants() + send_approval_message 4-platform copy variants
 Resume file: None
