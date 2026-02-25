@@ -45,6 +45,20 @@ class Settings(BaseSettings):
                                                 # Note: HeyGen API v2 has NO built-in scene_id system — custom image URLs required
     heygen_ambient_music_urls: str              # Comma-separated Supabase Storage public URLs for ambient music tracks (2-4 tracks)
 
+    # Publishing — Ayrshare multi-platform (PUBL-01, PUBL-02)
+    ayrshare_api_key: str                       # Ayrshare API key — dashboard → API Keys
+
+    # Audience timezone for peak hour scheduling (PUBL-02)
+    # Must be a valid pytz timezone string (e.g. "US/Eastern", "America/Mexico_City")
+    audience_timezone: str = "US/Eastern"
+
+    # Per-platform peak hour (start of window, 24h format, audience_timezone)
+    # Defaults: TikTok 7-9pm, Instagram 11am-1pm, Facebook 1-3pm, YouTube 12-3pm
+    peak_hour_tiktok: int = 19      # 7 PM
+    peak_hour_instagram: int = 11   # 11 AM
+    peak_hour_facebook: int = 13    # 1 PM
+    peak_hour_youtube: int = 12     # 12 PM
+
 
 @lru_cache
 def get_settings() -> Settings:
