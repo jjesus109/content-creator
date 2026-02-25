@@ -42,8 +42,8 @@
 
 - [x] **PUBL-01**: Approved video is published to TikTok, Instagram Reels, Facebook Reels, and YouTube Shorts via a single Ayrshare API call
 - [x] **PUBL-02**: Publish is scheduled at peak engagement hours per platform, not immediately on approval
-- [ ] **PUBL-03**: System verifies post-publish status on each platform 30 minutes after scheduled publish time
-- [ ] **PUBL-04**: If Ayrshare publish fails, bot automatically sends the original video file and post copy to Telegram for immediate manual posting
+- [x] **PUBL-03**: System verifies post-publish status on each platform 30 minutes after scheduled publish time
+- [x] **PUBL-04**: If Ayrshare publish fails, bot automatically sends the original video file and post copy to Telegram for immediate manual posting
 
 ### Analytics
 
@@ -106,8 +106,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TGAP-04 | Phase 4 | Complete |
 | PUBL-01 | Phase 5 | Complete |
 | PUBL-02 | Phase 5 | Complete |
-| PUBL-03 | Phase 5 | Pending |
-| PUBL-04 | Phase 5 | Pending |
+| PUBL-03 | Phase 5 | Complete |
+| PUBL-04 | Phase 5 | Complete |
 | ANLX-01 | Phase 6 | Pending |
 | ANLX-02 | Phase 6 | Pending |
 | ANLX-03 | Phase 6 | Pending |

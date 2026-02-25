@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 5 (Multi-Platform Publishing) — In Progress — 2/5 plans done
+**Current focus:** Phase 5 (Multi-Platform Publishing) — In Progress — 3/5 plans done
 
 ## Current Position
 
 Phase: 5 of 7 (Multi-Platform Publishing) — In Progress
-Plan: 2 of 5 in current phase — 05-02 complete
-Status: 05-02 complete — generate_platform_variants() added to PostCopyService, send_approval_message extended with 4 platform copy variants stacked in caption
-Last activity: 2026-02-25 — 05-02 executed: generate_platform_variants() + send_approval_message 4-platform copy
+Plan: 3 of 5 in current phase — 05-03 complete
+Status: 05-03 complete — PublishingService (Ayrshare + tenacity retry), platform_publish job, publish_verify job, 6 Telegram publish helpers
+Last activity: 2026-02-25 — 05-03 executed: publishing engine (PublishingService, publish job, verify job, Telegram helpers)
 
-Progress: [████████████████] 61% (Phases 1-4 complete, Phase 5 started 2/5 plans)
+Progress: [█████████████████] 64% (Phases 1-4 complete, Phase 5 started 3/5 plans)
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Progress: [████████████████] 61% (Phases 1-4 com
 | Phase 04-telegram-approval-loop P05 | 5 | 1 tasks | 3 files |
 | Phase 05-multi-platform-publishing P01 | 2 | 2 tasks | 3 files |
 | Phase 05-multi-platform-publishing P02 | 2 | 2 tasks | 2 files |
+| Phase 05 P03 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -134,6 +135,10 @@ Recent decisions affecting current work:
 - [Phase 05-multi-platform-publishing]: JSON extraction uses re.search DOTALL pattern for Anthropic structured responses — handles markdown code fence wrapping
 - [Phase 05-multi-platform-publishing]: has_all_variants guard avoids redundant Anthropic call if post_copy_tiktok/instagram/facebook/youtube already populated in content_history
 - [Phase 05-multi-platform-publishing]: Caption 1024-char truncation applies to full combined caption including all 4 platform variant sections stacked
+- [Phase 05-03]: tenacity @retry on _post() (internal method) with module-level _is_retryable predicate — retries 5xx+network, fails fast on 4xx
+- [Phase 05-03]: publish_to_platform_job does not re-raise exceptions — APScheduler already logs; creator notified via Telegram fallback
+- [Phase 05-03]: verify_publish_job is silent on success — only surfaces failures to creator; no retry on verify failure
+- [Phase 05-03]: send_publish_confirmation sends new Telegram message (not edit) — preserves approval message immutability (CONTEXT.md locked)
 
 ### Pending Todos
 
@@ -150,5 +155,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 05-02-PLAN.md — generate_platform_variants() + send_approval_message 4-platform copy variants
+Stopped at: Completed 05-03-PLAN.md — PublishingService, platform_publish job, publish_verify job, 6 Telegram publish helpers
 Resume file: None
