@@ -5,6 +5,7 @@ from app.scheduler.jobs.daily_pipeline import daily_pipeline_job
 from app.scheduler.jobs.cb_reset import cb_reset_job
 from app.scheduler.jobs.weekly_mood import weekly_mood_prompt_job, weekly_mood_reminder_job
 from app.scheduler.jobs.video_poller import set_scheduler
+from app.scheduler.jobs.platform_publish import set_scheduler as set_publish_scheduler
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,8 @@ def register_jobs(scheduler: BackgroundScheduler) -> None:
     # Inject scheduler into video_poller module — required before any poller job is registered.
     # Module-level reference avoids lambda/closure serialization failures with SQLAlchemyJobStore.
     set_scheduler(scheduler)
+    set_publish_scheduler(scheduler)
+    logger.info("Injected scheduler into platform_publish module.")
 
     # Daily pipeline trigger at 7 AM Mexico City (INFRA-03, SCRP-01–SCRP-04)
     scheduler.add_job(
