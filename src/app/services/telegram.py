@@ -87,9 +87,9 @@ async def send_approval_message(content_history_id: str, video_url: str) -> None
     settings = get_settings()
     supabase = get_supabase()
 
-    # Load content_history row
+    # Load content_history row (includes 4 platform copy columns for PUBL-01)
     row_result = supabase.table("content_history").select(
-        "script_text, topic_summary, post_copy, background_url, created_at"
+        "script_text, topic_summary, post_copy, post_copy_tiktok, post_copy_instagram, post_copy_facebook, post_copy_youtube, background_url, created_at"
     ).eq("id", content_history_id).single().execute()
     row = row_result.data
 
@@ -105,6 +105,37 @@ async def send_approval_message(content_history_id: str, video_url: str) -> None
     if not post_copy:
         post_copy = PostCopyService().generate(row["script_text"], row["topic_summary"])
         supabase.table("content_history").update({"post_copy": post_copy}).eq("id", content_history_id).execute()
+
+    # Generate and store platform copy variants if missing (PUBL-01)
+    # Run this in the thread pool to avoid blocking the async handler
+    loop = asyncio.get_event_loop()
+
+    def _generate_and_store_variants():
+        variants = PostCopyService().generate_platform_variants(row["script_text"], row["topic_summary"])
+        supabase.table("content_history").update({
+            "post_copy_tiktok": variants["tiktok"],
+            "post_copy_instagram": variants["instagram"],
+            "post_copy_facebook": variants["facebook"],
+            "post_copy_youtube": variants["youtube"],
+        }).eq("id", content_history_id).execute()
+        return variants
+
+    # Check if any variant is missing
+    has_all_variants = all([
+        row.get("post_copy_tiktok"),
+        row.get("post_copy_instagram"),
+        row.get("post_copy_facebook"),
+        row.get("post_copy_youtube"),
+    ])
+    if not has_all_variants:
+        platform_variants = await loop.run_in_executor(None, _generate_and_store_variants)
+    else:
+        platform_variants = {
+            "tiktok": row["post_copy_tiktok"],
+            "instagram": row["post_copy_instagram"],
+            "facebook": row["post_copy_facebook"],
+            "youtube": row["post_copy_youtube"],
+        }
 
     # Extract thumbnail — fallback to None on failure
     thumbnail_bio = None
@@ -123,7 +154,12 @@ async def send_approval_message(content_history_id: str, video_url: str) -> None
         f"---\n"
         f"Video: {video_url}\n"
         f"Fecha: {generation_date} | Palabras: {word_count}\n"
-        f"Mood: {mood_label} | Fondo: {background_short}"
+        f"Mood: {mood_label} | Fondo: {background_short}\n\n"
+        f"📱 COPY POR PLATAFORMA:\n"
+        f"🎵 TikTok:\n{platform_variants['tiktok']}\n\n"
+        f"📷 Instagram:\n{platform_variants['instagram']}\n\n"
+        f"🟦 Facebook:\n{platform_variants['facebook']}\n\n"
+        f"▶️ YouTube:\n{platform_variants['youtube']}"
     )
     if len(caption) > 1024:
         caption = caption[:1021] + "..."
