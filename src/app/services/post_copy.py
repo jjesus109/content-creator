@@ -9,7 +9,9 @@ extract_thumbnail() must also be called from a thread pool context — it perfor
 blocking I/O (HTTP download + ffmpeg subprocess). Do NOT call it from async
 handlers directly; use asyncio.get_event_loop().run_in_executor() or equivalent.
 """
+import json
 import logging
+import re
 import subprocess
 from io import BytesIO
 
@@ -96,6 +98,76 @@ class PostCopyService:
             message.usage.output_tokens,
         )
         return text
+
+    def generate_platform_variants(
+        self,
+        script_text: str,
+        topic_summary: str,
+    ) -> dict[str, str]:
+        """
+        Generate 4 platform-specific post copy variants in a single Anthropic API call.
+
+        Returns a dict with exactly 4 keys:
+          "tiktok":    Conversational Spanish + ~5 hashtags. Max 150 chars.
+          "instagram": Aesthetic Spanish + 20-30 hashtags. Max 2200 chars.
+          "facebook":  Slightly longer conversational. Max 500 chars.
+          "youtube":   SEO title + description. Max 500 chars.
+
+        Runs in APScheduler ThreadPoolExecutor — synchronous Anthropic client only.
+        """
+        system = (
+            "Eres un redactor de redes sociales especializado en contenido filosófico en español neutro. "
+            "Genera copy OPTIMIZADO PARA CADA PLATAFORMA basado en el guion dado."
+        )
+
+        user = (
+            f"Tema del video: {topic_summary}\n\n"
+            f"Guion completo:\n{script_text}\n\n"
+            "Genera copy para cada plataforma. Devuelve ÚNICAMENTE un objeto JSON válido con estas 4 claves:\n"
+            '{\n'
+            '  "tiktok":    "Conversacional, ~5 hashtags, máximo 150 caracteres",\n'
+            '  "instagram": "Estético, 20-30 hashtags de nicho, máximo 2200 caracteres",\n'
+            '  "facebook":  "Conversacional y ligeramente más extenso, máximo 500 caracteres",\n'
+            '  "youtube":   "Título SEO en primera línea + descripción, máximo 500 caracteres"\n'
+            '}\n\n'
+            "REGLAS:\n"
+            "- TikTok: tono conversacional juvenil, ~5 hashtags relevantes, MÁXIMO 150 caracteres totales\n"
+            "- Instagram: tono estético y reflexivo, 20-30 hashtags de nicho filosófico, MÁXIMO 2200 caracteres\n"
+            "- Facebook: tono conversacional ligeramente más extenso que TikTok, MÁXIMO 500 caracteres\n"
+            "- YouTube: primera línea = título SEO optimizado, resto = descripción filosófica, MÁXIMO 500 caracteres\n"
+            "- Todo en español neutro\n"
+            "- Devuelve ÚNICAMENTE el JSON, sin texto adicional ni bloques de código"
+        )
+
+        message = self._client.messages.create(
+            model=self._model,
+            max_tokens=1500,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+            temperature=0.7,
+        )
+        text = message.content[0].text.strip()
+        logger.debug(
+            "PostCopyService.generate_platform_variants: %d in / %d out tokens",
+            message.usage.input_tokens,
+            message.usage.output_tokens,
+        )
+
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if not match:
+            raise ValueError(f"Failed to parse platform variants JSON: {text[:200]}")
+
+        try:
+            data = json.loads(match.group())
+        except json.JSONDecodeError:
+            raise ValueError(f"Failed to parse platform variants JSON: {text[:200]}")
+
+        return {
+            "tiktok": data.get("tiktok", ""),
+            "instagram": data.get("instagram", ""),
+            "facebook": data.get("facebook", ""),
+            "youtube": data.get("youtube", ""),
+        }
 
 
 def extract_thumbnail(video_url: str) -> BytesIO:
