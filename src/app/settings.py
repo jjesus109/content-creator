@@ -45,8 +45,29 @@ class Settings(BaseSettings):
                                                 # Note: HeyGen API v2 has NO built-in scene_id system — custom image URLs required
     heygen_ambient_music_urls: str              # Comma-separated Supabase Storage public URLs for ambient music tracks (2-4 tracks)
 
-    # Publishing — Ayrshare multi-platform (PUBL-01, PUBL-02)
-    ayrshare_api_key: str                       # Ayrshare API key — dashboard → API Keys
+    # Publishing — Direct platform APIs (PUBL-01, PUBL-02)
+
+    # Instagram (Meta Graph API v18 — long-lived user access token, 60-day expiry)
+    instagram_access_token: str                 # Meta long-lived token — refresh every 60 days
+    instagram_business_account_id: str          # Instagram Business Account numeric ID
+
+    # Facebook (Meta Graph API — permanent long-lived Page access token)
+    facebook_access_token: str                  # Meta Page access token (long-lived, permanent)
+    facebook_page_id: str                       # Facebook Page ID
+
+    # YouTube (Data API v3 — OAuth2 refresh token, never expires with offline access)
+    youtube_client_id: str                      # OAuth2 client ID from Google Cloud Console
+    youtube_client_secret: str                  # OAuth2 client secret
+    youtube_refresh_token: str                  # OAuth2 refresh token (offline access, permanent)
+
+    # TikTok: manual posting — no API credentials needed
+    # (copy shown in approval message; video URL sent in confirmation message)
+
+    # TikTok Display API OAuth 2.0 tokens (ANLX-01)
+    # Creator must authorize once via /auth/tiktok FastAPI route
+    # access_token and refresh_token stored here after first authorization
+    tiktok_access_token: str = ""       # Display API user access token (expires in 24h, refresh via refresh_token)
+    tiktok_refresh_token: str = ""      # Refresh token (valid for 365 days)
 
     # Audience timezone for peak hour scheduling (PUBL-02)
     # Must be a valid pytz timezone string (e.g. "US/Eastern", "America/Mexico_City")
