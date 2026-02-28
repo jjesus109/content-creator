@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 6 (Analytics and Storage) — In Progress — 3/5 plans done
+**Current focus:** Phase 6 (Analytics and Storage) — In Progress — 5/5 plans done
 
 ## Current Position
 
-Phase: 6 of 7 (Analytics and Storage) — In Progress
-Plan: 3 of 5 in current phase — 06-03 complete
-Status: 06-03 complete — StorageLifecycleService (Supabase Storage only, no R2/boto3) + four Telegram storage handlers (confirm, cancel, eternal, warn_ok) + registered in app.py
-Last activity: 2026-02-28 — 06-03 executed: storage lifecycle service and Telegram handlers
+Phase: 6 of 7 (Analytics and Storage) — Complete
+Plan: 5 of 5 in current phase — 06-05 complete
+Status: 06-05 complete — weekly_analytics_report_job (Sun 9 AM) + storage_lifecycle_job (daily 2 AM) created and registered in registry.py
+Last activity: 2026-02-28 — 06-05 executed: weekly report and storage lifecycle cron jobs
 
-Progress: [████████████████████] 73% (Phases 1-5 complete, Phase 6 started 3/5 plans)
+Progress: [████████████████████] 80% (Phases 1-6 complete, Phase 7 not started)
 
 ## Performance Metrics
 
@@ -49,6 +49,8 @@ Progress: [████████████████████] 73% (Ph
 | Phase 06 P01 | 2 | 2 tasks | 2 files |
 | Phase 06 P02 | 3 | 2 tasks | 2 files |
 | Phase 06 P03 | 2 | 2 tasks | 3 files |
+| Phase 06 P04 | 4 | 2 tasks | 2 files |
+| Phase 06-analytics-and-storage P05 | 1 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -163,6 +165,11 @@ Recent decisions affecting current work:
 - [Phase 06-03]: is_viral/is_eternal safety guard in handle_storage_confirm prevents accidental deletion of exempt videos
 - [Phase 06-03]: handle_storage_warn_ok: no DB update needed; lifecycle job handles idempotency via storage_status='warm' AND deletion_requested_at IS NULL query
 - [Phase 06-03]: reset_expired_deletion_requests() fetches IDs first then loops — Supabase Python client has no bulk update with compound WHERE clause
+- [Phase Phase 06-04]: harvest_metrics_job fetches topic_summary AND created_at in single DB call — plan only showed topic_summary but analytics.py requires video_date arg; derived from created_at[:10]
+- [Phase Phase 06-04]: harvest_run_at = now + 48h in publish success block only — harvest not scheduled on publish failure
+- [Phase 06-analytics-and-storage]: asyncio.run() used in storage_lifecycle_job to bridge async StorageLifecycleService methods — APScheduler ThreadPoolExecutor has no event loop (different from send_alert_sync which uses run_coroutine_threadsafe when FastAPI loop exists)
+- [Phase 06-analytics-and-storage]: storage_lifecycle_job never deletes files directly — actual deletion only on stor_confirm: Telegram handler tap (Plan 06-03)
+- [Phase 06-analytics-and-storage]: is_viral=False and is_eternal=False guards in all three transition queries — exempt videos never transitioned
 
 ### Pending Todos
 
