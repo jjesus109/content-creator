@@ -121,7 +121,14 @@ Plans:
   2. Every Sunday, the creator receives a Telegram report with the week's growth summary and the top-performing video
   3. When any video exceeds 500% of the rolling average performance, the creator receives an immediate Telegram virality alert
   4. Video files automatically transition through Hot (0-7d), Warm (8-45d), and Cold/Delete (45d+) storage tiers — videos flagged as Viral or Eternal are exempt from deletion
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Migration 0006 (platform_metrics table + content_history lifecycle columns) + Settings extension (R2 + TikTok credentials)
+- [ ] 06-02-PLAN.md — MetricsService (YouTube/Instagram/TikTok API callers) + AnalyticsService (rolling average, virality check, sparkline, weekly report formatter)
+- [ ] 06-03-PLAN.md — StorageLifecycleService (R2 boto3 copy/delete) + storage_confirm Telegram handler + register in telegram/app.py
+- [ ] 06-04-PLAN.md — harvest_metrics_job (48h DateTrigger) + wire into platform_publish_job success block
+- [ ] 06-05-PLAN.md — weekly_analytics_report_job (Sunday CronTrigger) + storage_lifecycle_job (daily CronTrigger) + register both in registry.py
 
 ### Phase 7: Hardening
 **Goal**: The system runs autonomously for months without supervision — every failure mode is handled gracefully, every circuit breaker is verified, and no silent failures can accumulate undetected
@@ -146,5 +153,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Video Production | 6/6 | Complete   | 2026-02-22 |
 | 4. Telegram Approval Loop | 5/5 | Complete   | 2026-02-25 |
 | 5. Multi-Platform Publishing | 5/5 | Complete   | 2026-02-25 |
-| 6. Analytics and Storage | 0/TBD | Not started | - |
+| 6. Analytics and Storage | 0/5 | Not started | - |
 | 7. Hardening | 0/TBD | Not started | - |
