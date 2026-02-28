@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 6 (Analytics and Storage) — In Progress — 1/5 plans done
+**Current focus:** Phase 6 (Analytics and Storage) — In Progress — 3/5 plans done
 
 ## Current Position
 
 Phase: 6 of 7 (Analytics and Storage) — In Progress
-Plan: 1 of 5 in current phase — 06-01 complete
-Status: 06-01 complete — migration 0006_analytics.sql (platform_metrics table + content_history storage lifecycle columns) + TikTok OAuth settings fields added
-Last activity: 2026-02-28 — 06-01 executed: DB migration and Settings extension for analytics
+Plan: 3 of 5 in current phase — 06-03 complete
+Status: 06-03 complete — StorageLifecycleService (Supabase Storage only, no R2/boto3) + four Telegram storage handlers (confirm, cancel, eternal, warn_ok) + registered in app.py
+Last activity: 2026-02-28 — 06-03 executed: storage lifecycle service and Telegram handlers
 
-Progress: [████████████████████] 71% (Phases 1-5 complete, Phase 6 started 1/5 plans)
+Progress: [████████████████████] 73% (Phases 1-5 complete, Phase 6 started 3/5 plans)
 
 ## Performance Metrics
 
@@ -47,6 +47,8 @@ Progress: [████████████████████] 71% (Ph
 | Phase 05 P04 | 1 | 2 tasks | 2 files |
 | Phase 05 P05 | 4 | 1 tasks | 1 files |
 | Phase 06 P01 | 2 | 2 tasks | 2 files |
+| Phase 06 P02 | 3 | 2 tasks | 2 files |
+| Phase 06 P03 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -152,6 +154,15 @@ Recent decisions affecting current work:
 - [Phase 06-01]: storage_status CHECK includes 'exempt' for viral/eternal videos that must never be deleted
 - [Phase 06-01]: No UNIQUE constraint on (content_history_id, platform) in platform_metrics — one row per harvest cycle; idempotency at job level via job ID deduplication
 - [Phase 06-01]: tiktok_access_token and tiktok_refresh_token use empty-string defaults — Settings loads cleanly without TikTok env vars; harvester degrades gracefully with logged warning
+- [Phase 06-02]: Module-level settings = get_settings() removed from metrics.py — ValidationError at import time when env vars absent; settings accessed via self._settings inside __init__ only
+- [Phase 06-02]: check_and_alert_virality uses 48h time-window de-duplication (virality_alerted_at > NOW()-48h) NOT IS NULL — fires on every harvest cycle while video stays viral
+- [Phase 06-02]: Instagram Insights uses 'views' metric not 'video_views' — video_views deprecated in Meta Graph API v21 (January 2025)
+- [Phase 06-02]: format_virality_alert is minimal: platform, video date, view count only — no baseline_avg, no pct_above
+- [Phase 06-03]: Warm tier = DB label only; file stays in same Supabase Storage bucket; no copy, no R2, no boto3
+- [Phase 06-03]: Cold deletion = supabase.storage.from_(bucket).remove([path]); content_history row kept for analytics history
+- [Phase 06-03]: is_viral/is_eternal safety guard in handle_storage_confirm prevents accidental deletion of exempt videos
+- [Phase 06-03]: handle_storage_warn_ok: no DB update needed; lifecycle job handles idempotency via storage_status='warm' AND deletion_requested_at IS NULL query
+- [Phase 06-03]: reset_expired_deletion_requests() fetches IDs first then loops — Supabase Python client has no bulk update with compound WHERE clause
 
 ### Pending Todos
 
@@ -168,5 +179,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 06-01-PLAN.md — migration 0006_analytics.sql and Settings TikTok OAuth fields
+Stopped at: Completed 06-03-PLAN.md — StorageLifecycleService + storage Telegram handlers (confirm, cancel, eternal, warn_ok)
 Resume file: None
