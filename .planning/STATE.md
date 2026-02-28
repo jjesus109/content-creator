@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 5 (Multi-Platform Publishing) — In Progress — 4/5 plans done
+**Current focus:** Phase 6 (Analytics and Storage) — In Progress — 1/5 plans done
 
 ## Current Position
 
-Phase: 5 of 7 (Multi-Platform Publishing) — In Progress
-Plan: 4 of 5 in current phase — 05-04 complete
-Status: 05-04 complete — handle_approve wired to schedule 4 platform publish jobs + send confirmation; registry.py injects _scheduler into platform_publish at startup
-Last activity: 2026-02-25 — 05-04 executed: approval handler publish wiring and scheduler injection
+Phase: 6 of 7 (Analytics and Storage) — In Progress
+Plan: 1 of 5 in current phase — 06-01 complete
+Status: 06-01 complete — migration 0006_analytics.sql (platform_metrics table + content_history storage lifecycle columns) + TikTok OAuth settings fields added
+Last activity: 2026-02-28 — 06-01 executed: DB migration and Settings extension for analytics
 
-Progress: [██████████████████] 66% (Phases 1-4 complete, Phase 5 started 4/5 plans)
+Progress: [████████████████████] 71% (Phases 1-5 complete, Phase 6 started 1/5 plans)
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Progress: [██████████████████] 66% (Phases 1
 | Phase 05 P03 | 2 | 2 tasks | 4 files |
 | Phase 05 P04 | 1 | 2 tasks | 2 files |
 | Phase 05 P05 | 4 | 1 tasks | 1 files |
+| Phase 06 P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -146,6 +147,11 @@ Recent decisions affecting current work:
 - [Phase 05-04]: set_publish_scheduler aliased from set_scheduler import in registry.py — avoids name collision with video_poller set_scheduler
 - [Phase 05]: 12 smoke tests use inspect.getsource() to verify logic contracts without executing code
 - [Phase 05]: Checkpoint task (migration + Railway env) requires human action — not automatable
+- [Phase 06-01]: retention_rate float column in platform_metrics used by weekly report to rank top performer — not just views/likes
+- [Phase 06-01]: No r2_key column and no R2/Cloudflare credentials — warm tier is DB label only; files stay in Supabase Storage; cold deletion uses supabase.storage.from_().remove()
+- [Phase 06-01]: storage_status CHECK includes 'exempt' for viral/eternal videos that must never be deleted
+- [Phase 06-01]: No UNIQUE constraint on (content_history_id, platform) in platform_metrics — one row per harvest cycle; idempotency at job level via job ID deduplication
+- [Phase 06-01]: tiktok_access_token and tiktok_refresh_token use empty-string defaults — Settings loads cleanly without TikTok env vars; harvester degrades gracefully with logged warning
 
 ### Pending Todos
 
@@ -161,6 +167,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Completed 05-04-PLAN.md — handle_approve publish wiring and registry.py scheduler injection
+Last session: 2026-02-28
+Stopped at: Completed 06-01-PLAN.md — migration 0006_analytics.sql and Settings TikTok OAuth fields
 Resume file: None

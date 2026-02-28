@@ -47,10 +47,10 @@
 
 ### Analytics
 
-- [ ] **ANLX-01**: System harvests views, shares, and retention metrics from each platform 48 hours after publish
+- [x] **ANLX-01**: System harvests views, shares, and retention metrics from each platform 48 hours after publish
 - [ ] **ANLX-02**: Every Sunday, bot sends a weekly report to creator: growth summary and top-performing video of the week
 - [ ] **ANLX-03**: Bot sends an immediate Telegram alert if any video exceeds 500% of the average performance (virality threshold)
-- [ ] **ANLX-04**: Storage lifecycle auto-manages video files: hot (0-7d active), warm (8-45d backup), cold delete (45d+) — videos flagged as Viral or Eternal are exempt from deletion
+- [x] **ANLX-04**: Storage lifecycle auto-manages video files: hot (0-7d active), warm (8-45d backup), cold delete (45d+) — videos flagged as Viral or Eternal are exempt from deletion
 
 ## v2 Requirements
 
@@ -108,10 +108,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PUBL-02 | Phase 5 | Complete |
 | PUBL-03 | Phase 5 | Complete |
 | PUBL-04 | Phase 5 | Complete |
-| ANLX-01 | Phase 6 | Pending |
+| ANLX-01 | Phase 6 | Complete |
 | ANLX-02 | Phase 6 | Pending |
 | ANLX-03 | Phase 6 | Pending |
-| ANLX-04 | Phase 6 | Pending |
+| ANLX-04 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 26 total
