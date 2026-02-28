@@ -69,15 +69,14 @@ def publish_to_platform_job(
             video_url=video_url,
         )
 
-        ayrshare_post_id = response.get("postId", "")
-        post_ids = response.get("postIds", {})
-        platform_post_id = str(post_ids.get(platform, ""))
+        external_post_id = response.get("external_post_id", "")
+        platform_post_id = response.get("platform_post_id", "")
 
         # Persist publish event — verification job queries this table
         supabase.table("publish_events").insert({
             "content_history_id": content_history_id,
             "platform": platform,
-            "ayrshare_post_id": ayrshare_post_id,
+            "external_post_id": external_post_id,
             "platform_post_id": platform_post_id,
             "status": "published",
             "scheduled_at": datetime.now(tz=timezone.utc).isoformat(),
@@ -95,14 +94,32 @@ def publish_to_platform_job(
         _scheduler.add_job(
             verify_publish_job,
             trigger=DateTrigger(run_date=run_at),
-            args=[content_history_id, platform, ayrshare_post_id],
+            args=[content_history_id, platform, external_post_id],
             id=verify_job_id,
             name=f"Verify {platform} for {content_history_id[:8]}",
             replace_existing=True,
         )
+        # Schedule metrics harvest 48 hours after publish (ANLX-01)
+        from app.scheduler.jobs.harvest_metrics import harvest_metrics_job
+
+        harvest_run_at = datetime.now(tz=timezone.utc) + timedelta(hours=48)
+        harvest_job_id = f"harvest_{content_history_id}_{platform}"
+        _scheduler.add_job(
+            harvest_metrics_job,
+            trigger=DateTrigger(run_date=harvest_run_at),
+            args=[content_history_id, platform, external_post_id],
+            id=harvest_job_id,
+            name=f"Harvest {platform} metrics for {content_history_id[:8]}",
+            replace_existing=True,
+        )
         logger.info(
-            "Published %s for content_history_id=%s: ayrshare_post_id=%s",
-            platform, content_history_id[:8], ayrshare_post_id,
+            "Scheduled harvest for %s content_history_id=%s at %s",
+            platform, content_history_id[:8], harvest_run_at.isoformat(),
+        )
+
+        logger.info(
+            "Published %s for content_history_id=%s: external_post_id=%s",
+            platform, content_history_id[:8], external_post_id,
         )
 
     except Exception as exc:
