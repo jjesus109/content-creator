@@ -101,6 +101,27 @@ class CircuitBreakerService:
         if new_weekly_count >= 2:
             self._send_escalation_alert(new_weekly_count)
 
+        # Daily halt logic: increment daily_trip_count; halt pipeline after 3 trips in one day
+        new_daily_trip_count = state.get("daily_trip_count", 0) + 1
+        self.db.table(TABLE).update({
+            "daily_trip_count": new_daily_trip_count,
+            "updated_at": now.isoformat(),
+        }).eq("id", SINGLETON_ID).execute()
+
+        logger.warning(
+            "Circuit breaker daily_trip_count=%d after this trip.",
+            new_daily_trip_count,
+        )
+
+        # Fire halt alert only on the 3rd trip AND only if not already halted
+        already_halted = state.get("daily_halted_at") is not None
+        if new_daily_trip_count >= 3 and not already_halted:
+            self.db.table(TABLE).update({
+                "daily_halted_at": now.isoformat(),
+                "updated_at": now.isoformat(),
+            }).eq("id", SINGLETON_ID).execute()
+            self._send_daily_halt_alert()
+
     def _send_escalation_alert(self, trip_count: int) -> None:
         """Send Telegram escalation when breaker fires 2+ times in 7 days."""
         try:
@@ -114,16 +135,62 @@ class CircuitBreakerService:
         except Exception as e:
             logger.error("Failed to send escalation alert: %s", e)
 
+    def is_daily_halted(self) -> bool:
+        """
+        Returns True if the pipeline is halted for today due to 3+ circuit breaker trips.
+        Fail-open: returns False on any exception so the pipeline can continue if DB is unavailable.
+        """
+        try:
+            state = self.get_state()
+            return state.get("daily_halted_at") is not None
+        except Exception as e:
+            logger.error("is_daily_halted check failed (fail-open): %s", e)
+            return False
+
+    def clear_daily_halt(self) -> None:
+        """
+        Clear the daily halt state. Called by /resume Telegram command handler.
+        Resets daily_trip_count to 0 and clears daily_halted_at.
+        """
+        now = datetime.now(timezone.utc)
+        self.db.table(TABLE).update({
+            "daily_trip_count": 0,
+            "daily_halted_at": None,
+            "updated_at": now.isoformat(),
+        }).eq("id", SINGLETON_ID).execute()
+        logger.info("Daily halt cleared by /resume command.")
+
+    def _send_daily_halt_alert(self) -> None:
+        """
+        Send Telegram halt alert after 3 circuit breaker trips in one calendar day.
+        Includes /resume instructions so creator knows how to unblock the pipeline.
+        """
+        try:
+            from app.services.telegram import send_alert_sync
+            send_alert_sync(
+                "ALERTA: El pipeline ha sido detenido automaticamente despues de 3 intentos fallidos hoy. "
+                "Para reanudar, escribe /resume en el bot."
+            )
+        except Exception as e:
+            logger.warning(
+                "Failed to send daily halt alert: %s",
+                e,
+                extra={"pipeline_step": "circuit_breaker_halt", "content_history_id": ""},
+            )
+
     def midnight_reset(self) -> None:
         """
         Reset daily counters. Called by APScheduler at midnight America/Mexico_City.
         Does NOT reset weekly_trip_count or last_trip_at (rolling window must persist).
+        Clears daily halt state (daily_trip_count, daily_halted_at) for the new calendar day.
         """
         now = datetime.now(timezone.utc)
         self.db.table(TABLE).update({
             "current_day_cost": 0,
             "current_day_attempts": 0,
             "tripped_at": None,
+            "daily_trip_count": 0,
+            "daily_halted_at": None,
             "updated_at": now.isoformat(),
         }).eq("id", SINGLETON_ID).execute()
         logger.info("Circuit breaker daily counters reset at midnight.")
