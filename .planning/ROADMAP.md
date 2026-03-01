@@ -139,7 +139,13 @@ Plans:
   2. If a creator does not respond to the approval message within 24 hours, the system auto-skips that run, logs it, and schedules the next generation normally — no run hangs indefinitely
   3. When the daily generation circuit breaker fires three times in a day, the system halts, sends a Telegram alert, and requires the creator to manually resume — it does not loop
   4. Structured JSON logging is observable in Railway logs for every pipeline step — no silent failures; every error produces a log entry and a Telegram alert to the creator
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — E2E integration test: daily_pipeline_job() with real Anthropic + mocked HeyGen/Ayrshare/Telegram, content_history row assertions
+- [ ] 07-02-PLAN.md — Approval timeout: VideoStatus.APPROVAL_TIMEOUT, 24h DateTrigger job, last-chance message, stale-row cleanup at pipeline start
+- [ ] 07-03-PLAN.md — Daily halt circuit breaker (3 trips/day), migration 0007, /resume CommandHandler + wiring
+- [ ] 07-04-PLAN.md — JSON logging retrofit: logging_config.py (JSONFormatter + PipelineLogger), configure_logging() in main.py, pipeline_step/content_history_id across all stages
 
 ## Progress
 
@@ -154,4 +160,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Telegram Approval Loop | 5/5 | Complete   | 2026-02-25 |
 | 5. Multi-Platform Publishing | 5/5 | Complete   | 2026-02-25 |
 | 6. Analytics and Storage | 5/5 | Complete   | 2026-02-28 |
-| 7. Hardening | 0/TBD | Not started | - |
+| 7. Hardening | 0/4 | Not started | - |
