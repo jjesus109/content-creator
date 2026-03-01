@@ -40,10 +40,10 @@
 
 ### Publishing
 
-- [x] **PUBL-01**: Approved video is published to TikTok, Instagram Reels, Facebook Reels, and YouTube Shorts via a single Ayrshare API call
-- [x] **PUBL-02**: Publish is scheduled at peak engagement hours per platform, not immediately on approval
-- [x] **PUBL-03**: System verifies post-publish status on each platform 30 minutes after scheduled publish time
-- [x] **PUBL-04**: If Ayrshare publish fails, bot automatically sends the original video file and post copy to Telegram for immediate manual posting
+- [ ] **PUBL-01**: Approved video is published to TikTok, Instagram Reels, Facebook Reels, and YouTube Shorts via a single Ayrshare API call
+- [ ] **PUBL-02**: Publish is scheduled at peak engagement hours per platform, not immediately on approval
+- [ ] **PUBL-03**: System verifies post-publish status on each platform 30 minutes after scheduled publish time
+- [ ] **PUBL-04**: If Ayrshare publish fails, bot automatically sends the original video file and post copy to Telegram for immediate manual posting
 
 ### Analytics
 
@@ -57,6 +57,10 @@
 ### Voice
 
 - **VOICE-01**: ElevenLabs voice cloning integration (evaluate after confirming HeyGen native Spanish voice capability in Phase 3 — may be redundant)
+
+### Analytics
+
+- **ANLX-TKTOK-01**: TikTok OAuth route (`/auth/tiktok`) for automatic TikTok metrics token authorization — in v1, creator manually sets `TIKTOK_ACCESS_TOKEN` env var; TikTok metrics harvest is non-functional without it (v1 audit INT-02)
 
 ### Intelligence
 
@@ -104,10 +108,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TGAP-02 | Phase 4 | Complete |
 | TGAP-03 | Phase 4 | Complete |
 | TGAP-04 | Phase 4 | Complete |
-| PUBL-01 | Phase 5 | Complete |
-| PUBL-02 | Phase 5 | Complete |
-| PUBL-03 | Phase 5 | Complete |
-| PUBL-04 | Phase 5 | Complete |
+| PUBL-01 | Phase 5 + Phase 8 (verification) | Pending |
+| PUBL-02 | Phase 5 + Phase 8 (verification) | Pending |
+| PUBL-03 | Phase 5 + Phase 8 (verification) | Pending |
+| PUBL-04 | Phase 5 + Phase 8 (verification) | Pending |
 | ANLX-01 | Phase 6 | Complete |
 | ANLX-02 | Phase 6 | Complete |
 | ANLX-03 | Phase 6 | Complete |
@@ -117,7 +121,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 - v1 requirements: 26 total
 - Mapped to phases: 26
 - Unmapped: 0
-- Note: Phase 7 (Hardening) verifies all 26 requirements end-to-end; it introduces no new functional requirements
+- Pending re-verification: 4 (PUBL-01 through PUBL-04 — Phase 8 gap closure pending)
+- Note: Phase 7 (Hardening) verifies all 26 requirements end-to-end; Phase 8 (Milestone Closure) closes remaining audit gaps
 
 ---
 *Requirements defined: 2026-02-19*
