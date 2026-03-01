@@ -198,6 +198,7 @@ class AnalyticsService:
         logger.info(
             "Virality alert fired for content_history_id=%s platform=%s views=%d",
             content_history_id, platform, current_views,
+            extra={"pipeline_step": "virality_check", "content_history_id": content_history_id},
         )
         return True
 

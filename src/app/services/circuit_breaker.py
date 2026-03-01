@@ -50,7 +50,8 @@ class CircuitBreakerService:
 
         # Already tripped — fast path
         if state["tripped_at"] is not None:
-            logger.warning("Circuit breaker already tripped — rejecting attempt")
+            logger.warning("Circuit breaker already tripped — rejecting attempt",
+                           extra={"pipeline_step": "circuit_breaker", "content_history_id": ""})
             return False
 
         new_cost = float(state["current_day_cost"]) + cost_usd
@@ -61,6 +62,7 @@ class CircuitBreakerService:
             logger.warning(
                 "Circuit breaker tripping: cost=%.4f limit=%.4f attempts=%d limit=%d",
                 new_cost, self.cost_limit, new_attempts, self.attempt_limit,
+                extra={"pipeline_step": "circuit_breaker", "content_history_id": ""},
             )
             self._trip(state, new_cost, new_attempts)
             return False
@@ -95,7 +97,8 @@ class CircuitBreakerService:
             "updated_at": now.isoformat(),
         }).eq("id", SINGLETON_ID).execute()
 
-        logger.error("Circuit breaker tripped. weekly_count=%d", new_weekly_count)
+        logger.error("Circuit breaker tripped. weekly_count=%d", new_weekly_count,
+                     extra={"pipeline_step": "circuit_breaker", "content_history_id": ""})
 
         # Escalation alert if 2+ trips in rolling 7-day window
         if new_weekly_count >= 2:
@@ -111,6 +114,7 @@ class CircuitBreakerService:
         logger.warning(
             "Circuit breaker daily_trip_count=%d after this trip.",
             new_daily_trip_count,
+            extra={"pipeline_step": "circuit_breaker", "content_history_id": ""},
         )
 
         # Fire halt alert only on the 3rd trip AND only if not already halted
@@ -133,7 +137,8 @@ class CircuitBreakerService:
                 "Manual review required."
             )
         except Exception as e:
-            logger.error("Failed to send escalation alert: %s", e)
+            logger.error("Failed to send escalation alert: %s", e,
+                         extra={"pipeline_step": "circuit_breaker", "content_history_id": ""})
 
     def is_daily_halted(self) -> bool:
         """
@@ -144,7 +149,8 @@ class CircuitBreakerService:
             state = self.get_state()
             return state.get("daily_halted_at") is not None
         except Exception as e:
-            logger.error("is_daily_halted check failed (fail-open): %s", e)
+            logger.error("is_daily_halted check failed (fail-open): %s", e,
+                         extra={"pipeline_step": "circuit_breaker", "content_history_id": ""})
             return False
 
     def clear_daily_halt(self) -> None:
@@ -193,4 +199,5 @@ class CircuitBreakerService:
             "daily_halted_at": None,
             "updated_at": now.isoformat(),
         }).eq("id", SINGLETON_ID).execute()
-        logger.info("Circuit breaker daily counters reset at midnight.")
+        logger.info("Circuit breaker daily counters reset at midnight.",
+                    extra={"pipeline_step": "circuit_breaker", "content_history_id": ""})

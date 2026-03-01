@@ -67,7 +67,8 @@ class ScriptGenerationService:
             ).gt("expires_at", "now()").execute()
             return result.data or []
         except Exception as e:
-            logger.error("Failed to load rejection constraints: %s — proceeding without", e)
+            logger.error("Failed to load rejection constraints: %s — proceeding without", e,
+                         extra={"pipeline_step": "script_gen", "content_history_id": ""})
             return []
 
     def generate_topic_summary(
@@ -190,7 +191,8 @@ class ScriptGenerationService:
             logger.debug("Word count OK: %d words (target: %d)", _word_count(script), target_words)
             return script, 0.0
 
-        logger.info("Script over limit: %d words (target: %d) — summarizing", _word_count(script), target_words)
+        logger.info("Script over limit: %d words (target: %d) — summarizing", _word_count(script), target_words,
+                    extra={"pipeline_step": "script_gen", "content_history_id": ""})
 
         system = (
             "Eres un editor de guiones filosoficos en espanol neutro. "
@@ -224,7 +226,8 @@ class ScriptGenerationService:
                     break
             logger.warning(
                 "Summarization overshot: %d words (target: %d) — truncated to sentence boundary",
-                final_count, target_words
+                final_count, target_words,
+                extra={"pipeline_step": "script_gen", "content_history_id": ""},
             )
             summarized = truncated
 

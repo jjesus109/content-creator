@@ -85,7 +85,8 @@ class AudioProcessingService:
         """
         # Step 1 — Download HeyGen video bytes (blocking; correct in APScheduler
         # thread pool because there is no running event loop to contend with).
-        logger.info("Downloading HeyGen video from signed URL...")
+        logger.info("Downloading HeyGen video from signed URL...",
+                    extra={"pipeline_step": "audio_process", "content_history_id": ""})
         video_resp = requests.get(video_url, timeout=120)  # 2-min timeout for large files (200-500 MB)
         video_resp.raise_for_status()
         video_bytes = video_resp.content
@@ -129,7 +130,8 @@ class AudioProcessingService:
                 "-f", "mp4",
                 "pipe:1",                # Output processed MP4 to stdout
             ]
-            logger.info("Starting ffmpeg audio processing...")
+            logger.info("Starting ffmpeg audio processing...",
+                        extra={"pipeline_step": "audio_process", "content_history_id": ""})
             result = subprocess.run(
                 cmd,
                 input=video_bytes,
@@ -142,6 +144,7 @@ class AudioProcessingService:
                     "ffmpeg failed (exit %d): %s",
                     result.returncode,
                     stderr_text,
+                    extra={"pipeline_step": "audio_process", "content_history_id": ""},
                 )
                 raise RuntimeError(
                     f"ffmpeg exited with code {result.returncode}"
@@ -149,6 +152,7 @@ class AudioProcessingService:
             logger.info(
                 "ffmpeg processing complete. Output size: %d bytes",
                 len(result.stdout),
+                extra={"pipeline_step": "audio_process", "content_history_id": ""},
             )
             return result.stdout
         finally:

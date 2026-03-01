@@ -177,6 +177,7 @@ class ApprovalService:
             cause_code,
             pattern_type,
             expires_at,
+            extra={"pipeline_step": "approval_check", "content_history_id": ""},
         )
 
         self._supabase.table("rejection_constraints").insert(

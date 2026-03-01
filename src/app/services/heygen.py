@@ -57,6 +57,7 @@ def pick_background_url(last_used_url: str | None = None) -> str:
             "pick_background_url: filtered pool is empty after excluding last_used_url=%s; "
             "falling back to full pool",
             last_used_url,
+            extra={"pipeline_step": "heygen_submit", "content_history_id": ""},
         )
         available = pool
 
@@ -129,6 +130,7 @@ class HeyGenService:
             settings.heygen_avatar_id,
             settings.heygen_voice_id,
             background_url,
+            extra={"pipeline_step": "heygen_submit", "content_history_id": ""},
         )
 
         response = requests.post(HEYGEN_GENERATE_URL, json=payload, headers=headers, timeout=30)
@@ -137,7 +139,8 @@ class HeyGenService:
         data = response.json()
         video_id: str = data["data"]["video_id"]
 
-        logger.info("HeyGen render submitted: video_id=%s", video_id)
+        logger.info("HeyGen render submitted: video_id=%s", video_id,
+                    extra={"pipeline_step": "heygen_submit", "content_history_id": ""})
         return video_id
 
 
@@ -174,7 +177,8 @@ def _process_completed_render(video_id: str, heygen_signed_url: str) -> None:
         return
 
     try:
-        logger.info("Processing completed render: video_id=%s", video_id)
+        logger.info("Processing completed render: video_id=%s", video_id,
+                    extra={"pipeline_step": "video_process", "content_history_id": ""})
 
         # ffmpeg: download video + music, apply EQ + mix, return processed bytes
         audio_svc = AudioProcessingService()
@@ -190,7 +194,8 @@ def _process_completed_render(video_id: str, heygen_signed_url: str) -> None:
             "video_status": VideoStatus.READY.value,
         }).eq("heygen_job_id", video_id).execute()
 
-        logger.info("Video ready: video_id=%s stable_url=%s", video_id, stable_url)
+        logger.info("Video ready: video_id=%s stable_url=%s", video_id, stable_url,
+                    extra={"pipeline_step": "video_process", "content_history_id": ""})
         # Retrieve the content_history id for the approval message callback_data
         id_result = supabase.table("content_history").select("id").eq("heygen_job_id", video_id).single().execute()
         content_history_id = id_result.data["id"]
@@ -198,7 +203,8 @@ def _process_completed_render(video_id: str, heygen_signed_url: str) -> None:
         send_approval_message_sync(content_history_id=content_history_id, video_url=stable_url)
 
     except Exception as exc:
-        logger.error("Error processing render video_id=%s: %s", video_id, exc)
+        logger.error("Error processing render video_id=%s: %s", video_id, exc,
+                     extra={"pipeline_step": "video_process", "content_history_id": ""})
         supabase.table("content_history").update(
             {"video_status": VideoStatus.FAILED.value}
         ).eq("heygen_job_id", video_id).execute()
@@ -217,4 +223,5 @@ def _handle_render_failure(video_id: str, error_msg: str) -> None:
         f"Render HeyGen fallido para video_id={video_id}: {error_msg}. "
         "Revisa manualmente o acepta saltarte el video de hoy."
     )
-    logger.error("HeyGen render failed: video_id=%s error=%s", video_id, error_msg)
+    logger.error("HeyGen render failed: video_id=%s error=%s", video_id, error_msg,
+                 extra={"pipeline_step": "heygen_poll", "content_history_id": ""})

@@ -71,5 +71,6 @@ class VideoStorageService:
         )
 
         public_url: str = self.supabase.storage.from_(VIDEO_BUCKET).get_public_url(file_path)
-        logger.info("Uploaded video to Supabase Storage: %s", public_url)
+        logger.info("Uploaded video to Supabase Storage: %s", public_url,
+                    extra={"pipeline_step": "video_upload", "content_history_id": ""})
         return public_url

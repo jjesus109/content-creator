@@ -54,7 +54,8 @@ class StorageLifecycleService:
             "storage_status": "warm",
             "storage_tier_set_at": datetime.now(timezone.utc).isoformat(),
         }).eq("id", content_history_id).execute()
-        logger.info("Transitioned to warm (DB only): content_history_id=%s", content_history_id[:8])
+        logger.info("Transitioned to warm (DB only): content_history_id=%s", content_history_id[:8],
+                    extra={"pipeline_step": "storage_lifecycle", "content_history_id": content_history_id})
 
     # ------------------------------------------------------------------
     # Cold deletion — delete file from Supabase Storage; keep DB record
@@ -80,6 +81,7 @@ class StorageLifecycleService:
             logger.warning(
                 "No video_url found for content_history_id=%s — skipping Supabase deletion",
                 content_history_id[:8],
+                extra={"pipeline_step": "storage_lifecycle", "content_history_id": content_history_id},
             )
             return
 
@@ -98,11 +100,13 @@ class StorageLifecycleService:
         try:
             supabase.storage.from_(bucket).remove([storage_path])
             logger.info(
-                "Deleted from Supabase Storage: bucket=%s path=%s", bucket, storage_path
+                "Deleted from Supabase Storage: bucket=%s path=%s", bucket, storage_path,
+                extra={"pipeline_step": "storage_lifecycle", "content_history_id": content_history_id},
             )
         except Exception as exc:
             logger.error(
-                "Supabase Storage delete failed for %s: %s", content_history_id[:8], exc
+                "Supabase Storage delete failed for %s: %s", content_history_id[:8], exc,
+                extra={"pipeline_step": "storage_lifecycle", "content_history_id": content_history_id},
             )
             raise
 
@@ -113,7 +117,8 @@ class StorageLifecycleService:
             "storage_tier_set_at": datetime.now(timezone.utc).isoformat(),
         }).eq("id", content_history_id).execute()
         logger.info(
-            "Marked storage_status=deleted in DB: content_history_id=%s", content_history_id[:8]
+            "Marked storage_status=deleted in DB: content_history_id=%s", content_history_id[:8],
+            extra={"pipeline_step": "storage_lifecycle", "content_history_id": content_history_id},
         )
 
     # ------------------------------------------------------------------
@@ -159,7 +164,8 @@ class StorageLifecycleService:
         # No DB update needed here — lifecycle job query handles idempotency via:
         # storage_status='warm' AND deletion_requested_at IS NULL AND age BETWEEN 38-44 days.
         logger.info(
-            "Sent 7-day pre-deletion warning for content_history_id=%s", content_history_id[:8]
+            "Sent 7-day pre-deletion warning for content_history_id=%s", content_history_id[:8],
+            extra={"pipeline_step": "storage_lifecycle", "content_history_id": content_history_id},
         )
 
     # ------------------------------------------------------------------
@@ -208,7 +214,8 @@ class StorageLifecycleService:
             "storage_status": "pending_deletion",
         }).eq("id", content_history_id).execute()
         logger.info(
-            "Deletion confirmation requested for content_history_id=%s", content_history_id[:8]
+            "Deletion confirmation requested for content_history_id=%s", content_history_id[:8],
+            extra={"pipeline_step": "storage_lifecycle", "content_history_id": content_history_id},
         )
 
     # ------------------------------------------------------------------
@@ -250,6 +257,7 @@ class StorageLifecycleService:
             }).eq("id", content_history_id).execute()
 
         logger.info(
-            "Reset %d expired deletion requests back to warm storage_status", count
+            "Reset %d expired deletion requests back to warm storage_status", count,
+            extra={"pipeline_step": "storage_lifecycle", "content_history_id": ""},
         )
         return count

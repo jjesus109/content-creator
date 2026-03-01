@@ -46,7 +46,8 @@ class MetricsService:
         }
         fetcher = platform_map.get(platform)
         if not fetcher:
-            logger.warning("Unknown platform: %s", platform)
+            logger.warning("Unknown platform: %s", platform,
+                       extra={"pipeline_step": "metrics_harvest", "content_history_id": content_history_id})
             return None
 
         try:
@@ -55,6 +56,7 @@ class MetricsService:
             logger.error(
                 "Failed to fetch metrics for platform=%s post_id=%s: %s",
                 platform, external_post_id, exc,
+                extra={"pipeline_step": "metrics_harvest", "content_history_id": content_history_id},
             )
             return None
 
@@ -72,6 +74,7 @@ class MetricsService:
             logger.error(
                 "Failed to insert platform_metrics row for platform=%s: %s",
                 platform, exc,
+                extra={"pipeline_step": "metrics_harvest", "content_history_id": content_history_id},
             )
             return None
 
@@ -105,7 +108,8 @@ class MetricsService:
         items = response.json().get("items", [])
 
         if not items:
-            logger.warning("YouTube: no items for video_id=%s", video_id)
+            logger.warning("YouTube: no items for video_id=%s", video_id,
+                       extra={"pipeline_step": "metrics_harvest", "content_history_id": ""})
             return {"views": 0, "likes": 0, "comments": 0, "retention_rate": None}
 
         stats = items[0].get("statistics", {})
@@ -134,7 +138,8 @@ class MetricsService:
                 retention_rate = float(rows[0][1])
         except Exception as exc:
             logger.warning(
-                "YouTube Analytics partial harvest for video_id=%s: %s", video_id, exc
+                "YouTube Analytics partial harvest for video_id=%s: %s", video_id, exc,
+                extra={"pipeline_step": "metrics_harvest", "content_history_id": ""},
             )
 
         return {
@@ -174,6 +179,7 @@ class MetricsService:
                 "Instagram: empty insights data for media_id=%s "
                 "(account may be under 1,000 followers or API unavailable)",
                 media_id,
+                extra={"pipeline_step": "metrics_harvest", "content_history_id": ""},
             )
             return {
                 "views":          None,
@@ -188,6 +194,7 @@ class MetricsService:
         logger.warning(
             "Instagram: retention_rate not available via Graph API for media_id=%s — partial harvest",
             media_id,
+            extra={"pipeline_step": "metrics_harvest", "content_history_id": ""},
         )
         return {
             "views":          parsed.get("views"),
@@ -212,7 +219,8 @@ class MetricsService:
         """
         s = self._settings
         if not s.tiktok_access_token:
-            logger.warning("TikTok access token not configured — skipping harvest")
+            logger.warning("TikTok access token not configured — skipping harvest",
+                           extra={"pipeline_step": "metrics_harvest", "content_history_id": ""})
             return {"views": None, "likes": None, "shares": None, "retention_rate": None}
 
         response = requests.post(
@@ -233,7 +241,8 @@ class MetricsService:
         response.raise_for_status()
         data_list = response.json().get("data", {}).get("videos", [])
         if not data_list:
-            logger.warning("TikTok: no video data returned for video_id=%s", video_id)
+            logger.warning("TikTok: no video data returned for video_id=%s", video_id,
+                           extra={"pipeline_step": "metrics_harvest", "content_history_id": ""})
             return {"views": None, "likes": None, "shares": None, "retention_rate": None}
 
         video_data = data_list[0]
@@ -242,6 +251,7 @@ class MetricsService:
             "TikTok: retention_rate not computable (video_duration absent in query response) "
             "for video_id=%s — partial harvest",
             video_id,
+            extra={"pipeline_step": "metrics_harvest", "content_history_id": ""},
         )
         return {
             "views":          video_data.get("view_count"),
@@ -265,7 +275,8 @@ class MetricsService:
         """
         s = self._settings
         if not s.facebook_access_token:
-            logger.warning("Facebook access token not configured — skipping harvest")
+            logger.warning("Facebook access token not configured — skipping harvest",
+                           extra={"pipeline_step": "metrics_harvest", "content_history_id": ""})
             return {"views": None, "shares": None, "retention_rate": None}
 
         # --- Insights: views and retention components ---
@@ -293,6 +304,7 @@ class MetricsService:
             logger.warning(
                 "Facebook: retention_rate not computable for media_id=%s — partial harvest",
                 media_id,
+                extra={"pipeline_step": "metrics_harvest", "content_history_id": ""},
             )
 
         # --- Shares: separate endpoint ---
@@ -313,6 +325,7 @@ class MetricsService:
             logger.warning(
                 "Facebook: shares fetch failed for media_id=%s — partial harvest: %s",
                 media_id, exc,
+                extra={"pipeline_step": "metrics_harvest", "content_history_id": ""},
             )
 
         return {
