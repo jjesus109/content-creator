@@ -18,6 +18,7 @@ def daily_pipeline_job() -> None:
     Daily script generation pipeline — registered as 'daily_pipeline_trigger' in registry.py.
 
     Execution order:
+    0. Mark any unanswered 'ready' rows from previous pipeline runs as approval_timeout
     1. Circuit breaker check (abort if tripped)
     2. Load current week's mood profile (defaults if none set)
     3. For each attempt (max 3):
@@ -29,6 +30,9 @@ def daily_pipeline_job() -> None:
        f. Submit to HeyGen, save to content_history with embedding + heygen_job_id, register poller
     4. If all retries exhausted — send creator alert
     """
+    # Step 0: Mark any unanswered 'ready' rows from previous pipeline runs as approval_timeout
+    _expire_stale_approvals()
+
     supabase = get_supabase()
     cb = CircuitBreakerService(supabase)
 
@@ -177,6 +181,53 @@ def _save_to_content_history(
     except Exception as e:
         logger.error("Failed to save script to content_history: %s", e)
         send_alert_sync(f"Script generado pero no guardado en DB: {e}. Revisa manualmente.")
+
+
+def _expire_stale_approvals() -> None:
+    """
+    Mark any content_history rows with video_status='ready' that have no corresponding
+    approval_events row as 'approval_timeout'. Called at the start of every pipeline run.
+
+    This prevents the pipeline from hanging indefinitely on unanswered approvals.
+    Keeps queries simple: fetch ready IDs, then check each for approval_events individually.
+    Supabase Python client has no JOIN query support, so we iterate IDs in a loop.
+    """
+    from app.models.video import VideoStatus
+
+    supabase = get_supabase()
+
+    # Fetch all content_history rows with video_status='ready'
+    ready_result = (
+        supabase.table("content_history")
+        .select("id")
+        .eq("video_status", VideoStatus.READY.value)
+        .execute()
+    )
+    if not ready_result.data:
+        return
+
+    for row in ready_result.data:
+        content_history_id = row["id"]
+
+        # Check if there is a corresponding approval_events row
+        events_result = (
+            supabase.table("approval_events")
+            .select("id")
+            .eq("content_history_id", content_history_id)
+            .execute()
+        )
+        if events_result.data:
+            # Creator already responded — leave status as-is
+            continue
+
+        # No approval event found — mark as approval_timeout
+        supabase.table("content_history").update(
+            {"video_status": VideoStatus.APPROVAL_TIMEOUT.value}
+        ).eq("id", content_history_id).execute()
+        logger.info(
+            "Marking content_history %s as approval_timeout — no creator response.",
+            content_history_id,
+        )
 
 
 def trigger_immediate_rerun() -> None:

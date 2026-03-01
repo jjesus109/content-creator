@@ -192,6 +192,7 @@ def send_approval_message_sync(content_history_id: str, video_url: str) -> None:
     """
     Sync wrapper for APScheduler thread pool / executor context.
     Same pattern as send_alert_sync(). Called from _process_completed_render().
+    After sending the approval message, schedules a 24h timeout job.
     """
     try:
         loop = asyncio.get_event_loop()
@@ -204,18 +205,25 @@ def send_approval_message_sync(content_history_id: str, video_url: str) -> None:
     except RuntimeError:
         asyncio.run(send_approval_message(content_history_id, video_url))
 
+    # Schedule 24h approval timeout job — lazy import avoids circular import
+    from app.scheduler.jobs.approval_timeout import schedule_approval_timeout
+    schedule_approval_timeout(content_history_id)
+    logger.info("Approval timeout job scheduled for content_history_id=%s", content_history_id[:8])
+
 
 async def send_publish_confirmation(
     content_history_id: str,
     scheduled_times: dict,
+    video_url: str = "",
+    tiktok_copy: str = "",
 ) -> None:
     """
     Send a separate follow-up message after creator approves listing per-platform schedule times.
-    scheduled_times: dict mapping platform -> UTC datetime of scheduled publish.
+    scheduled_times: dict mapping platform -> UTC datetime of scheduled publish (auto platforms only).
+    TikTok is manual — skip from schedule list, append a manual-posting block instead.
     (CONTEXT.md locked decision: original approval message is not edited — this is a new message.)
     """
     from app.settings import get_settings
-    from datetime import timezone as tz_module
     import pytz
 
     bot = get_telegram_bot()
@@ -223,14 +231,13 @@ async def send_publish_confirmation(
     audience_tz = pytz.timezone(settings.audience_timezone)
 
     PLATFORM_EMOJI = {
-        "tiktok": "🎵 TikTok",
         "instagram": "📷 Instagram",
-        "facebook": "🟦 Facebook",
-        "youtube": "▶️ YouTube",
+        "facebook":  "🟦 Facebook",
+        "youtube":   "▶️ YouTube",
     }
 
     lines = ["✅ Aprobado. Publicaciones programadas:\n"]
-    for platform in ["tiktok", "instagram", "facebook", "youtube"]:
+    for platform in ["instagram", "facebook", "youtube"]:
         if platform in scheduled_times:
             sched_utc = scheduled_times[platform]
             sched_local = sched_utc.astimezone(audience_tz)
@@ -239,24 +246,39 @@ async def send_publish_confirmation(
             lines.append(f"{label}: {day} {sched_local.strftime('%I:%M %p')}")
 
     lines.append(f"\n(Hora en {settings.audience_timezone})")
+
+    # TikTok manual posting block
+    if tiktok_copy:
+        lines.append("\n---")
+        lines.append("🎵 TikTok — Publicación manual:")
+        if video_url:
+            lines.append(f"Video: {video_url}")
+        copy_preview = tiktok_copy[:300] + ("..." if len(tiktok_copy) > 300 else "")
+        lines.append(f"Copy: {copy_preview}")
+
     message = "\n".join(lines)
 
     await bot.send_message(chat_id=settings.telegram_creator_id, text=message)
     logger.info("Publish confirmation sent for content_history_id=%s", content_history_id)
 
 
-def send_publish_confirmation_sync(content_history_id: str, scheduled_times: dict) -> None:
+def send_publish_confirmation_sync(
+    content_history_id: str,
+    scheduled_times: dict,
+    video_url: str = "",
+    tiktok_copy: str = "",
+) -> None:
     """Sync wrapper for APScheduler/async approval handler context."""
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
             asyncio.run_coroutine_threadsafe(
-                send_publish_confirmation(content_history_id, scheduled_times), loop
+                send_publish_confirmation(content_history_id, scheduled_times, video_url, tiktok_copy), loop
             )
         else:
-            loop.run_until_complete(send_publish_confirmation(content_history_id, scheduled_times))
+            loop.run_until_complete(send_publish_confirmation(content_history_id, scheduled_times, video_url, tiktok_copy))
     except RuntimeError:
-        asyncio.run(send_publish_confirmation(content_history_id, scheduled_times))
+        asyncio.run(send_publish_confirmation(content_history_id, scheduled_times, video_url, tiktok_copy))
 
 
 async def send_platform_success(platform: str, content_history_id: str) -> None:

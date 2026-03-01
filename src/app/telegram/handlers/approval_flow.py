@@ -66,6 +66,15 @@ async def handle_approve(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     content_history_id = query.data[len(PREFIX_APPROVE):]
 
+    # Cancel the 24h approval timeout job — non-fatal if already fired or not found
+    from app.scheduler.jobs.approval_timeout import _scheduler as _approval_timeout_scheduler
+    try:
+        if _approval_timeout_scheduler is not None:
+            _approval_timeout_scheduler.remove_job(f"approval_timeout_{content_history_id}")
+            logger.info("Approval timeout job cancelled for %s", content_history_id[:8])
+    except Exception:
+        pass  # Job may have already fired or ID not found — non-fatal
+
     # Local import — prevents circular import at module load time
     from app.services.approval import ApprovalService
     approval_svc = ApprovalService()
@@ -86,9 +95,10 @@ async def handle_approve(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     supabase = get_supabase()
     video_row = supabase.table("content_history").select(
-        "video_url"
+        "video_url, post_copy_tiktok"
     ).eq("id", content_history_id).single().execute()
     video_url = video_row.data.get("video_url", "")
+    tiktok_copy = video_row.data.get("post_copy_tiktok", "") or ""
 
     # Get scheduler from FastAPI app state (same pattern as registry.py)
     from app.services.telegram import _fastapi_app
@@ -103,7 +113,7 @@ async def handle_approve(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     )
 
     # Confirmation message: separate message (CONTEXT.md: original approval message stays unchanged)
-    send_publish_confirmation_sync(content_history_id, scheduled_times)
+    send_publish_confirmation_sync(content_history_id, scheduled_times, video_url=video_url, tiktok_copy=tiktok_copy)
 
     logger.info("Approved and publish jobs scheduled: content_history_id=%s", content_history_id)
 

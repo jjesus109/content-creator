@@ -6,6 +6,7 @@ from app.scheduler.jobs.cb_reset import cb_reset_job
 from app.scheduler.jobs.weekly_mood import weekly_mood_prompt_job, weekly_mood_reminder_job
 from app.scheduler.jobs.video_poller import set_scheduler
 from app.scheduler.jobs.platform_publish import set_scheduler as set_publish_scheduler
+from app.scheduler.jobs.approval_timeout import set_scheduler as set_approval_timeout_scheduler
 from app.scheduler.jobs.weekly_report import weekly_analytics_report_job
 from app.scheduler.jobs.storage_lifecycle import storage_lifecycle_job
 from app.settings import get_settings
@@ -28,7 +29,8 @@ def register_jobs(scheduler: BackgroundScheduler) -> None:
     # Module-level reference avoids lambda/closure serialization failures with SQLAlchemyJobStore.
     set_scheduler(scheduler)
     set_publish_scheduler(scheduler)
-    logger.info("Injected scheduler into platform_publish module.")
+    set_approval_timeout_scheduler(scheduler)
+    logger.info("Injected scheduler into platform_publish and approval_timeout modules.")
 
     # Daily pipeline trigger at 7 AM Mexico City (INFRA-03, SCRP-01–SCRP-04)
     scheduler.add_job(
