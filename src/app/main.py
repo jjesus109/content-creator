@@ -12,12 +12,9 @@ from app.routes.webhooks import router as webhooks_router
 from app.telegram.app import build_telegram_app, start_telegram_polling, stop_telegram_polling
 from app.services.telegram import set_fastapi_app
 
-# Configure structured logging for Railway
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
-)
-logging.getLogger("httpx").setLevel(logging.WARNING)
+from app.logging_config import configure_logging
+
+configure_logging()
 logger = logging.getLogger(__name__)
 
 
