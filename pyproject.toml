@@ -30,3 +30,8 @@ packages = ["src/app"]
 dev = [
     "pytest>=8.0",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "e2e: end-to-end integration tests that require live credentials (deselect with '-m not e2e')",
+]
