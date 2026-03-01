@@ -1,3 +1,16 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+last_updated: "2026-03-01T07:04:54.804Z"
+progress:
+  total_phases: 7
+  completed_phases: 6
+  total_plans: 33
+  completed_plans: 31
+---
+
 # Project State
 
 ## Project Reference
@@ -5,16 +18,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 6 (Analytics and Storage) — In Progress — 5/5 plans done
+**Current focus:** Phase 7 (Hardening) — In Progress — 1/4 plans done
 
 ## Current Position
 
-Phase: 6 of 7 (Analytics and Storage) — Complete
-Plan: 5 of 5 in current phase — 06-05 complete
-Status: 06-05 complete — weekly_analytics_report_job (Sun 9 AM) + storage_lifecycle_job (daily 2 AM) created and registered in registry.py
-Last activity: 2026-02-28 — 06-05 executed: weekly report and storage lifecycle cron jobs
+Phase: 7 of 7 (Hardening) — In Progress
+Plan: 1 of 4 in current phase — 07-01 complete
+Status: 07-01 complete — E2E integration test (test_phase07_e2e.py) created with mocked HeyGen/Telegram and real Anthropic, pytest.mark.e2e registered
+Last activity: 2026-03-01 — 07-01 executed: E2E integration test for full pipeline chain
 
-Progress: [████████████████████] 80% (Phases 1-6 complete, Phase 7 not started)
+Progress: [█████████████████████] 82% (Phases 1-6 complete, Phase 7 in progress 1/4)
 
 ## Performance Metrics
 
@@ -51,6 +64,8 @@ Progress: [████████████████████] 80% (Ph
 | Phase 06 P03 | 2 | 2 tasks | 3 files |
 | Phase 06 P04 | 4 | 2 tasks | 2 files |
 | Phase 06-analytics-and-storage P05 | 1 | 2 tasks | 3 files |
+| Phase 07-hardening P01 | 6 | 1 tasks | 2 files |
+| Phase 07-hardening P02 | 2 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -170,6 +185,14 @@ Recent decisions affecting current work:
 - [Phase 06-analytics-and-storage]: asyncio.run() used in storage_lifecycle_job to bridge async StorageLifecycleService methods — APScheduler ThreadPoolExecutor has no event loop (different from send_alert_sync which uses run_coroutine_threadsafe when FastAPI loop exists)
 - [Phase 06-analytics-and-storage]: storage_lifecycle_job never deletes files directly — actual deletion only on stor_confirm: Telegram handler tap (Plan 06-03)
 - [Phase 06-analytics-and-storage]: is_viral=False and is_eternal=False guards in all three transition queries — exempt videos never transitioned
+- [Phase 07-01]: Patch HeyGenService at app.services.heygen.HeyGenService (source module) — lazy import inside daily_pipeline_job() body requires source-path patching per Python mock "patch where looked up" rule
+- [Phase 07-01]: pytest.mark.e2e registered in pyproject.toml [tool.pytest.ini_options] — prevents PytestUnknownMarkWarning and enables --strict-markers compatibility
+- [Phase 07-01]: clear_lru_cache autouse fixture calls get_settings.cache_clear() after each test — prevents stale cached Settings from leaking between E2E test runs (Pitfall 7)
+- [Phase 07-01]: All four externals mocked in mock_all_externals fixture: HeyGenService, register_video_poller, send_alert_sync, send_approval_message_sync — incomplete mocking causes APScheduler RuntimeError (Pitfall 6)
+- [Phase 07-hardening]: APPROVAL_TIMEOUT enum value added before DB migration — daily_pipeline_job can reference status before Plan 03 adds DB CHECK constraint
+- [Phase 07-hardening]: schedule_approval_timeout uses lazy import inside send_approval_message_sync body to break circular import through telegram.py
+- [Phase 07-hardening]: handle_approve wraps remove_job in broad except — APScheduler JobLookupError must not stop the approval flow
+- [Phase 07-hardening]: _expire_stale_approvals iterates ready IDs individually rather than JOIN — Supabase Python client has no JOIN query support
 
 ### Pending Todos
 
@@ -185,6 +208,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-28
-Stopped at: Completed 06-03-PLAN.md — StorageLifecycleService + storage Telegram handlers (confirm, cancel, eternal, warn_ok)
+Last session: 2026-03-01
+Stopped at: Completed 07-01-PLAN.md — E2E integration test (test_phase07_e2e.py) with real Anthropic + mocked HeyGen/Telegram
 Resume file: None
