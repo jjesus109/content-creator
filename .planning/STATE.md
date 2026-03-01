@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T07:04:54.804Z"
+last_updated: "2026-03-01T07:03:54Z"
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 33
-  completed_plans: 31
+  completed_plans: 32
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 7 (Hardening) — In Progress — 1/4 plans done
+**Current focus:** Phase 7 (Hardening) — In Progress — 2/4 plans done
 
 ## Current Position
 
 Phase: 7 of 7 (Hardening) — In Progress
-Plan: 1 of 4 in current phase — 07-01 complete
-Status: 07-01 complete — E2E integration test (test_phase07_e2e.py) created with mocked HeyGen/Telegram and real Anthropic, pytest.mark.e2e registered
-Last activity: 2026-03-01 — 07-01 executed: E2E integration test for full pipeline chain
+Plan: 2 of 4 in current phase — 07-02 complete
+Status: 07-02 complete — approval timeout flow: VideoStatus.APPROVAL_TIMEOUT, approval_timeout.py job, _expire_stale_approvals at pipeline startup, handle_approve cancellation, registry wired
+Last activity: 2026-03-01 — 07-02 executed: 24h approval timeout job + pipeline stale-row cleanup
 
-Progress: [█████████████████████] 82% (Phases 1-6 complete, Phase 7 in progress 1/4)
+Progress: [█████████████████████] 85% (Phases 1-6 complete, Phase 7 in progress 2/4)
 
 ## Performance Metrics
 
