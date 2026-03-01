@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 7 (Hardening) — In Progress — 2/4 plans done
+**Current focus:** Phase 7 (Hardening) — In Progress — 3/4 plans done
 
 ## Current Position
 
 Phase: 7 of 7 (Hardening) — In Progress
-Plan: 2 of 4 in current phase — 07-02 complete
-Status: 07-02 complete — approval timeout flow: VideoStatus.APPROVAL_TIMEOUT, approval_timeout.py job, _expire_stale_approvals at pipeline startup, handle_approve cancellation, registry wired
-Last activity: 2026-03-01 — 07-02 executed: 24h approval timeout job + pipeline stale-row cleanup
+Plan: 3 of 4 in current phase — 07-03 complete
+Status: 07-03 complete — CircuitBreakerService daily halt (3 trips/day) + /resume Telegram command + daily_pipeline_job guard + migration 0007
+Last activity: 2026-03-01 — 07-03 executed: daily halt logic, /resume handler, and pipeline halt guard
 
-Progress: [█████████████████████] 85% (Phases 1-6 complete, Phase 7 in progress 2/4)
+Progress: [█████████████████████] 87% (Phases 1-6 complete, Phase 7 in progress 3/4)
 
 ## Performance Metrics
 
@@ -192,6 +192,11 @@ Recent decisions affecting current work:
 - [Phase 07-hardening]: APPROVAL_TIMEOUT enum value added before DB migration — daily_pipeline_job can reference status before Plan 03 adds DB CHECK constraint
 - [Phase 07-hardening]: schedule_approval_timeout uses lazy import inside send_approval_message_sync body to break circular import through telegram.py
 - [Phase 07-hardening]: handle_approve wraps remove_job in broad except — APScheduler JobLookupError must not stop the approval flow
+- [Phase 07-03]: daily_trip_count incremented in _trip() after weekly escalation logic — separate DB UPDATE keeps atomic escalation update distinct from daily state update
+- [Phase 07-03]: Halt alert fires only at new_daily_trip_count >= 3 AND already_halted is False — prevents duplicate halt alerts if circuit breaker fires more than 3 times in a day
+- [Phase 07-03]: is_daily_halted() fails open (returns False) on DB exception — pipeline availability over halt enforcement when DB is unreachable
+- [Phase 07-03]: No confirmation message sent to creator after /resume — CONTEXT.md locked decision
+- [Phase 07-03]: midnight_reset includes daily_trip_count=0 + daily_halted_at=NULL — new calendar day always starts clean regardless of prior day halt state
 - [Phase 07-hardening]: _expire_stale_approvals iterates ready IDs individually rather than JOIN — Supabase Python client has no JOIN query support
 
 ### Pending Todos
@@ -209,5 +214,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 07-01-PLAN.md — E2E integration test (test_phase07_e2e.py) with real Anthropic + mocked HeyGen/Telegram
+Stopped at: Completed 07-03-PLAN.md — CircuitBreakerService daily halt (3 trips/day), /resume Telegram command, daily_pipeline_job halt guard, migration 0007
 Resume file: None

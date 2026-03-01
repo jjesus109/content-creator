@@ -143,8 +143,8 @@ Plans:
 
 Plans:
 - [x] 07-01-PLAN.md — E2E integration test: daily_pipeline_job() with real Anthropic + mocked HeyGen/Ayrshare/Telegram, content_history row assertions
-- [ ] 07-02-PLAN.md — Approval timeout: VideoStatus.APPROVAL_TIMEOUT, 24h DateTrigger job, last-chance message, stale-row cleanup at pipeline start
-- [ ] 07-03-PLAN.md — Daily halt circuit breaker (3 trips/day), migration 0007, /resume CommandHandler + wiring
+- [x] 07-02-PLAN.md — Approval timeout: VideoStatus.APPROVAL_TIMEOUT, 24h DateTrigger job, last-chance message, stale-row cleanup at pipeline start
+- [x] 07-03-PLAN.md — Daily halt circuit breaker (3 trips/day), migration 0007, /resume CommandHandler + wiring
 - [ ] 07-04-PLAN.md — JSON logging retrofit: logging_config.py (JSONFormatter + PipelineLogger), configure_logging() in main.py, pipeline_step/content_history_id across all stages
 
 ## Progress
