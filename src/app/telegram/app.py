@@ -23,6 +23,8 @@ def build_telegram_app() -> Application:
     register_mood_handlers(app)
     register_approval_handlers(app)   # Phase 4: approval flow callbacks
     register_storage_handlers(app)    # Phase 6: storage lifecycle callbacks
+    from app.telegram.handlers.resume_flow import register_resume_handler
+    register_resume_handler(app)      # Phase 7: /resume command — clears daily halt
     return app
 
 

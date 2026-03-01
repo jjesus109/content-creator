@@ -42,6 +42,13 @@ def daily_pipeline_job() -> None:
         send_alert_sync("Pipeline diario omitido: el circuit breaker esta activo. Revisa el gasto del dia.")
         return
 
+    if cb.is_daily_halted():
+        logger.warning(
+            "daily_pipeline_job: circuit breaker daily halt active — skipping. Send /resume to unblock.",
+            extra={"pipeline_step": "pipeline_halt_check", "content_history_id": ""},
+        )
+        return
+
     # Step 2: Load mood profile
     mood = MoodService(supabase).get_current_week_mood()
     target_words = mood["target_words"]
