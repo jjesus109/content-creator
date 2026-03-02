@@ -62,6 +62,15 @@
 
 - **ANLX-TKTOK-01**: TikTok OAuth route (`/auth/tiktok`) for automatic TikTok metrics token authorization — in v1, creator manually sets `TIKTOK_ACCESS_TOKEN` env var; TikTok metrics harvest is non-functional without it (v1 audit INT-02)
 
+**TikTok Design Decision (v1 closure):**
+TikTok publishing in v1 is intentionally manual: `MANUAL_PLATFORMS = {"tiktok"}` in `src/app/services/publishing.py`.
+The system generates TikTok copy via `PostCopyService.generate_platform_variants()` and delivers it to the creator
+in the Telegram approval message; the creator posts manually. No TikTok API publishing route is implemented.
+
+TikTok metrics collection (`_fetch_tiktok()` in MetricsService) degrades gracefully when `TIKTOK_ACCESS_TOKEN`
+is empty string (the default). This is acceptable v1 behavior — TikTok OAuth (`/auth/tiktok`) is a v2 feature
+tracked as `ANLX-TKTOK-01`. Audit gap INT-02 is **closed by design decision**.
+
 ### Intelligence
 
 - **INTL-01**: Virality alert automatically extracts format fingerprint of breakout video for next generation cycle (manual process in v1)
@@ -121,8 +130,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 - v1 requirements: 26 total
 - Mapped to phases: 26
 - Unmapped: 0
-- Pending re-verification: 4 (PUBL-01 through PUBL-04 — Phase 8 gap closure pending)
-- Note: Phase 7 (Hardening) verifies all 26 requirements end-to-end; Phase 8 (Milestone Closure) closes remaining audit gaps
+- Pending re-verification: 0 (PUBL-01 through PUBL-04 — closed by Phase 8 VERIFICATION.md)
+- Note: Phase 7 (Hardening) verifies all 26 requirements end-to-end; Phase 8 (Milestone Closure) closed all audit gaps — audit INT-02 closed by TikTok design decision above
 
 ---
 *Requirements defined: 2026-02-19*
