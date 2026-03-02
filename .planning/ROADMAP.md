@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 5. Multi-Platform Publishing | 5/5 | Complete   | 2026-02-25 |
 | 6. Analytics and Storage | 5/5 | Complete   | 2026-02-28 |
 | 7. Hardening | 3/4 | In Progress|  |
-| 8. Milestone Closure | 3/3 | Complete   | 2026-03-02 |
+| 8. Milestone Closure | 3/3 | Complete    | 2026-03-02 |
 
 ### Phase 8: Milestone Closure
 **Goal:** Close all v1 audit gaps — formal verification of Phase 5, test integrity fix, and code hygiene — so `/gsd:audit-milestone` returns `passed`
