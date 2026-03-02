@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 8 (Milestone Closure) — Plan 02 complete
+**Current focus:** Phase 8 (Milestone Closure) — Plans 01, 02, 03 complete; all audit gaps closed
 
 ## Current Position
 
-Phase: 8 of 8 (Milestone Closure) — In progress
-Plan: 2 of N in current phase — 08-02 complete
-Status: 08-02 complete — Second E2E test (test_render_completion_sends_approval_message) added to tests/test_phase07_e2e.py; mock_render_completion_externals fixture patches AudioProcessingService, VideoStorageService, send_approval_message_sync; FLOW-01 audit gap closed
-Last activity: 2026-03-02 — 08-02 executed: render completion E2E test added closing FLOW-01 gap
+Phase: 8 of 8 (Milestone Closure) — All plans complete
+Plan: 3 of 3 in current phase — 08-01, 08-02, 08-03 all complete
+Status: 08-01 complete — Phase 5 VERIFICATION.md created (4/4 PUBL requirements VERIFIED); TikTok design decision documented in REQUIREMENTS.md; INT-02 closed by design; PUBL-01 through PUBL-04 checkboxes marked [x]
+Last activity: 2026-03-02 — 08-01 executed: Phase 5 formal verification report + TikTok design decision note
 
 Progress: [████████████████████████] 97% (Phases 1-7 complete, Phase 8 in progress)
 
@@ -220,5 +220,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 08-02-PLAN.md — render completion E2E test added, FLOW-01 audit gap closed
+Stopped at: Completed 08-01-PLAN.md — Phase 5 VERIFICATION.md and TikTok design decision; all Phase 8 audit gaps now closed
 Resume file: None
