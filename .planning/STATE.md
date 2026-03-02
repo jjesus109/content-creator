@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T14:57:03.800Z"
+last_updated: "2026-03-02T21:27:27.732Z"
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 33
-  completed_plans: 33
+  total_phases: 8
+  completed_phases: 8
+  total_plans: 36
+  completed_plans: 36
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** A hyper-realistic AI avatar video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 7 (Hardening) — All 4 plans complete, pending verification
+**Current focus:** Phase 8 (Milestone Closure) — Plan 02 complete
 
 ## Current Position
 
-Phase: 7 of 7 (Hardening) — All plans executed
-Plan: 4 of 4 in current phase — 07-04 complete
-Status: 07-04 complete — JSONFormatter + PipelineLogger module, configure_logging() replaces basicConfig, pipeline_step/content_history_id retrofitted across all 11 pipeline services
-Last activity: 2026-03-01 — 07-04 executed: structured JSON logging across entire pipeline
+Phase: 8 of 8 (Milestone Closure) — In progress
+Plan: 2 of N in current phase — 08-02 complete
+Status: 08-02 complete — Second E2E test (test_render_completion_sends_approval_message) added to tests/test_phase07_e2e.py; mock_render_completion_externals fixture patches AudioProcessingService, VideoStorageService, send_approval_message_sync; FLOW-01 audit gap closed
+Last activity: 2026-03-02 — 08-02 executed: render completion E2E test added closing FLOW-01 gap
 
-Progress: [████████████████████████] 97% (Phases 1-6 complete, Phase 7 all plans done)
+Progress: [████████████████████████] 97% (Phases 1-7 complete, Phase 8 in progress)
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [███████████████████████
 | Phase 06-analytics-and-storage P05 | 1 | 2 tasks | 3 files |
 | Phase 07-hardening P01 | 6 | 1 tasks | 2 files |
 | Phase 07-hardening P02 | 2 | 2 tasks | 6 files |
+| Phase 08-milestone-closure P01 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -198,6 +199,11 @@ Recent decisions affecting current work:
 - [Phase 07-03]: No confirmation message sent to creator after /resume — CONTEXT.md locked decision
 - [Phase 07-03]: midnight_reset includes daily_trip_count=0 + daily_halted_at=NULL — new calendar day always starts clean regardless of prior day halt state
 - [Phase 07-hardening]: _expire_stale_approvals iterates ready IDs individually rather than JOIN — Supabase Python client has no JOIN query support
+- [Phase 08-02]: mock_render_completion_externals patches AudioProcessingService, VideoStorageService, send_approval_message_sync at source modules — all are lazy imports inside _process_completed_render() body; patch-where-looked-up rule applies
+- [Phase 08-02]: Render completion test skipif uses SUPABASE_URL+SUPABASE_KEY (not ANTHROPIC_API_KEY) — render path needs DB access only, not AI generation
+- [Phase 08-02]: finally block deletes content_history row by id — guaranteed cleanup regardless of assertion outcome or mid-test exception
+- [Phase 08-milestone-closure]: 05-VERIFICATION.md synthesizes existing evidence only — cites UAT test numbers, SUMMARY commits, and audit-confirmed source file references
+- [Phase 08-milestone-closure]: INT-02 closed by design decision — MANUAL_PLATFORMS={tiktok} is intentional v1 architecture; documented in REQUIREMENTS.md v2 section
 
 ### Pending Todos
 
@@ -213,6 +219,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Completed 07-04-PLAN.md — structured JSON logging retrofit across all pipeline stages
+Last session: 2026-03-02
+Stopped at: Completed 08-02-PLAN.md — render completion E2E test added, FLOW-01 audit gap closed
 Resume file: None

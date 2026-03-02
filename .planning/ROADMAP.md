@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Multi-Platform Publishing** - Approved video scheduled and published to TikTok, IG Reels, FB Reels, and YT Shorts via Ayrshare with publish verification (completed 2026-02-25)
 - [x] **Phase 6: Analytics and Storage** - 48-hour metrics harvest, virality alerts, Sunday weekly reports, and tiered storage lifecycle management (completed 2026-02-28)
 - [ ] **Phase 7: Hardening** - End-to-end integration tests, timeout handling, circuit breakers verified, and system cleared for unattended autonomous operation
-- [ ] **Phase 8: Milestone Closure** - Write Phase 5 VERIFICATION.md, fix broken E2E test assertion, and delete orphaned circuit_breaker.py to close all v1 audit gaps
+- [x] **Phase 8: Milestone Closure** - Write Phase 5 VERIFICATION.md, fix broken E2E test assertion, and delete orphaned circuit_breaker.py to close all v1 audit gaps (completed 2026-03-02)
 
 ## Phase Details
 
@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 5. Multi-Platform Publishing | 5/5 | Complete   | 2026-02-25 |
 | 6. Analytics and Storage | 5/5 | Complete   | 2026-02-28 |
 | 7. Hardening | 3/4 | In Progress|  |
-| 8. Milestone Closure | 0/3 | Pending |  |
+| 8. Milestone Closure | 3/3 | Complete   | 2026-03-02 |
 
 ### Phase 8: Milestone Closure
 **Goal:** Close all v1 audit gaps — formal verification of Phase 5, test integrity fix, and code hygiene — so `/gsd:audit-milestone` returns `passed`
@@ -172,5 +172,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 Plans:
 - [ ] 08-01-PLAN.md — Write Phase 5 VERIFICATION.md (synthesize UAT 8/8, SUMMARY frontmatter, integration wiring evidence → formal report for PUBL-01 through PUBL-04)
-- [ ] 08-02-PLAN.md — Add second E2E test targeting `_process_completed_render()` directly; existing test at line 139 unchanged; new `test_render_completion_sends_approval_message` asserts approval delivery on render completion (FLOW-01 closure)
+- [x] 08-02-PLAN.md — Add second E2E test targeting `_process_completed_render()` directly; existing test at line 139 unchanged; new `test_render_completion_sends_approval_message` asserts approval delivery on render completion (FLOW-01 closure)
 - [ ] 08-03-PLAN.md — Delete orphaned `src/app/scheduler/jobs/circuit_breaker.py` (unreachable duplicate of `app.services.circuit_breaker`, never imported, missing Phase 7 methods)
