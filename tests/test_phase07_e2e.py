@@ -137,3 +137,88 @@ def test_daily_pipeline_writes_content_history(mock_all_externals):
     # Mock invocation assertions — externals were called exactly once
     mock_all_externals["heygen"].submit.assert_called_once()
     mock_all_externals["approval"].assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Render completion fixture and test (FLOW-01 gap closure)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def mock_render_completion_externals():
+    """
+    Mock the three callables _process_completed_render() uses via lazy import.
+
+    Patch targets follow the "patch where looked up" rule — all three are
+    lazy-imported inside the function body, so patch at the source module:
+    - app.services.audio_processing.AudioProcessingService
+    - app.services.video_storage.VideoStorageService
+    - app.services.telegram.send_approval_message_sync
+
+    Yields a dict keyed by short name for assertion access.
+    """
+    with patch("app.services.audio_processing.AudioProcessingService") as mock_audio_cls, \
+         patch("app.services.video_storage.VideoStorageService") as mock_storage_cls, \
+         patch("app.services.telegram.send_approval_message_sync") as mock_approval:
+
+        # Configure return values for the service instances
+        mock_audio_cls.return_value.process_video_audio.return_value = b"fake-video-bytes"
+        mock_storage_cls.return_value.upload.return_value = "https://storage.supabase.co/fake.mp4"
+
+        yield {
+            "audio": mock_audio_cls.return_value,
+            "storage": mock_storage_cls.return_value,
+            "approval": mock_approval,
+        }
+
+
+@pytest.mark.skipif(
+    not os.getenv("SUPABASE_URL") or not os.getenv("SUPABASE_KEY"),
+    reason="SUPABASE_URL/SUPABASE_KEY not set — render completion test skipped"
+)
+def test_render_completion_sends_approval_message(mock_render_completion_externals):
+    """
+    Verify that _process_completed_render() calls send_approval_message_sync exactly once.
+
+    Targets the render-completion code path (FLOW-01 gap closure):
+    _process_completed_render(video_id, heygen_signed_url)
+      -> send_approval_message_sync(content_history_id=..., video_url=...)
+
+    Uses a real Supabase connection to insert a content_history row with
+    video_status='pending_render', calls _process_completed_render() directly,
+    asserts the approval message was sent with the correct content_history_id,
+    then cleans up the inserted row.
+    """
+    from app.services.heygen import _process_completed_render
+    from app.services.database import get_supabase
+
+    supabase = get_supabase()
+
+    # Insert a content_history row in pending_render state for the double-processing guard to pass
+    insert_result = supabase.table("content_history").insert({
+        "heygen_job_id": "test-render-job-e2e",
+        "video_status": "pending_render",
+        "script_text": "Test script for render completion E2E",
+        "topic_summary": "test topic",
+    }).execute()
+
+    assert insert_result.data, "Failed to insert test content_history row"
+    content_history_id = insert_result.data[0]["id"]
+
+    try:
+        _process_completed_render(
+            video_id="test-render-job-e2e",
+            heygen_signed_url="https://fake-heygen-signed.url/video.mp4",
+        )
+
+        # Assert approval message was sent exactly once
+        mock_render_completion_externals["approval"].assert_called_once()
+
+        # Assert the correct content_history_id was passed as a keyword argument
+        call_kwargs = mock_render_completion_externals["approval"].call_args
+        assert call_kwargs.kwargs["content_history_id"] == content_history_id, (
+            f"Expected content_history_id={content_history_id!r}, "
+            f"got {call_kwargs.kwargs.get('content_history_id')!r}"
+        )
+    finally:
+        # Clean up the inserted row regardless of test outcome
+        supabase.table("content_history").delete().eq("id", content_history_id).execute()
