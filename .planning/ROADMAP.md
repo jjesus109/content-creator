@@ -172,5 +172,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 Plans:
 - [ ] 08-01-PLAN.md — Write Phase 5 VERIFICATION.md (synthesize UAT 8/8, SUMMARY frontmatter, integration wiring evidence → formal report for PUBL-01 through PUBL-04)
-- [ ] 08-02-PLAN.md — Fix broken E2E test assertion in `tests/test_phase07_e2e.py:139` (remove `mock_all_externals["approval"].assert_called_once()` or redesign to target render-completion path)
+- [ ] 08-02-PLAN.md — Add second E2E test targeting `_process_completed_render()` directly; existing test at line 139 unchanged; new `test_render_completion_sends_approval_message` asserts approval delivery on render completion (FLOW-01 closure)
 - [ ] 08-03-PLAN.md — Delete orphaned `src/app/scheduler/jobs/circuit_breaker.py` (unreachable duplicate of `app.services.circuit_breaker`, never imported, missing Phase 7 methods)
