@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 8 of 8 (Milestone Closure) — All plans complete
 Plan: 3 of 3 in current phase — 08-01, 08-02, 08-03 all complete
 Status: 08-03 complete — Orphaned src/app/scheduler/jobs/circuit_breaker.py deleted; audit gap INT-01 closed; file was untracked (never committed), confirmed zero imports reference it; all 21 smoke tests pass
-Last activity: 2026-03-02 — 08-03 executed: orphaned circuit_breaker.py removed from working tree, INT-01 audit gap closed
+Last activity: 2026-03-04 - Completed quick task 001: improve script generation prompt: enforce 120 word limit and add emotional hook to first phrase
 
 Progress: [████████████████████████] 100% (All 8 phases complete, Phase 8 all plans done)
 
@@ -219,6 +219,12 @@ None yet.
 - [Phase 5]: Ayrshare TikTok content policy and plan tier limits are MEDIUM confidence — confirm before Phase 5 implementation
 - [Phase 2]: pgvector 0.85 cosine similarity threshold is uncalibrated for Spanish philosophical content — seed DB with example scripts and run calibration before going live
 - [Phase 2]: ANTHROPIC_API_KEY and OPENAI_API_KEY must be added to .env before service can start
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 001 | Improve script generation prompt: enforce 120 word limit and add emotional hook to first phrase | 2026-03-04 | 0890139 | [001-improve-script-prompt-word-limit-hook](.planning/quick/001-improve-script-prompt-word-limit-hook/) |
 
 ## Session Continuity
 
