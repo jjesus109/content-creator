@@ -225,9 +225,10 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 001 | Improve script generation prompt: enforce 120 word limit and add emotional hook to first phrase | 2026-03-04 | 0890139 | [001-improve-script-prompt-word-limit-hook](.planning/quick/001-improve-script-prompt-word-limit-hook/) |
+| 002 | Create dry-run script generation CLI that calls real Anthropic API and stops before HeyGen/Telegram | 2026-03-04 | 4822e18 | [002-test-script-generation-dry-run](.planning/quick/002-test-script-generation-dry-run/) |
 
 ## Session Continuity
 
-Last session: 2026-03-02
-Stopped at: Completed 08-03-PLAN.md — orphaned scheduler/jobs/circuit_breaker.py deleted; audit gap INT-01 closed; all Phase 8 plans complete
+Last session: 2026-03-04
+Stopped at: Completed quick task 002 — scripts/dry_run_script_generation.py created; dry-run CLI for script generation prompt iteration
 Resume file: None
