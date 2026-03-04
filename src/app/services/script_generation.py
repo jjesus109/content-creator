@@ -11,6 +11,10 @@ logger = logging.getLogger(__name__)
 COST_INPUT_PER_MTOK = 0.80
 COST_OUTPUT_PER_MTOK = 4.00
 
+# Hard word cap — applied at generation time and as post-generation guard.
+# Overrides target_words when target_words > this limit.
+HARD_WORD_LIMIT = 120
+
 
 def _word_count(text: str) -> int:
     """Word count for Spanish text. Uses split() — NOT len(text) (that's character count)."""
@@ -146,32 +150,53 @@ class ScriptGenerationService:
         constraint_text = self._format_constraints(rejection_constraints or [])
 
         system = (
+            "<role>\n"
             "Eres 'El Buscador' — un creador de contenido filosofico en espanol neutro que activamente "
             "cuestiona, explora con honestidad, admite incertidumbre e invita al espectador a pensar junto contigo. "
-            "NO eres un maestro ni una autoridad. Eres un companero de reflexion.\n\n"
+            "NO eres un maestro ni una autoridad. Eres un companero de reflexion.\n"
+            "</role>\n"
+            "<instructions>\n"
+            "Utiliza <chain_of_thought> para estructurar tu guion pensando paso a paso.\n"
             "ESTRUCTURA OBLIGATORIA (los 6 pilares deben sentirse en cada guion):\n"
+            "0. PRIMERA FRASE OBLIGATORIA: El guion debe comenzar con un hook emocional o de curiosidad — una pregunta inquietante, una contradiccion sorprendente, o una imagen vivida que genere tension inmediata. Esta primera frase es el gancho que decide si el espectador sigue mirando.\n"
             "1. RAIZ FILOSOFICA: Ancla en una escuela real, pensador o concepto (Estoicismo, Nietzsche, Zen, Camus...)\n"
             "2. TENSION UNIVERSAL: Abre con una contradiccion o paradoja que el espectador reconoce en su propia vida\n"
             "3. GIRO DE PERSPECTIVA: El desarrollo reencuadra la comprension comun — no resume, desplaza el punto de vista\n"
             "4. ANCLA EMOCIONAL: Conecta el insight a un sentimiento especifico (paz, ambicion, duelo, claridad)\n"
             "5. CTA REFLEXIVO: Pide al espectador que se siente con una pregunta o pruebe una cosa — NUNCA 'sigueme para mas'\n"
-            "6. ARQUETIPO DEL CREADOR: Tono de buscador — pregunta activamente, no dicta verdades absolutas\n\n"
-            "REGLAS DE FORMATO:\n"
+            "6. ARQUETIPO DEL CREADOR: Tono de buscador — pregunta activamente, no dicta verdades absolutas\n"
+            "Usa una etiqueta <reflexion> para evaluar rigurosamente si lograste los 6 pilares y el limite de palabras.\n"
+            "Finalmente, entrega OBLIGATORIAMENTE el resultado final dentro de etiquetas <guion_final>.\n"
+            "</instructions>\n"
+            "<guardrails>\n"
             f"- Escribe exactamente en espanol neutro, masculino, frases cortas optimizadas para voz AI\n"
             f"- Tono emocional de la semana: {tone}\n"
-            f"- Objetivo de palabras: ~{target_words} palabras (puedes ir hasta {int(target_words * 1.15)} — se resumira si excedes)\n"
-            "- Devuelve UNICAMENTE el guion, sin titulos, sin etiquetas de seccion, sin explicaciones"
+            f"- Objetivo de palabras: ~{min(target_words, HARD_WORD_LIMIT)} palabras. LIMITE ABSOLUTO: {HARD_WORD_LIMIT} palabras. No se permite ningun guion que exceda este limite bajo ninguna circunstancia.\n"
+            "- El guion final NO debe tener titulos, ni etiquetas de seccion, ni explicaciones extra.\n"
+            "</guardrails>"
         )
 
         user = (
+            f"<context>\n"
             f"Tema: {topic_summary}\n"
             f"Pool tematico: {pool_name}\n"
             f"{constraint_text}\n"
+            f"</context>\n"
             "Genera el guion."
         )
 
-        # max_tokens: target_words * 4 gives room for Spanish word variance + pillar development
-        return self._call_claude(system, user, max_tokens=target_words * 4)
+        # max_tokens increased to comfortably fit chain_of_thought, reflexion, and script
+        script_text, cost = self._call_claude(system, user, max_tokens=target_words * 6)
+
+        import re
+        match = re.search(r'<guion_final>(.*?)</guion_final>', script_text, re.DOTALL)
+        if match:
+            script_text = match.group(1).strip()
+        else:
+            script_text = re.sub(r'<chain_of_thought>.*?</chain_of_thought>', '', script_text, flags=re.DOTALL)
+            script_text = re.sub(r'<reflexion>.*?</reflexion>', '', script_text, flags=re.DOTALL).strip()
+            
+        return script_text, cost
 
     def summarize_if_needed(
         self,
@@ -195,22 +220,43 @@ class ScriptGenerationService:
                     extra={"pipeline_step": "script_gen", "content_history_id": ""})
 
         system = (
-            "Eres un editor de guiones filosoficos en espanol neutro. "
-            "Tu unica tarea es reducir el guion al numero de palabras indicado, "
-            "preservando obligatoriamente:\n"
-            "- La raiz filosofica (pensador o escuela mencionado)\n"
-            "- El ancla emocional (el sentimiento especifico)\n"
-            "- El CTA reflexivo al final (la pregunta o accion para el espectador)\n"
-            "Si necesitas recortar, comprime el desarrollo (el giro de perspectiva). "
-            "Devuelve UNICAMENTE el guion resumido, sin explicaciones."
+            "<role>\n"
+            "Eres un editor de guiones filosoficos y experto en retencion de audiencia para videos cortos. "
+            "Tu objetivo es hacer el texto irresistible sin perder su profundidad.\n"
+            "</role>\n"
+            "<instructions>\n"
+            "Utiliza <chain_of_thought> para planificar cómo optimizar y reducir el guion al limite de palabras indicado. "
+            "Debes reescribir la introduccion para incluir OBLIGATORIAMENTE:\n"
+            "1. Un hook narrativo (situacion cotidiana o historia relatable).\n"
+            "2. Un hook emocional (conecta con miedos o deseos profundos).\n"
+            "3. Un hook de curiosidad (abre un misterio o patron no resuelto).\n"
+            "4. Un punto de vista contrario (desafia el sentido comun de forma radical).\n"
+            "Luego, comprime el desarrollo conservando la raiz filosofica original, "
+            "y manten el ancla emocional y el CTA reflexivo intactos.\n"
+            "Usa una etiqueta <reflexion> para evaluar rigurosamente si lograste los 4 hooks y cumpliste el limite de palabras.\n"
+            "Finalmente, entrega OBLIGATORIAMENTE el resultado final dentro de etiquetas <guion_final>.\n"
+            "</instructions>\n"
+            "<guardrails>\n"
+            "- DEBES preservar: la raiz filosofica, el ancla emocional y el CTA reflexivo.\n"
+            "- EL GUION FINAL NO debe exceder de ninguna manera el limite de palabras estricto.\n"
+            "</guardrails>"
         )
 
         user = (
-            f"Resume este guion a aproximadamente {target_words} palabras (maximo {int(target_words * 1.05)}):\n\n"
+            f"Resume y optimiza este guion a aproximadamente {target_words} palabras (maximo {int(target_words * 1.05)}):\n\n"
             f"{script}"
         )
 
-        summarized, cost = self._call_claude(system, user, max_tokens=target_words * 3)
+        # max_tokens increased to comfortably fit chain_of_thought and reflexion
+        summarized, cost = self._call_claude(system, user, max_tokens=target_words * 5)
+
+        import re
+        match = re.search(r'<guion_final>(.*?)</guion_final>', summarized, re.DOTALL)
+        if match:
+            summarized = match.group(1).strip()
+        else:
+            summarized = re.sub(r'<chain_of_thought>.*?</chain_of_thought>', '', summarized, flags=re.DOTALL)
+            summarized = re.sub(r'<reflexion>.*?</reflexion>', '', summarized, flags=re.DOTALL).strip()
 
         # Verify the summary is actually shorter; truncate at sentence boundary if overshot
         final_count = _word_count(summarized)
