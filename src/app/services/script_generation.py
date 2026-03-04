@@ -212,11 +212,13 @@ class ScriptGenerationService:
 
         SCRP-03: Creator never sees an over-length script.
         """
-        if _word_count(script) <= target_words:
-            logger.debug("Word count OK: %d words (target: %d)", _word_count(script), target_words)
+        effective_target = min(target_words, HARD_WORD_LIMIT)
+
+        if _word_count(script) <= effective_target:
+            logger.debug("Word count OK: %d words (target: %d)", _word_count(script), effective_target)
             return script, 0.0
 
-        logger.info("Script over limit: %d words (target: %d) — summarizing", _word_count(script), target_words,
+        logger.info("Script over limit: %d words (target: %d) — summarizing", _word_count(script), effective_target,
                     extra={"pipeline_step": "script_gen", "content_history_id": ""})
 
         system = (
@@ -238,17 +240,18 @@ class ScriptGenerationService:
             "</instructions>\n"
             "<guardrails>\n"
             "- DEBES preservar: la raiz filosofica, el ancla emocional y el CTA reflexivo.\n"
-            "- EL GUION FINAL NO debe exceder de ninguna manera el limite de palabras estricto.\n"
+            f"- EL GUION FINAL NO debe exceder {HARD_WORD_LIMIT} palabras bajo ninguna circunstancia.\n"
+            f"- La primera frase del guion optimizado DEBE ser un hook emocional o de curiosidad.\n"
             "</guardrails>"
         )
 
         user = (
-            f"Resume y optimiza este guion a aproximadamente {target_words} palabras (maximo {int(target_words * 1.05)}):\n\n"
+            f"Resume y optimiza este guion a aproximadamente {effective_target} palabras (maximo {int(effective_target * 1.05)}):\n\n"
             f"{script}"
         )
 
         # max_tokens increased to comfortably fit chain_of_thought and reflexion
-        summarized, cost = self._call_claude(system, user, max_tokens=target_words * 5)
+        summarized, cost = self._call_claude(system, user, max_tokens=effective_target * 5)
 
         import re
         match = re.search(r'<guion_final>(.*?)</guion_final>', summarized, re.DOTALL)
@@ -260,10 +263,10 @@ class ScriptGenerationService:
 
         # Verify the summary is actually shorter; truncate at sentence boundary if overshot
         final_count = _word_count(summarized)
-        if final_count > target_words:
-            # Truncate to last sentence boundary within target_words
+        if final_count > effective_target:
+            # Truncate to last sentence boundary within effective_target
             words = summarized.split()
-            truncated = " ".join(words[:target_words])
+            truncated = " ".join(words[:effective_target])
             # Walk back to last sentence-ending punctuation to avoid mid-sentence cut
             for end_char in (".", "!", "?"):
                 last_end = truncated.rfind(end_char)
@@ -272,7 +275,7 @@ class ScriptGenerationService:
                     break
             logger.warning(
                 "Summarization overshot: %d words (target: %d) — truncated to sentence boundary",
-                final_count, target_words,
+                final_count, effective_target,
                 extra={"pipeline_step": "script_gen", "content_history_id": ""},
             )
             summarized = truncated
