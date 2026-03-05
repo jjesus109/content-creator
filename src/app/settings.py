@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     heygen_dark_backgrounds: str                # Comma-separated Supabase Storage public URLs for dark cinematic images (min 2)
                                                 # Note: HeyGen API v2 has NO built-in scene_id system — custom image URLs required
     heygen_ambient_music_urls: str              # Comma-separated Supabase Storage public URLs for ambient music tracks (2-4 tracks)
+    heygen_gesture_prompt: str  # Avatar gesture instruction sent as character.prompt in v2 API
 
     # Publishing — Direct platform APIs (PUBL-01, PUBL-02)
 
