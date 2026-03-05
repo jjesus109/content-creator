@@ -81,11 +81,11 @@ class HeyGenService:
         Submit a script to HeyGen for avatar video rendering.
 
         Sends a POST to HEYGEN_GENERATE_URL with the configured avatar, voice,
-        portrait dimensions (1080x1920), and the provided background image URL.
+        and landscape dimensions (1920x1080 — verified v2 payload structure).
 
         Args:
             script_text:    The Spanish script text to be spoken by the avatar.
-            background_url: A Supabase Storage public URL for the background image.
+            background_url: Retained in signature for caller compatibility; not used in v2 payload.
 
         Returns:
             The HeyGen `video_id` string (used to track render status via webhook/poller).
@@ -93,30 +93,37 @@ class HeyGenService:
         Raises:
             requests.HTTPError: If HeyGen returns a non-2xx response.
         """
+        # background_url retained in signature for caller compatibility; not used in v2 payload
         settings = self._settings
 
         payload = {
+            "caption": True,
+            "dimension": {
+                "width": "1920",
+                "height": "1080",
+            },
+            "title": "Daily video",
             "video_inputs": [
                 {
                     "character": {
                         "type": "avatar",
-                        "avatar_id": settings.heygen_avatar_id,
+                        "scale": 1,
                         "avatar_style": "normal",
+                        "talking_style": "stable",
+                        "avatar_id": settings.heygen_avatar_id,
+                        "use_avatar_iv_model": True,
+                        "prompt": settings.heygen_gesture_prompt,
                     },
                     "voice": {
                         "type": "text",
+                        "speed": "1",
+                        "pitch": "0",
+                        "duration": "1",
                         "voice_id": settings.heygen_voice_id,
                         "input_text": script_text,
-                        "speed": 1.0,
-                    },
-                    "background": {
-                        "type": "image",
-                        "url": background_url,
                     },
                 }
             ],
-            "dimension": {"width": 1080, "height": 1920},  # 9:16 portrait
-            "caption": False,
             "callback_url": settings.heygen_webhook_url,
         }
 
@@ -126,10 +133,10 @@ class HeyGenService:
         }
 
         logger.info(
-            "Submitting HeyGen render: avatar=%s voice=%s background=%s",
+            "Submitting HeyGen render: avatar=%s voice=%s gesture_prompt=%s",
             settings.heygen_avatar_id,
             settings.heygen_voice_id,
-            background_url,
+            settings.heygen_gesture_prompt[:40],
             extra={"pipeline_step": "heygen_submit", "content_history_id": ""},
         )
 
