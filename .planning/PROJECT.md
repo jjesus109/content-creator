@@ -25,7 +25,7 @@ A hyper-realistic AI avatar video lands in Telegram every day, ready to approve 
 - [ ] Telegram bot delivery: video preview + post copy + [Approve] / [Reject with Cause] buttons
 - [ ] Weekly mood profile input via Telegram (bot prompts creator once/week)
 - [ ] Rejection feedback stored as negative context for next generation iteration
-- [ ] Auto-publish to TikTok, IG Reels, FB Reels, YT Shorts via Ayrshare/Buffer API
+- [ ] Auto-publish to TikTok, IG Reels, FB Reels, YT Shorts via direct platform APIs (TikTok Content Publishing API, Meta Graph API, YouTube Data API v3)
 - [ ] Optimal scheduling based on peak hours detected via platform API
 - [ ] 48-hour performance metric harvest (views, shares, retention)
 - [ ] Sunday weekly report + virality alert (500% above average triggers format clone)
@@ -54,7 +54,7 @@ A hyper-realistic AI avatar video lands in Telegram every day, ready to approve 
 - **Tech — Script AI**: GPT-4o (primary) / Claude 3.5 (fallback)
 - **Tech — Video generation**: HeyGen API (avatar rendering, lip-sync)
 - **Tech — Voice**: ElevenLabs (TTS/voice cloning — verify if HeyGen native voice covers this)
-- **Tech — Publishing**: Ayrshare (single POST → 4 platforms); Buffer as fallback
+- **Tech — Publishing**: Direct platform APIs: TikTok Content Publishing API, Meta Graph API (Instagram + Facebook Pages), YouTube Data API v3
 - **Tech — Database**: Supabase (Postgres + pgvector for anti-repetition)
 - **Tech — Storage**: Supabase Storage or S3 for video lifecycle management
 - **Tech — Scheduler**: APScheduler 3.10.x with Postgres job store (survives deploys)
@@ -71,7 +71,7 @@ A hyper-realistic AI avatar video lands in Telegram every day, ready to approve 
 |----------|-----------|---------|
 | Telegram as sole UI | Zero-friction approval loop; no app to open | — Pending |
 | HeyGen for avatar video | Hyper-realistic output, lip-sync quality | — Pending |
-| Ayrshare vs Buffer | Native multi-platform publish with single API | — Pending |
+| Direct APIs vs Ayrshare aggregator | Direct API control: no third-party rate limits, no aggregator cost, full platform compliance | Direct posting chosen — TikTok Content Publishing API, Meta Graph API (Instagram/Facebook), YouTube Data API v3 |
 | Vector DB for anti-repetition | Semantic similarity (not keyword) prevents topic recycling | — Pending |
 | Single user architecture | Simpler, faster to build; no auth/tenancy overhead | — Pending |
 

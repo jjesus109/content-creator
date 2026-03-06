@@ -14,7 +14,7 @@
 
 ### Security
 
-- [x] **SCRTY-01**: All API keys (OpenAI, HeyGen, ElevenLabs, Ayrshare, Telegram) stored as encrypted environment variables — never hardcoded
+- [x] **SCRTY-01**: All API keys (OpenAI, HeyGen, ElevenLabs, TikTok, Meta/Facebook, YouTube, Telegram) stored as encrypted environment variables — never hardcoded
 - [x] **SCRTY-02**: Telegram bot responds only to the creator's configured user ID, silently ignores all other senders
 
 ### Script Generation
@@ -40,10 +40,10 @@
 
 ### Publishing
 
-- [x] **PUBL-01**: Approved video is published to TikTok, Instagram Reels, Facebook Reels, and YouTube Shorts via a single Ayrshare API call
+- [x] **PUBL-01**: Approved video is published to TikTok, Instagram Reels, Facebook Reels, and YouTube Shorts via direct platform APIs: TikTok Content Publishing API, Meta Graph API (Instagram + Facebook Pages), YouTube Data API v3
 - [x] **PUBL-02**: Publish is scheduled at peak engagement hours per platform, not immediately on approval
 - [x] **PUBL-03**: System verifies post-publish status on each platform 30 minutes after scheduled publish time
-- [x] **PUBL-04**: If Ayrshare publish fails, bot automatically sends the original video file and post copy to Telegram for immediate manual posting
+- [x] **PUBL-04**: If any platform publish fails, bot automatically sends the original video file and post copy to Telegram for immediate manual posting as fallback
 
 ### Analytics
 
