@@ -227,9 +227,10 @@ None yet.
 | 001 | Improve script generation prompt: enforce 120 word limit and add emotional hook to first phrase | 2026-03-04 | 0890139 | [001-improve-script-prompt-word-limit-hook](.planning/quick/001-improve-script-prompt-word-limit-hook/) |
 | 002 | Create dry-run script generation CLI that calls real Anthropic API and stops before HeyGen/Telegram | 2026-03-04 | 4822e18 | [002-test-script-generation-dry-run](.planning/quick/002-test-script-generation-dry-run/) |
 | 003 | Align HeyGenService.submit() to verified v2 payload; add heygen_gesture_prompt to Settings; create dry-run HeyGen submit CLI | 2026-03-05 | 739f48d | [003-heygen-api-payload-update](.planning/quick/003-heygen-api-payload-update/) |
+| 004 | Replace Ayrshare with direct platform API references in all four living planning documents | 2026-03-06 | e61750d | [004-replace-ayrshare-with-direct-posting](.planning/quick/004-replace-ayrshare-with-direct-posting/) |
 
 ## Session Continuity
 
-Last session: 2026-03-05
-Stopped at: Completed quick task 003 — HeyGen v2 payload aligned to verified structure; heygen_gesture_prompt added to Settings; scripts/dry_run_heygen_submit.py created
+Last session: 2026-03-06
+Stopped at: Completed quick task 004 — Ayrshare references replaced with direct platform API descriptions (TikTok Content Publishing API, Meta Graph API, YouTube Data API v3) across PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md
 Resume file: None
