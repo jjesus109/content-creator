@@ -79,7 +79,7 @@ Recent decisions affecting current work:
 - [Roadmap]: 7 phases derived from dependency chain — scripts before video, video before approval, approval before publish, publish before analytics, all before hardening
 - [Roadmap]: Phase 7 (Hardening) covers all 26 v1 requirements end-to-end verification; it holds no new functional requirements itself
 - [Research]: HeyGen v2 API endpoint structure must be verified against live docs before starting Phase 3
-- [Research]: Ayrshare TikTok support and plan tier limits must be confirmed before starting Phase 5
+- [Research]: Direct platform APIs chosen for Phase 5 — TikTok Content Publishing API, Meta Graph API (Instagram/Facebook), YouTube Data API v3; Ayrshare aggregator replaced
 - [Research]: pgvector 0.85 threshold needs calibration with 20-30 seed Spanish scripts before Phase 2 goes live
 - [Phase 01-foundation]: Use dependency-groups.dev (PEP 735) instead of deprecated tool.uv.dev-dependencies in pyproject.toml
 - [Phase 01-foundation]: CircuitBreakerState includes last_trip_at column for rolling 7-day escalation window
@@ -153,7 +153,7 @@ Recent decisions affecting current work:
 - [Phase 04-05]: smoke tests use inspect/import only — no live DB or API calls; fast, side-effect-free
 - [Phase 04-05]: tests/ directory created at project root — mirrors standard Python project layout
 - [Phase 05-multi-platform-publishing]: publish_events is append-only — verification job inserts new verified/verify_failed rows; no UPDATE pattern; full audit trail preserved
-- [Phase 05-multi-platform-publishing]: ayrshare_api_key has no default — Pydantic raises ValidationError at startup if AYRSHARE_API_KEY env var not set
+- [Phase 05-multi-platform-publishing]: Platform API credentials have no defaults — Pydantic raises ValidationError at startup if TIKTOK_CLIENT_KEY, META_ACCESS_TOKEN, YOUTUBE_CLIENT_SECRET env vars are not set
 - [Phase 05-multi-platform-publishing]: tenacity added to [project].dependencies (production) — used by PublishJob retry logic at runtime
 - [Phase 05-multi-platform-publishing]: generate_platform_variants uses max_tokens=1500 — 4 variants need more output space than single generate() at 300 tokens
 - [Phase 05-multi-platform-publishing]: JSON extraction uses re.search DOTALL pattern for Anthropic structured responses — handles markdown code fence wrapping
@@ -216,7 +216,7 @@ None yet.
 
 - [Deployment]: .env file not yet populated with real credentials — service cannot start until Supabase/Telegram/Anthropic/OpenAI credentials added
 - [Phase 3]: HeyGen API v2 endpoint structure, webhook retry policy, and Spanish TTS behavior are MEDIUM confidence — verify against live docs before writing integration code
-- [Phase 5]: Ayrshare TikTok content policy and plan tier limits are MEDIUM confidence — confirm before Phase 5 implementation
+- [Phase 5]: Direct platform API credentials (TikTok Content Publishing API, Meta Graph API, YouTube Data API v3) must be provisioned before re-implementing Phase 5
 - [Phase 2]: pgvector 0.85 cosine similarity threshold is uncalibrated for Spanish philosophical content — seed DB with example scripts and run calibration before going live
 - [Phase 2]: ANTHROPIC_API_KEY and OPENAI_API_KEY must be added to .env before service can start
 

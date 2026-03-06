@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Script Generation** - Daily scripts generated with 5-Pillar framework, anti-repetition guard, mood profiles, and rejection feedback loop (completed 2026-02-20)
 - [x] **Phase 3: Video Production** - HeyGen avatar video rendered, re-hosted to S3, audio post-processed, background variety enforced (completed 2026-02-22)
 - [x] **Phase 4: Telegram Approval Loop** - Creator receives daily video via Telegram with approve/reject inline keyboard and structured rejection flow (completed 2026-02-25)
-- [x] **Phase 5: Multi-Platform Publishing** - Approved video scheduled and published to TikTok, IG Reels, FB Reels, and YT Shorts via Ayrshare with publish verification (completed 2026-02-25)
+- [x] **Phase 5: Multi-Platform Publishing** - Approved video scheduled and published to TikTok, IG Reels, FB Reels, and YT Shorts via direct platform APIs with publish verification (completed 2026-02-25)
 - [x] **Phase 6: Analytics and Storage** - 48-hour metrics harvest, virality alerts, Sunday weekly reports, and tiered storage lifecycle management (completed 2026-02-28)
 - [ ] **Phase 7: Hardening** - End-to-end integration tests, timeout handling, circuit breakers verified, and system cleared for unattended autonomous operation
 - [x] **Phase 8: Milestone Closure** - Write Phase 5 VERIFICATION.md, fix broken E2E test assertion, and delete orphaned circuit_breaker.py to close all v1 audit gaps (completed 2026-03-02)
@@ -96,20 +96,20 @@ Plans:
 - [x] 04-05-PLAN.md — Phase 4 smoke tests (8 checks) + human verification checkpoint
 
 ### Phase 5: Multi-Platform Publishing
-**Goal**: Approved content is published to all four platforms at peak engagement hours, publication success is verified, and a Telegram fallback fires automatically if Ayrshare fails
+**Goal**: Approved content is published to all four platforms at peak engagement hours, publication success is verified, and a Telegram fallback fires automatically if publishing fails
 **Depends on**: Phase 4
 **Requirements**: PUBL-01, PUBL-02, PUBL-03, PUBL-04
 **Success Criteria** (what must be TRUE):
-  1. A single Ayrshare API call publishes the approved video to TikTok, Instagram Reels, Facebook Reels, and YouTube Shorts simultaneously with the generated post copy
+  1. The approved video is published to TikTok, Instagram Reels, Facebook Reels, and YouTube Shorts via direct platform APIs (TikTok Content Publishing API, Meta Graph API, YouTube Data API v3) with platform-specific post copy
   2. Publication is scheduled at platform-specific peak engagement hours, not immediately on approval — the creator sees a confirmation of the scheduled time in Telegram
   3. Thirty minutes after the scheduled publish time, the system checks publish status on each platform and logs the result — failures are surfaced to the creator
-  4. If Ayrshare publish fails, the system automatically sends the original video file and post copy to the creator's Telegram as a manual posting fallback
+  4. If any platform publish fails, the system automatically sends the original video file and post copy to the creator's Telegram as a manual posting fallback
 **Plans**: 5 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Migration 0005 (publish_events table + 4 platform copy columns) + Settings extension (ayrshare_api_key, audience_timezone, peak_hour_*) + tenacity dependency
+- [ ] 05-01-PLAN.md — Migration 0005 (publish_events table + 4 platform copy columns) + Settings extension (platform API credentials, audience_timezone, peak_hour_*) + tenacity dependency
 - [ ] 05-02-PLAN.md — PostCopyService.generate_platform_variants() + send_approval_message showing all 4 platform copy variants with platform labels
-- [ ] 05-03-PLAN.md — PublishingService (Ayrshare wrapper + tenacity retry) + platform_publish job + publish_verify job + Telegram publish helpers
+- [ ] 05-03-PLAN.md — PublishingService (per-platform direct API clients + tenacity retry) + platform_publish job + publish_verify job + Telegram publish helpers
 - [ ] 05-04-PLAN.md — Wire handle_approve to schedule_platform_publishes() + send_publish_confirmation_sync() + registry.py scheduler injection
 - [ ] 05-05-PLAN.md — Phase 5 smoke tests (12 checks) + human verification checkpoint (migration + code review)
 
@@ -143,7 +143,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [x] 07-01-PLAN.md — E2E integration test: daily_pipeline_job() with real Anthropic + mocked HeyGen/Ayrshare/Telegram, content_history row assertions
+- [x] 07-01-PLAN.md — E2E integration test: daily_pipeline_job() with real Anthropic + mocked HeyGen/PublishingService/Telegram, content_history row assertions
 - [x] 07-02-PLAN.md — Approval timeout: VideoStatus.APPROVAL_TIMEOUT, 24h DateTrigger job, last-chance message, stale-row cleanup at pipeline start
 - [x] 07-03-PLAN.md — Daily halt circuit breaker (3 trips/day), migration 0007, /resume CommandHandler + wiring
 - [ ] 07-04-PLAN.md — JSON logging retrofit: logging_config.py (JSONFormatter + PipelineLogger), configure_logging() in main.py, pipeline_step/content_history_id across all stages
