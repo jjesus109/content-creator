@@ -13,6 +13,8 @@ from app.routes.webhooks import router as webhooks_router
 from app.routes.admin import router as admin_router
 from app.telegram.app import build_telegram_app, start_telegram_polling, stop_telegram_polling
 from app.services.telegram import set_fastapi_app, set_event_loop
+from app.services.database import validate_supabase_key
+from app.settings import get_settings
 
 from app.logging_config import configure_logging
 
@@ -27,6 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Scheduler starts here so it is alive before the first request.
     """
     logger.info("Starting up content-creation service.")
+    validate_supabase_key(get_settings().supabase_key)
     run_migrations()
 
     scheduler = create_scheduler()
