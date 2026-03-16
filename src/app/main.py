@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
@@ -11,7 +12,7 @@ from app.routes.health import router as health_router
 from app.routes.webhooks import router as webhooks_router
 from app.routes.admin import router as admin_router
 from app.telegram.app import build_telegram_app, start_telegram_polling, stop_telegram_polling
-from app.services.telegram import set_fastapi_app
+from app.services.telegram import set_fastapi_app, set_event_loop
 
 from app.logging_config import configure_logging
 
@@ -38,6 +39,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await start_telegram_polling(tg_app)
     app.state.telegram_app = tg_app
     set_fastapi_app(app)  # allows APScheduler threads to reach app.state.telegram_app
+    set_event_loop(asyncio.get_event_loop())  # capture running uvicorn loop for _sync wrappers
     logger.info("Telegram Application started.")
 
     yield  # App is running
