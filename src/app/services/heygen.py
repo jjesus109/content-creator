@@ -99,8 +99,8 @@ class HeyGenService:
         payload = {
             "caption": True,
             "dimension": {
-                "width": "1920",
-                "height": "1080",
+                "width": "1080",
+                "height": "1920",
             },
             "title": "Daily video",
             "video_inputs": [
