@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 8 of 8 (Milestone Closure) — All plans complete
 Plan: 3 of 3 in current phase — 08-01, 08-02, 08-03 all complete
 Status: 08-03 complete — Orphaned src/app/scheduler/jobs/circuit_breaker.py deleted; audit gap INT-01 closed; file was untracked (never committed), confirmed zero imports reference it; all 21 smoke tests pass
-Last activity: 2026-03-04 - Completed quick task 001: improve script generation prompt: enforce 120 word limit and add emotional hook to first phrase
+Last activity: 2026-03-15 - Completed quick task 005: add POST /admin/trigger-pipeline endpoint for Railway testing
 
 Progress: [████████████████████████] 100% (All 8 phases complete, Phase 8 all plans done)
 
