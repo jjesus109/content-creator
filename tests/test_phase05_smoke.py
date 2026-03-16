@@ -12,7 +12,7 @@ Verifies the complete Phase 5 import chain and surface contracts:
     send_platform_failure_sync importable and callable
   - handle_approve wired to schedule_platform_publishes() + send_publish_confirmation_sync
   - registry.py injects scheduler into platform_publish at startup
-  - Settings has all publishing fields (ayrshare_api_key + per-platform peaks)
+  - Settings has all publishing fields (per-platform credentials + peaks)
   - PostCopyService.generate_platform_variants() importable with correct signature
 
 No live DB or API calls — all checks use import/inspect only.
@@ -33,7 +33,9 @@ def test_publishing_service_import():
     svc = object.__new__(PublishingService)
     assert hasattr(svc, "publish")
     assert hasattr(svc, "get_post_status")
-    assert hasattr(svc, "_post")
+    assert hasattr(svc, "_publish_youtube")
+    assert hasattr(svc, "_publish_instagram")
+    assert hasattr(svc, "_publish_facebook")
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +45,7 @@ def test_publishing_service_import():
 def test_publishing_service_retry_decorator():
     import inspect
     from app.services.publishing import PublishingService
-    src = inspect.getsource(PublishingService._post)
+    src = inspect.getsource(PublishingService._publish_youtube)
     assert "stop_after_attempt" in src or "retry" in src
 
 
@@ -115,7 +117,7 @@ def test_verify_publish_job_import():
     params = list(sig.parameters.keys())
     assert "content_history_id" in params
     assert "platform" in params
-    assert "ayrshare_post_id" in params
+    assert "external_post_id" in params
     assert "completed" in SUCCESS_STATUSES
 
 
@@ -167,7 +169,13 @@ def test_registry_injects_platform_publish_scheduler():
 def test_settings_has_publishing_fields():
     from app.settings import Settings
     fields = Settings.model_fields
-    assert "ayrshare_api_key" in fields
+    assert "instagram_access_token" in fields
+    assert "instagram_business_account_id" in fields
+    assert "facebook_access_token" in fields
+    assert "facebook_page_id" in fields
+    assert "youtube_client_id" in fields
+    assert "youtube_client_secret" in fields
+    assert "youtube_refresh_token" in fields
     assert "audience_timezone" in fields
     assert "peak_hour_tiktok" in fields
     assert "peak_hour_instagram" in fields
@@ -187,3 +195,16 @@ def test_post_copy_service_has_platform_variants():
     params = list(sig.parameters.keys())
     assert "script_text" in params
     assert "topic_summary" in params
+
+
+# ---------------------------------------------------------------------------
+# Check 13 — MANUAL_PLATFORMS and AUTO_PLATFORMS constants
+# ---------------------------------------------------------------------------
+
+def test_manual_platforms_constant():
+    from app.services.publishing import MANUAL_PLATFORMS, AUTO_PLATFORMS
+    assert "tiktok" in MANUAL_PLATFORMS
+    assert "youtube" in AUTO_PLATFORMS
+    assert "instagram" in AUTO_PLATFORMS
+    assert "facebook" in AUTO_PLATFORMS
+    assert "tiktok" not in AUTO_PLATFORMS
