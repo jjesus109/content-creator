@@ -10,6 +10,16 @@ logger = logging.getLogger(__name__)
 # Used by APScheduler thread pool jobs to access app.state.telegram_app.
 _fastapi_app = None
 
+# Captured uvicorn event loop — set during lifespan startup so APScheduler threads
+# can use run_coroutine_threadsafe instead of asyncio.get_event_loop() (broken on Python 3.10+).
+_event_loop = None
+
+
+def set_event_loop(loop) -> None:
+    """Called from main.py lifespan to capture the running uvicorn asyncio event loop."""
+    global _event_loop
+    _event_loop = loop
+
 
 def set_fastapi_app(fastapi_app) -> None:
     """Called from main.py lifespan after telegram app is built."""
@@ -59,14 +69,12 @@ async def send_alert(message: str) -> None:
 
 def send_alert_sync(message: str) -> None:
     """Sync wrapper for APScheduler thread pool jobs — same pattern as Phase 1."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.run_coroutine_threadsafe(send_alert(message), loop)
-        else:
-            loop.run_until_complete(send_alert(message))
-    except RuntimeError:
-        asyncio.run(send_alert(message))
+    coro = send_alert(message)
+    if _event_loop is not None and _event_loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(coro, _event_loop)
+        future.result(timeout=30)
+    else:
+        asyncio.run(coro)
 
 
 async def send_approval_message(content_history_id: str, video_url: str) -> None:
@@ -194,16 +202,12 @@ def send_approval_message_sync(content_history_id: str, video_url: str) -> None:
     Same pattern as send_alert_sync(). Called from _process_completed_render().
     After sending the approval message, schedules a 24h timeout job.
     """
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.run_coroutine_threadsafe(
-                send_approval_message(content_history_id, video_url), loop
-            )
-        else:
-            loop.run_until_complete(send_approval_message(content_history_id, video_url))
-    except RuntimeError:
-        asyncio.run(send_approval_message(content_history_id, video_url))
+    coro = send_approval_message(content_history_id, video_url)
+    if _event_loop is not None and _event_loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(coro, _event_loop)
+        future.result(timeout=30)
+    else:
+        asyncio.run(coro)
 
     # Schedule 24h approval timeout job — lazy import avoids circular import
     from app.scheduler.jobs.approval_timeout import schedule_approval_timeout
@@ -269,16 +273,12 @@ def send_publish_confirmation_sync(
     tiktok_copy: str = "",
 ) -> None:
     """Sync wrapper for APScheduler/async approval handler context."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.run_coroutine_threadsafe(
-                send_publish_confirmation(content_history_id, scheduled_times, video_url, tiktok_copy), loop
-            )
-        else:
-            loop.run_until_complete(send_publish_confirmation(content_history_id, scheduled_times, video_url, tiktok_copy))
-    except RuntimeError:
-        asyncio.run(send_publish_confirmation(content_history_id, scheduled_times, video_url, tiktok_copy))
+    coro = send_publish_confirmation(content_history_id, scheduled_times, video_url, tiktok_copy)
+    if _event_loop is not None and _event_loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(coro, _event_loop)
+        future.result(timeout=30)
+    else:
+        asyncio.run(coro)
 
 
 async def send_platform_success(platform: str, content_history_id: str) -> None:
@@ -297,14 +297,12 @@ async def send_platform_success(platform: str, content_history_id: str) -> None:
 
 def send_platform_success_sync(platform: str, content_history_id: str) -> None:
     """Sync wrapper for APScheduler thread context."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.run_coroutine_threadsafe(send_platform_success(platform, content_history_id), loop)
-        else:
-            loop.run_until_complete(send_platform_success(platform, content_history_id))
-    except RuntimeError:
-        asyncio.run(send_platform_success(platform, content_history_id))
+    coro = send_platform_success(platform, content_history_id)
+    if _event_loop is not None and _event_loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(coro, _event_loop)
+        future.result(timeout=30)
+    else:
+        asyncio.run(coro)
 
 
 async def send_platform_failure(
@@ -337,13 +335,9 @@ def send_platform_failure_sync(
     error_message: str,
 ) -> None:
     """Sync wrapper for APScheduler thread context."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.run_coroutine_threadsafe(
-                send_platform_failure(platform, video_url, post_copy, error_message), loop
-            )
-        else:
-            loop.run_until_complete(send_platform_failure(platform, video_url, post_copy, error_message))
-    except RuntimeError:
-        asyncio.run(send_platform_failure(platform, video_url, post_copy, error_message))
+    coro = send_platform_failure(platform, video_url, post_copy, error_message)
+    if _event_loop is not None and _event_loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(coro, _event_loop)
+        future.result(timeout=30)
+    else:
+        asyncio.run(coro)
