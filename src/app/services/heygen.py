@@ -76,7 +76,7 @@ class HeyGenService:
         # Settings loaded lazily via get_settings() — no module-level network call
         self._settings = get_settings()
 
-    def submit(self, script_text: str, background_url: str) -> str:
+    def submit(self, script_text: str, background_url: str, title: str | None = None) -> str:
         """
         Submit a script to HeyGen for avatar video rendering.
 
@@ -86,6 +86,8 @@ class HeyGenService:
         Args:
             script_text:    The Spanish script text to be spoken by the avatar.
             background_url: Retained in signature for caller compatibility; not used in v2 payload.
+            title:          Optional human-readable label for the HeyGen dashboard. Falls back to
+                            'Video YYYY-MM-DD' (today's date) if not provided. Truncated to 100 chars.
 
         Returns:
             The HeyGen `video_id` string (used to track render status via webhook/poller).
@@ -94,6 +96,8 @@ class HeyGenService:
             requests.HTTPError: If HeyGen returns a non-2xx response.
         """
         # background_url retained in signature for caller compatibility; not used in v2 payload
+        from datetime import date
+        resolved_title = (title or f"Video {date.today().isoformat()}")[:100]
         settings = self._settings
 
         payload = {
@@ -102,7 +106,7 @@ class HeyGenService:
                 "width": "1080",
                 "height": "1920",
             },
-            "title": "Daily video",
+            "title": resolved_title,
             "video_inputs": [
                 {
                     "character": {
