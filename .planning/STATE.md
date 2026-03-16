@@ -230,9 +230,10 @@ None yet.
 | 004 | Replace Ayrshare with direct platform API references in all four living planning documents | 2026-03-06 | e61750d | [004-replace-ayrshare-with-direct-posting](.planning/quick/004-replace-ayrshare-with-direct-posting/) |
 | 005 | Add POST /admin/trigger-pipeline to manually fire the daily pipeline job for Railway testing | 2026-03-15 | ab3daf8 | [005-admin-trigger-pipeline-endpoint](.planning/quick/005-admin-trigger-pipeline-endpoint/) |
 | 006 | Protect /admin/* endpoints with required Bearer token auth (ADMIN_API_KEY env var, fail-closed, secrets.compare_digest) | 2026-03-15 | 18241cd | [006-admin-endpoint-auth](.planning/quick/006-admin-endpoint-auth/) |
+| 007 | Fix RuntimeError: Event loop is closed in all five Telegram _sync wrappers — use run_coroutine_threadsafe with captured uvicorn loop | 2026-03-16 | 3ae6459 | [007-fix-telegram-sync-event-loop](.planning/quick/007-fix-telegram-sync-event-loop/) |
 
 ## Session Continuity
 
-Last session: 2026-03-15
-Stopped at: Completed quick task 006 — Added ADMIN_API_KEY required field to Settings and HTTPBearer verify_admin_key dependency to admin router; all /admin/* routes now require correct Bearer token
+Last session: 2026-03-16
+Stopped at: Completed quick task 007 — Replaced all five _sync wrapper bodies in telegram.py with run_coroutine_threadsafe(_event_loop) pattern; main.py lifespan now captures uvicorn event loop at startup via set_event_loop(asyncio.get_event_loop())
 Resume file: None
