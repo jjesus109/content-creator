@@ -9,6 +9,7 @@ from app.scheduler.setup import create_scheduler
 from app.scheduler.registry import register_jobs
 from app.routes.health import router as health_router
 from app.routes.webhooks import router as webhooks_router
+from app.routes.admin import router as admin_router
 from app.telegram.app import build_telegram_app, start_telegram_polling, stop_telegram_polling
 from app.services.telegram import set_fastapi_app
 
@@ -54,3 +55,4 @@ app = FastAPI(
 
 app.include_router(health_router)
 app.include_router(webhooks_router)
+app.include_router(admin_router)
