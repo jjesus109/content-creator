@@ -70,6 +70,9 @@ class Settings(BaseSettings):
     tiktok_access_token: str = ""       # Display API user access token (expires in 24h, refresh via refresh_token)
     tiktok_refresh_token: str = ""      # Refresh token (valid for 365 days)
 
+    # Admin API (SCRTY-01)
+    admin_api_key: str  # Bearer token for /admin/* endpoints — Railway env var ADMIN_API_KEY
+
     # Audience timezone for peak hour scheduling (PUBL-02)
     # Must be a valid pytz timezone string (e.g. "US/Eastern", "America/Mexico_City")
     audience_timezone: str = "US/Eastern"
