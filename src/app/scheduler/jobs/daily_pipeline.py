@@ -142,7 +142,7 @@ def daily_pipeline_job() -> None:
         heygen_svc = HeyGenService()
         plog.extra["pipeline_step"] = "heygen_submit"
         try:
-            heygen_job_id = heygen_svc.submit(script_text=script, background_url=background_url)
+            heygen_job_id = heygen_svc.submit(script_text=script, background_url=background_url, title=topic_summary)
             plog.info("HeyGen job submitted: video_id=%s background=%s", heygen_job_id, background_url)
         except Exception as exc:
             plog.error("HeyGen submission failed: %s", exc)
