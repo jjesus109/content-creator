@@ -207,6 +207,7 @@ Recent decisions affecting current work:
 - [Phase 08-milestone-closure]: INT-02 closed by design decision — MANUAL_PLATFORMS={tiktok} is intentional v1 architecture; documented in REQUIREMENTS.md v2 section
 - [Phase 08-03]: scheduler/jobs/circuit_breaker.py was untracked (never committed) — git rm inapplicable; plain rm used; empty commit documents audit gap INT-01 closure
 - [Phase 08-03]: Zero imports reference app.scheduler.jobs.circuit_breaker — deletion carries zero risk; production app.services.circuit_breaker is the single authoritative service
+- [quick-009]: validate_supabase_key uses only base64 + json (stdlib) — no new runtime dependencies; no signature verification needed, only role claim matters; placed before run_migrations() to abort before any DB work; RuntimeError propagates unhandled from lifespan for Railway to log
 
 ### Pending Todos
 
@@ -232,9 +233,10 @@ None yet.
 | 006 | Protect /admin/* endpoints with required Bearer token auth (ADMIN_API_KEY env var, fail-closed, secrets.compare_digest) | 2026-03-15 | 18241cd | [006-admin-endpoint-auth](.planning/quick/006-admin-endpoint-auth/) |
 | 007 | Fix RuntimeError: Event loop is closed in all five Telegram _sync wrappers — use run_coroutine_threadsafe with captured uvicorn loop | 2026-03-16 | 3ae6459 | [007-fix-telegram-sync-event-loop](.planning/quick/007-fix-telegram-sync-event-loop/) |
 | 008 | Replace hardcoded 'Daily video' HeyGen title with topic_summary; add optional title param with date fallback and 100-char truncation | 2026-03-16 | f4378c7 | [008-heygen-dynamic-title](.planning/quick/008-heygen-dynamic-title/) |
+| 009 | Add startup validation that SUPABASE_KEY is a service_role JWT — raises RuntimeError with actionable message before any DB work if wrong key configured | 2026-03-16 | 1fb014a | [009-supabase-key-validation](.planning/quick/009-supabase-key-validation/) |
 
 ## Session Continuity
 
 Last session: 2026-03-16
-Stopped at: Completed quick task 008 — HeyGenService.submit() accepts optional title param (fallback: Video YYYY-MM-DD, truncated to 100 chars); daily_pipeline.py passes topic_summary as title so each HeyGen render is identifiable by topic in the dashboard
+Stopped at: Completed quick task 009 — validate_supabase_key() decodes JWT payload (stdlib only) and aborts startup with a clear message naming the wrong role if SUPABASE_KEY is the anon key; wired into lifespan before run_migrations()
 Resume file: None
