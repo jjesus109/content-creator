@@ -1,11 +1,30 @@
 import logging
+import secrets
 import threading
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.scheduler.jobs.daily_pipeline import daily_pipeline_job
+from app.settings import get_settings
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+_bearer = HTTPBearer()
+
+
+def verify_admin_key(
+    credentials: HTTPAuthorizationCredentials = Security(_bearer),
+) -> None:
+    """Validate the Bearer token against ADMIN_API_KEY from env.
+    Raises 401 if missing or wrong. Fail-closed: if ADMIN_API_KEY is
+    not set, get_settings() raises ValidationError at startup so this
+    line is never reached with an empty key.
+    """
+    expected = get_settings().admin_api_key
+    if not secrets.compare_digest(credentials.credentials, expected):
+        raise HTTPException(status_code=401, detail="Invalid or missing API key.")
+
+
+router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(verify_admin_key)])
 logger = logging.getLogger(__name__)
 
 
@@ -21,9 +40,7 @@ async def trigger_pipeline():
     an async FastAPI handler to a blocking synchronous job (same pattern used
     by APScheduler internally).
 
-    WARNING: This endpoint has no authentication. Do NOT expose it to the public
-    internet in production — restrict via Railway's private networking or add a
-    shared-secret header if the service is publicly reachable.
+    Authentication: Bearer token required via ADMIN_API_KEY env var (SCRTY-01).
     """
     logger.info("Manual pipeline trigger requested via /admin/trigger-pipeline.")
     thread = threading.Thread(target=daily_pipeline_job, daemon=True, name="manual-pipeline-trigger")
