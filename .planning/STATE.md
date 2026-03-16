@@ -228,9 +228,10 @@ None yet.
 | 002 | Create dry-run script generation CLI that calls real Anthropic API and stops before HeyGen/Telegram | 2026-03-04 | 4822e18 | [002-test-script-generation-dry-run](.planning/quick/002-test-script-generation-dry-run/) |
 | 003 | Align HeyGenService.submit() to verified v2 payload; add heygen_gesture_prompt to Settings; create dry-run HeyGen submit CLI | 2026-03-05 | 739f48d | [003-heygen-api-payload-update](.planning/quick/003-heygen-api-payload-update/) |
 | 004 | Replace Ayrshare with direct platform API references in all four living planning documents | 2026-03-06 | e61750d | [004-replace-ayrshare-with-direct-posting](.planning/quick/004-replace-ayrshare-with-direct-posting/) |
+| 005 | Add POST /admin/trigger-pipeline to manually fire the daily pipeline job for Railway testing | 2026-03-15 | ab3daf8 | [005-admin-trigger-pipeline-endpoint](.planning/quick/005-admin-trigger-pipeline-endpoint/) |
 
 ## Session Continuity
 
-Last session: 2026-03-06
-Stopped at: Completed quick task 004 — Ayrshare references replaced with direct platform API descriptions (TikTok Content Publishing API, Meta Graph API, YouTube Data API v3) across PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md
+Last session: 2026-03-15
+Stopped at: Completed quick task 005 — Added POST /admin/trigger-pipeline endpoint to FastAPI app; fires daily_pipeline_job() in a daemon thread, returns 202 Accepted
 Resume file: None
