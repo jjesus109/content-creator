@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 # Haiku 3.5: $0.80/MTok input, $4.00/MTok output — cheapest capable model for short creative text
 COST_INPUT_PER_MTOK = 0.80
 COST_OUTPUT_PER_MTOK = 4.00
-
+MAX_TOKENS = 3000
 # Hard word cap — applied at generation time and as post-generation guard.
 # Overrides target_words when target_words > this limit.
-HARD_WORD_LIMIT = 120
+HARD_WORD_LIMIT = 90
 
 
 def _word_count(text: str) -> int:
@@ -174,6 +174,10 @@ class ScriptGenerationService:
             f"- Objetivo de palabras: ~{min(target_words, HARD_WORD_LIMIT)} palabras. LIMITE ABSOLUTO: {HARD_WORD_LIMIT} palabras. No se permite ningun guion que exceda este limite bajo ninguna circunstancia.\n"
             "- El guion final NO debe tener titulos, ni etiquetas de seccion, ni explicaciones extra.\n"
             "</guardrails>"
+            "Ejemplo de output:"
+            "<guion_final>\n"
+            "...\n"
+            "</guion_final> "
         )
 
         user = (
@@ -186,7 +190,7 @@ class ScriptGenerationService:
         )
 
         # max_tokens increased to comfortably fit chain_of_thought, reflexion, and script
-        script_text, cost = self._call_claude(system, user, max_tokens=target_words * 6)
+        script_text, cost = self._call_claude(system, user, max_tokens=MAX_TOKENS)
 
         import re
         match = re.search(r'<guion_final>(.*?)</guion_final>', script_text, re.DOTALL)

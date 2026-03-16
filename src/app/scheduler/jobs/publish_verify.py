@@ -2,9 +2,9 @@
 APScheduler job: verify publish status 30 minutes after a platform publish.
 
 Fired automatically by publish_to_platform_job() 30 minutes after a successful
-Ayrshare response. Queries Ayrshare GET /post/{id} to confirm the post is live.
+platform API response. Queries the platform directly to confirm the post is live.
 
-On success (status == "completed" or "success"): silently log only (user decision:
+On success (status == "verified"): silently log only (user decision:
   only surface failures by default — no Telegram message on success).
 On failure: update publish_events.status to 'verify_failed', send Telegram alert.
 """
@@ -16,13 +16,13 @@ from app.services.telegram import send_alert_sync
 
 logger = logging.getLogger(__name__)
 
-SUCCESS_STATUSES = {"completed", "success", "active"}
+SUCCESS_STATUSES = {"completed", "success", "active", "verified"}
 
 
 def verify_publish_job(
     content_history_id: str,
     platform: str,
-    ayrshare_post_id: str,
+    external_post_id: str,
 ) -> None:
     """
     Verify that a platform post is live 30 minutes after publishing.
@@ -32,7 +32,7 @@ def verify_publish_job(
     supabase = get_supabase()
 
     try:
-        response = PublishingService().get_post_status(ayrshare_post_id)
+        response = PublishingService().get_post_status(platform, external_post_id)
         status = response.get("status", "").lower()
         logger.info(
             "Verification %s for content_history_id=%s: status=%s",

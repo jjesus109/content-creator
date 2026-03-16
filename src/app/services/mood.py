@@ -22,9 +22,9 @@ DEFAULT_DURATION = "medium"
 
 # Target word counts by duration (CONTEXT.md locked decision)
 DURATION_WORD_COUNTS = {
-    "short": 70,    # 30s — TikTok hook-only
-    "medium": 140,  # 60s — all-platform safe (default)
-    "long": 200,    # 90s — YT Shorts max
+    "short": 40,    # 30s — TikTok hook-only
+    "medium": 80,  # 60s — all-platform safe (default)
+    "long": 120,    # 90s — YT Shorts max
 }
 
 

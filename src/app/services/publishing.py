@@ -388,7 +388,7 @@ def schedule_platform_publishes(
             name=f"Publish {platform} for {content_history_id[:8]}",
             replace_existing=True,
         )
-
+            
         scheduled_times[platform] = run_at.astimezone(pytz.UTC)
         logger.info(
             "Scheduled %s publish for content_history_id=%s at %s (%s)",
