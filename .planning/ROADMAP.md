@@ -167,13 +167,13 @@ Plans:
   2. The Character Bible (40-50 word trait spec) is embedded unchanged in every generation prompt — 8 of 10 consecutive test videos show the same cat recognized by visual inspection
   3. When Kling fails more than 20% of requests, the circuit breaker opens, the pipeline halts, and the creator receives a Telegram alert without any credit waste from retry loops
   4. Every video has AI content labels applied on TikTok, YouTube, and Instagram before the video is surfaced to the creator for approval
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 09-01: DB schema migration for v2.0 (pipeline_runs v2 columns, music_pool table, character_bible setting)
-- [ ] 09-02: Character Bible definition + Kling fal.ai async SDK integration + video storage
-- [ ] 09-03: Kling circuit breaker (20% failure threshold, exponential backoff 2s/8s/32s, credit balance check)
-- [ ] 09-04: AI content label automation (TikTok built-in, YouTube description, Instagram caption prefix) + smoke tests
+- [ ] 09-01-PLAN.md — DB schema migration 0008 (kling_job_id, kling_circuit_breaker_state, music_pool stub, app_settings) + Settings & VideoStatus extensions
+- [ ] 09-02-PLAN.md — CHARACTER_BIBLE constant + KlingService + fal.ai video_poller adaptation + daily_pipeline swap
+- [ ] 09-03-PLAN.md — KlingCircuitBreakerService (20% threshold, balance check, midnight reset) + CB wiring
+- [ ] 09-04-PLAN.md — _apply_ai_label() in platform_publish.py + test_ai_labels.py + test_smoke.py + human checkpoint
 
 #### Phase 10: Scene Engine and Music Pool
 **Goal**: Every daily run produces a scene prompt drawn from a curated library, checked for repetition, enriched with seasonal context when applicable, paired with a mood-matched licensed music track, and expressed in a universal Spanish caption
@@ -186,7 +186,7 @@ Plans:
   4. When the creator rejects a video, the rejected scene details are stored and injected as negative context into the next generation prompt automatically
   5. Every video has a universal Spanish caption of 5-8 words following the [observation] + [implied personality] formula — no per-platform variants generated
   6. A music track is selected per video by matching scene mood to BPM range (playful: 110-125, sleepy: 70-80, curious: 90-100) from a pool of 200+ pre-tagged tracks
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 10-01: Music pool DB population (200+ tracks, mood/tempo/platform-license tags) + license matrix (Track ID | Provider | TikTok/YouTube/Instagram clearance | expiration)
@@ -203,7 +203,7 @@ Plans:
   1. Before publishing to each platform, the system queries the license matrix for the selected track — if the track is not cleared for a platform, that platform's publish is blocked and the creator is notified via Telegram
   2. A video with a fully licensed track publishes to all four platforms without manual intervention
   3. A video assigned a track with an expired or missing clearance record for at least one platform is blocked from publishing to that platform and a Telegram alert identifies the track and the affected platform
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 11-01: License validation gate in PublishService (pre-publish matrix query, per-platform block logic, Telegram alert on block)
