@@ -128,6 +128,17 @@ def daily_pipeline_job() -> None:
         # 4f: v2.0 — Submit to Kling AI 3.0 via fal.ai (replaces HeyGen)
         from app.services.kling import KlingService
         from app.scheduler.jobs.video_poller import register_video_poller
+        from app.services.kling_circuit_breaker import KlingCircuitBreakerService
+
+        # Kling CB check: halt if failure rate > 20% over last 24h
+        kling_cb = KlingCircuitBreakerService(supabase)
+        if kling_cb.is_open():
+            plog.warning("Kling circuit breaker is open — skipping video generation for today.")
+            send_alert_sync(
+                "Kling AI circuit breaker activo — pipeline de video detenido hoy. "
+                "Escribe /resume para reanudar."
+            )
+            return
 
         kling_svc = KlingService()
         plog.extra["pipeline_step"] = "kling_submit"

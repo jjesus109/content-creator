@@ -30,6 +30,16 @@ def video_poller_job(video_id: str, submitted_at: datetime) -> None:
     Self-cancels when render is completed, failed, or exhausted retries.
     video_id and submitted_at are passed via APScheduler args= for pickle serializability.
     """
+    # Balance check: once per 60s poll interval (not per submission — reduces latency)
+    # Halt if balance < $1.00; alert if < $5.00
+    from app.services.kling_circuit_breaker import KlingCircuitBreakerService
+    supabase = get_supabase()
+    kling_cb = KlingCircuitBreakerService(supabase)
+    if not kling_cb.check_balance():
+        logger.error("Kling poll: fal.ai balance too low — halting for today")
+        _cancel_self(video_id)
+        return
+
     elapsed = datetime.now(tz=timezone.utc) - submitted_at
 
     # Timeout guard: 20 minutes from submission
@@ -64,6 +74,7 @@ def video_poller_job(video_id: str, submitted_at: datetime) -> None:
             )
             from app.services.kling import _process_completed_render
             _process_completed_render(video_id, video_url)
+            kling_cb.record_attempt(success=True)
             _cancel_self(video_id)
 
         elif status.status == "failed":
@@ -74,6 +85,7 @@ def video_poller_job(video_id: str, submitted_at: datetime) -> None:
             )
             from app.services.kling import _handle_render_failure
             _handle_render_failure(video_id, error_msg)
+            kling_cb.record_attempt(success=False)
             _cancel_self(video_id)
 
         # "queued" or "in_progress" — continue polling on next interval

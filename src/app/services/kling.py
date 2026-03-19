@@ -16,6 +16,7 @@ import logging
 import requests
 
 import fal_client
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.settings import get_settings
 from app.services.database import get_supabase
@@ -34,6 +35,28 @@ CHARACTER_BIBLE = (
     "and traditional adobe architecture. Named Mochi."
 )
 # Word count target: 40-50 words. Current: ~46 words.
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=32),
+    retry=retry_if_exception_type(Exception),
+    reraise=True,
+    before_sleep=lambda retry_state: logger.warning(
+        "Kling submit retry attempt %d",
+        retry_state.attempt_number,
+    ),
+)
+def _submit_with_backoff(model_id: str, arguments: dict) -> object:
+    """
+    Submit to fal.ai Kling with exponential backoff: 2s -> 8s -> 32s (3 attempts total).
+    Backoff sequence: wait_exponential(multiplier=1, min=2, max=32)
+      Attempt 1: immediate
+      Retry 1: ~2s wait
+      Retry 2: ~8s wait (capped at 32s max)
+    Only retries on transient exceptions. reraise=True propagates after exhaustion.
+    """
+    return fal_client.submit(model_id, arguments=arguments)
 
 
 class KlingService:
@@ -75,9 +98,10 @@ class KlingService:
             extra={"pipeline_step": "kling_submit", "content_history_id": ""},
         )
 
-        # fal_client.submit() is synchronous — correct for APScheduler ThreadPoolExecutor.
+        # Use _submit_with_backoff for exponential backoff: 2s -> 8s -> 32s (3 attempts).
+        # On transient fal.ai errors, tenacity retries before recording a CB failure.
         # fal_client auto-reads FAL_API_KEY from environment.
-        result = fal_client.submit(
+        result = _submit_with_backoff(
             self._settings.kling_model_version,
             arguments={
                 "prompt": full_prompt,
