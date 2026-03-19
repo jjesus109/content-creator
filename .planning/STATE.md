@@ -2,16 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
-status: planning
-stopped_at: Phase 9 context gathered
-last_updated: "2026-03-19T06:40:03.727Z"
-last_activity: 2026-03-19 — v2.0 roadmap created (3 phases, 13 requirements mapped)
+status: executing
+stopped_at: "Completed 09-01-PLAN.md"
+last_updated: "2026-03-19T14:02:29Z"
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 4
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,16 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** A cute Mexican cat video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** v2.0 Phase 9 — Character Bible and Video Generation
+**Current focus:** Phase 09 — mexican-animated-cat-video-format
 
 ## Current Position
 
-Phase: 9 of 11 (Character Bible and Video Generation)
-Plan: 0 of 4 in current phase
-Status: Ready to plan
-Last activity: 2026-03-19 — v2.0 roadmap created (3 phases, 13 requirements mapped)
-
-Progress: [░░░░░░░░░░] 0% (v2.0 scope)
+Phase: 09 (mexican-animated-cat-video-format) — EXECUTING
+Plan: 2 of 4
 
 ## Accumulated Context
 
@@ -42,6 +36,8 @@ Progress: [░░░░░░░░░░] 0% (v2.0 scope)
 - [v2.0]: Universal Spanish caption (5-8 words, [observation]+[implied personality] formula) — per-platform variants deferred to v3.0
 - [v2.0]: Music pool 200+ tracks pre-curated; license matrix per platform mandatory before first publish
 - [v2.0]: Phase 4 (Telegram approval) and Phase 5-6 (publishing, analytics) reused unchanged from v1.0
+- [09-01]: kling_circuit_breaker_state kept separate from circuit_breaker_state — different failure models (rate-based vs cost+count-based)
+- [09-01]: fal_api_key added to Settings explicitly even though fal_client auto-reads env — forces startup validation if key missing
 
 ### v1.0 Quick Tasks Completed
 
@@ -65,10 +61,11 @@ None.
 
 - [Phase 9]: Kling exact rate limits unknown — Phase 9 plan should include 1-week API test to observe real failure patterns before circuit breaker threshold is finalized
 - [Phase 10]: Anti-repetition 75-80% threshold is research estimate — empirical calibration with 20-30 test video pairs required before automation enabled
-- [Deployment]: New env vars needed: FAL_API_KEY, KLING_MODEL_VERSION before Phase 9 executes
+- [Deployment]: New env vars FAL_API_KEY and KLING_MODEL_VERSION declared in Settings and .env.example — must be added to Railway before Phase 9 plans 02-04 execute
+- [Deployment]: Migration 0008_v2_schema.sql must be applied to Supabase DB before Phase 9 plans 02-04 execute
 
 ## Session Continuity
 
-Last session: 2026-03-19T06:40:03.718Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-mexican-animated-cat-video-format/09-CONTEXT.md
+Last session: 2026-03-19T14:02:29Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: .planning/phases/09-mexican-animated-cat-video-format/09-02-PLAN.md
