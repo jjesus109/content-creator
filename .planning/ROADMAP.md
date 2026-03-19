@@ -170,10 +170,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — DB schema migration 0008 (kling_job_id, kling_circuit_breaker_state, music_pool stub, app_settings) + Settings & VideoStatus extensions
-- [ ] 09-02-PLAN.md — CHARACTER_BIBLE constant + KlingService + fal.ai video_poller adaptation + daily_pipeline swap
-- [ ] 09-03-PLAN.md — KlingCircuitBreakerService (20% threshold, balance check, midnight reset) + CB wiring
-- [ ] 09-04-PLAN.md — _apply_ai_label() in platform_publish.py + test_ai_labels.py + test_smoke.py + human checkpoint
+- [x] 09-01-PLAN.md — DB schema migration 0008 (kling_job_id, kling_circuit_breaker_state, music_pool stub, app_settings) + Settings & VideoStatus extensions
+- [x] 09-02-PLAN.md — CHARACTER_BIBLE constant + KlingService + fal.ai video_poller adaptation + daily_pipeline swap
+- [x] 09-03-PLAN.md — KlingCircuitBreakerService (20% threshold, balance check, midnight reset) + CB wiring
+- [x] 09-04-PLAN.md — _apply_ai_label() in platform_publish.py + test_ai_labels.py + test_smoke.py + human checkpoint
 
 #### Phase 10: Scene Engine and Music Pool
 **Goal**: Every daily run produces a scene prompt drawn from a curated library, checked for repetition, enriched with seasonal context when applicable, paired with a mood-matched licensed music track, and expressed in a universal Spanish caption
