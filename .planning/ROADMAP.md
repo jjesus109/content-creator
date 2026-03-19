@@ -186,14 +186,14 @@ Plans:
   4. When the creator rejects a video, the rejected scene details are stored and injected as negative context into the next generation prompt automatically
   5. Every video has a universal Spanish caption of 5-8 words following the [observation] + [implied personality] formula — no per-platform variants generated
   6. A music track is selected per video by matching scene mood to BPM range (playful: 110-125, sleepy: 70-80, curious: 90-100) from a pool of 200+ pre-tagged tracks
-**Plans**: 4 plans
+**Plans**: 5 plans
 
 Plans:
-- [ ] 10-01: Music pool DB population (200+ tracks, mood/tempo/platform-license tags) + license matrix (Track ID | Provider | TikTok/YouTube/Instagram clearance | expiration)
-- [ ] 10-02: SceneEngine (curated category library 40-60 combos, GPT-4o selection, prompt template with Character Bible slot)
-- [ ] 10-03: SeasonalCalendarService (holiday date checks, themed overlay injection for Sep 16, Nov 1-2, Nov 20, Aug 8)
-- [ ] 10-04: Anti-repetition recalibration (pgvector scene embeddings, empirical 75-80% threshold, 7-day window, SCN-04 rejection feedback storage)
-- [ ] 10-05: MusicMatcher (mood-to-BPM mapping, pool query) + CaptionGenerator (Spanish formula, 5-8 words) + pipeline wiring + smoke tests
+- [ ] 10-01-PLAN.md — DB migration 0009 (scene_embedding, check_scene_similarity, music_pool artist column) + Wave 0 test scaffold + music_seed.csv
+- [ ] 10-02-PLAN.md — scenes.json (40-60 combos) + SceneEngine (GPT-4o scene+caption, single call) + SeasonalCalendarService
+- [ ] 10-03-PLAN.md — SimilarityService.is_too_similar_scene() (7-day/0.78 threshold) + scene rejection storage/load + feature flag
+- [ ] 10-04-PLAN.md — MusicMatcher (mood-to-BPM, license flags, expiry filtering) + music pool tests
+- [ ] 10-05-PLAN.md — Pipeline wiring (SceneEngine+MusicMatcher replace v1.0 script gen) + integration tests + human checkpoint
 
 #### Phase 11: Music License Enforcement at Publish
 **Goal**: No video is published to any platform with a music track that is not cleared for that platform — the license matrix is the final gate before cross-platform distribution
