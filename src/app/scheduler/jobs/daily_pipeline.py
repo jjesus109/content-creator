@@ -28,7 +28,7 @@ def daily_pipeline_job() -> None:
        c. Check similarity against content_history — retry on hit
        d. (Pass) Generate full script — report cost to CB
        e. Summarize if over target word count — report cost to CB
-       f. Submit to HeyGen, save to content_history with embedding + heygen_job_id, register poller
+       f. Submit to Kling AI via fal.ai, save to content_history with embedding + kling_job_id, register poller
     4. If all retries exhausted — send creator alert
     """
     # Step 0: Mark any unanswered 'ready' rows from previous pipeline runs as approval_timeout
@@ -125,57 +125,47 @@ def daily_pipeline_job() -> None:
             plog.info("Script summarized to fit target word count.")
             cb.record_attempt(sum_cost)  # summarization cost tracked (non-fatal if CB trips here)
 
-        # 4f: Phase 3 — Submit to HeyGen after script is confirmed good
-        from app.services.heygen import HeyGenService, pick_background_url
+        # 4f: v2.0 — Submit to Kling AI 3.0 via fal.ai (replaces HeyGen)
+        from app.services.kling import KlingService
         from app.scheduler.jobs.video_poller import register_video_poller
 
-        # Pick background — read last-used URL from most recent content_history row
-        last_background_resp = supabase.table("content_history").select(
-            "background_url"
-        ).order("created_at", desc=True).limit(1).execute()
-        last_background = (
-            last_background_resp.data[0]["background_url"]
-            if last_background_resp.data else None
-        )
-        background_url = pick_background_url(last_used_url=last_background)
-
-        heygen_svc = HeyGenService()
-        plog.extra["pipeline_step"] = "heygen_submit"
+        kling_svc = KlingService()
+        plog.extra["pipeline_step"] = "kling_submit"
         try:
-            heygen_job_id = heygen_svc.submit(script_text=script, background_url=background_url, title=topic_summary)
-            plog.info("HeyGen job submitted: video_id=%s background=%s", heygen_job_id, background_url)
+            kling_job_id = kling_svc.submit(script_text=script)
+            plog.info("Kling job submitted: job_id=%s", kling_job_id)
         except Exception as exc:
-            plog.error("HeyGen submission failed: %s", exc)
-            send_alert_sync(f"Error al enviar a HeyGen: {exc}. Script guardado sin video.")
-            # Fail-soft: save script without HeyGen fields; do not abort pipeline
+            plog.error("Kling submission failed: %s", exc)
+            send_alert_sync(f"Error al enviar a Kling AI: {exc}. Script guardado sin video.")
+            # Fail-soft: save script without Kling fields; do not abort pipeline
             _save_to_content_history(supabase, script, topic_summary, embedding, mood)
             return
 
-        # Save script + HeyGen job ID atomically
+        # Save script + Kling job ID atomically
         new_id = _save_to_content_history(
             supabase, script, topic_summary, embedding, mood,
-            heygen_job_id=heygen_job_id,
-            background_url=background_url,
+            kling_job_id=kling_job_id,
         )
         plog.extra["content_history_id"] = new_id or ""
         plog.extra["pipeline_step"] = "pipeline_complete"
 
-        # Register APScheduler polling fallback
-        register_video_poller(heygen_job_id)
+        # Register APScheduler polling fallback (60s interval)
+        register_video_poller(kling_job_id)
 
-        plog.info("Daily pipeline complete. Script saved. HeyGen render in progress: %s", heygen_job_id)
-        # Exit immediately — render happens asynchronously via webhook (primary) or poller (fallback)
+        plog.info(
+            "Daily pipeline complete. Script saved. Kling render in progress: %s",
+            kling_job_id,
+        )
         return  # Success
 
 
 def _save_to_content_history(
     supabase, script: str, topic_summary: str, embedding: list[float], mood: dict,
-    heygen_job_id: str | None = None,
-    background_url: str | None = None,
+    kling_job_id: str | None = None,
 ) -> str | None:
     """
     Persist the generated script with its embedding to content_history.
-    Phase 3 adds: heygen_job_id, video_status=pending_render, background_url.
+    v2.0: uses kling_job_id column, video_status=kling_pending.
     NOTE: mood_profile is NOT a column on content_history — do not insert it here.
     Returns the new content_history id, or None on failure.
     """
@@ -185,10 +175,9 @@ def _save_to_content_history(
         "topic_summary": topic_summary,
         "embedding": embedding,          # list[float] — Supabase client handles vector serialization
     }
-    if heygen_job_id:
-        row["heygen_job_id"] = heygen_job_id
-        row["video_status"] = VideoStatus.PENDING_RENDER.value
-        row["background_url"] = background_url
+    if kling_job_id:
+        row["kling_job_id"] = kling_job_id
+        row["video_status"] = VideoStatus.KLING_PENDING.value
     try:
         result = supabase.table("content_history").insert(row).execute()
         new_id = result.data[0]["id"] if result.data else None

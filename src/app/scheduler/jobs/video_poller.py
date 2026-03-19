@@ -1,5 +1,5 @@
 import logging
-import requests
+import fal_client
 from datetime import datetime, timedelta, timezone
 from app.settings import get_settings
 from app.services.database import get_supabase
@@ -8,7 +8,6 @@ from app.models.video import VideoStatus
 
 logger = logging.getLogger(__name__)
 
-HEYGEN_STATUS_URL = "https://api.heygen.com/v1/video_status.get"
 POLL_TIMEOUT_MINUTES = 20
 POLLER_JOB_ID_PREFIX = "video_poller_"
 
@@ -27,141 +26,137 @@ def set_scheduler(scheduler) -> None:
 def video_poller_job(video_id: str, submitted_at: datetime) -> None:
     """
     APScheduler interval job. Runs every 60 seconds.
-    Checks HeyGen render status for video_id.
+    Checks Kling/fal.ai render status for video_id via fal_client.status() (sync).
     Self-cancels when render is completed, failed, or exhausted retries.
     video_id and submitted_at are passed via APScheduler args= for pickle serializability.
     """
-    settings = get_settings()
     elapsed = datetime.now(tz=timezone.utc) - submitted_at
 
     # Timeout guard: 20 minutes from submission
     if elapsed > timedelta(minutes=POLL_TIMEOUT_MINUTES):
         logger.error(
-            "HeyGen render timeout (20 min) for video_id=%s. Elapsed: %s",
+            "Kling render timeout (20 min) for job_id=%s. Elapsed: %s",
             video_id, elapsed
         )
         _retry_or_fail(video_id)
         return
 
     try:
-        response = requests.get(
-            HEYGEN_STATUS_URL,
-            params={"video_id": video_id},
-            headers={"x-api-key": settings.heygen_api_key},
-            timeout=15,
-        )
-        response.raise_for_status()
-        data = response.json().get("data", {})
-        status = data.get("status")
-        logger.info("HeyGen poll: video_id=%s status=%s elapsed=%s", video_id, status, elapsed)
+        # fal_client.status() is synchronous — correct for APScheduler ThreadPoolExecutor
+        settings = get_settings()
 
-        if status == "completed":
-            signed_url = data.get("video_url")
-            logger.info("Poller: render complete for video_id=%s, triggering processing", video_id)
-            from app.services.heygen import _process_completed_render
-            _process_completed_render(video_id, signed_url)
+        status = fal_client.status(
+            settings.kling_model_version,
+            video_id,
+            with_logs=False,
+        )
+        logger.info(
+            "Kling poll: job_id=%s status=%s elapsed=%s",
+            video_id, status.status, elapsed,
+        )
+
+        if status.status == "completed":
+            # Extract video URL from fal.ai response
+            video_url = status.response["video"]["url"]
+            logger.info(
+                "Poller: Kling render complete for job_id=%s, triggering processing",
+                video_id,
+            )
+            from app.services.kling import _process_completed_render
+            _process_completed_render(video_id, video_url)
             _cancel_self(video_id)
 
-        elif status == "failed":
-            error_msg = data.get("error") or "unknown"
-            logger.error("Poller: HeyGen render failed for video_id=%s error=%s", video_id, error_msg)
-            from app.services.heygen import _handle_render_failure
+        elif status.status == "failed":
+            error_msg = str(status.response.get("error", "unknown"))
+            logger.error(
+                "Poller: Kling render failed for job_id=%s error=%s",
+                video_id, error_msg,
+            )
+            from app.services.kling import _handle_render_failure
             _handle_render_failure(video_id, error_msg)
             _cancel_self(video_id)
 
-        # pending / processing / waiting: do nothing — next interval will check again
+        # "queued" or "in_progress" — continue polling on next interval
 
     except Exception as exc:
-        logger.error("Poller error for video_id=%s: %s", video_id, exc)
-        # Do NOT cancel — retry on next interval; transient network errors are recoverable
+        logger.error("Kling poller error for job_id=%s: %s", video_id, exc)
+        # Do NOT cancel — retry on next interval; transient errors are recoverable
 
 
 def _retry_or_fail(video_id: str) -> None:
     """
-    Retry-once logic for 20-minute timeout (locked decision: retry once, then alert and skip).
-
-    Uses video_status as a sentinel:
-    - If status is pending_render or rendering: this is the FIRST timeout.
-      Resubmit same script to HeyGen, update heygen_job_id, reset status to
-      pending_render_retry, register a new poller. Cancel current poller.
-    - If status is pending_render_retry: this is the SECOND timeout.
-      Mark failed, alert creator via Telegram, cancel poller.
+    Retry-once logic for 20-minute timeout.
+    Uses video_status as sentinel:
+    - kling_pending or rendering → first timeout: resubmit to Kling, set kling_pending_retry
+    - kling_pending_retry → second timeout: mark failed, alert creator
     """
-    from app.services.heygen import HeyGenService
+    from app.services.kling import KlingService
     supabase = get_supabase()
 
-    # Read current row to get script_text and video_status
     result = supabase.table("content_history").select(
-        "script_text, background_url, video_status"
-    ).eq("heygen_job_id", video_id).single().execute()
+        "script_text, video_status"
+    ).eq("kling_job_id", video_id).single().execute()
 
     if not result.data:
-        logger.error("_retry_or_fail: no row found for heygen_job_id=%s — cannot retry", video_id)
+        logger.error("_retry_or_fail: no row found for kling_job_id=%s — cannot retry", video_id)
         _cancel_self(video_id)
         return
 
     current_status = result.data.get("video_status")
     script_text = result.data.get("script_text")
-    background_url = result.data.get("background_url")
 
     is_first_timeout = current_status in (
-        VideoStatus.PENDING_RENDER.value,
+        VideoStatus.KLING_PENDING.value,
         VideoStatus.RENDERING.value,
     )
-    is_second_timeout = current_status == VideoStatus.PENDING_RENDER_RETRY.value
+    is_second_timeout = current_status == VideoStatus.KLING_PENDING_RETRY.value
 
     if is_first_timeout:
         logger.warning(
-            "First timeout for video_id=%s — retrying HeyGen submission (per user decision)",
+            "First Kling timeout for job_id=%s — retrying submission",
             video_id,
         )
         try:
-            heygen_svc = HeyGenService()
-            new_job_id = heygen_svc.submit(script_text=script_text, background_url=background_url)
-            logger.info("Retry submitted to HeyGen: old_job_id=%s new_job_id=%s", video_id, new_job_id)
-
-            # Update DB: new heygen_job_id + status sentinel marking retry in progress
+            kling_svc = KlingService()
+            new_job_id = kling_svc.submit(script_text=script_text)
+            logger.info(
+                "Kling retry submitted: old_job_id=%s new_job_id=%s",
+                video_id, new_job_id,
+            )
             supabase.table("content_history").update({
-                "heygen_job_id": new_job_id,
-                "video_status": VideoStatus.PENDING_RENDER_RETRY.value,
-            }).eq("heygen_job_id", video_id).execute()
-
-            # Register a new poller for the new job ID
+                "kling_job_id": new_job_id,
+                "video_status": VideoStatus.KLING_PENDING_RETRY.value,
+            }).eq("kling_job_id", video_id).execute()
             register_video_poller(new_job_id)
-
         except Exception as exc:
-            logger.error("HeyGen retry submission failed for video_id=%s: %s", video_id, exc)
-            # Retry submission itself failed — fall through to failure path
+            logger.error("Kling retry submission failed for job_id=%s: %s", video_id, exc)
             supabase.table("content_history").update(
                 {"video_status": VideoStatus.FAILED.value}
-            ).eq("heygen_job_id", video_id).execute()
+            ).eq("kling_job_id", video_id).execute()
             send_alert_sync(
-                f"Timeout de render HeyGen para video_id={video_id}. "
+                f"Timeout de render Kling para job_id={video_id}. "
                 f"Reintento fallido: {exc}. Video del dia omitido."
             )
-
         finally:
-            # Cancel the current poller regardless of outcome — new poller registered above
             _cancel_self(video_id)
 
     elif is_second_timeout:
         logger.error(
-            "Second timeout for video_id=%s — marking failed, alerting creator (per user decision)",
+            "Second Kling timeout for job_id=%s — marking failed, alerting creator",
             video_id,
         )
         supabase.table("content_history").update(
             {"video_status": VideoStatus.FAILED.value}
-        ).eq("heygen_job_id", video_id).execute()
+        ).eq("kling_job_id", video_id).execute()
         send_alert_sync(
-            f"Render HeyGen agotado (2 intentos, 40 min) para video_id={video_id}. "
+            f"Render Kling agotado (2 intentos, 40 min) para job_id={video_id}. "
             "Video del dia omitido."
         )
         _cancel_self(video_id)
 
     else:
-        # Unexpected status (e.g., already processing/ready/failed) — cancel and do nothing
         logger.warning(
-            "_retry_or_fail: unexpected status=%s for video_id=%s — cancelling poller",
+            "_retry_or_fail: unexpected status=%s for job_id=%s — cancelling poller",
             current_status, video_id,
         )
         _cancel_self(video_id)
@@ -169,10 +164,10 @@ def _retry_or_fail(video_id: str) -> None:
 
 def register_video_poller(video_id: str) -> None:
     """
-    Register a 60-second interval job to poll HeyGen status for video_id.
-    Uses predictable job_id so webhook can cancel by ID: f"video_poller_{video_id}".
+    Register a 60-second interval job to poll Kling/fal.ai status for video_id.
+    Uses predictable job_id so poller can cancel by ID: f"video_poller_{video_id}".
     video_id and submitted_at are passed via APScheduler args= — no closures, fully picklable.
-    Called from daily_pipeline_job after HeyGen submission, and from _retry_or_fail on retry.
+    Called from daily_pipeline_job after Kling submission, and from _retry_or_fail on retry.
     """
     submitted_at = datetime.now(tz=timezone.utc)
 
@@ -182,10 +177,10 @@ def register_video_poller(video_id: str) -> None:
         args=[video_id, submitted_at],
         trigger=IntervalTrigger(seconds=60),
         id=f"{POLLER_JOB_ID_PREFIX}{video_id}",
-        name=f"HeyGen poller for {video_id}",
+        name=f"Kling poller for {video_id}",
         replace_existing=True,
     )
-    logger.info("Registered video poller for video_id=%s", video_id)
+    logger.info("Registered video poller for job_id=%s", video_id)
 
 
 def _cancel_self(video_id: str) -> None:
@@ -193,4 +188,4 @@ def _cancel_self(video_id: str) -> None:
     try:
         _scheduler.remove_job(f"{POLLER_JOB_ID_PREFIX}{video_id}")
     except Exception:
-        pass  # Already removed (webhook fired first) — not an error
+        pass  # Already removed — not an error

@@ -107,19 +107,25 @@ def test_retry_or_fail_first_timeout_calls_kling_service():
     mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(data=mock_row)
     mock_supabase.table.return_value.update.return_value.eq.return_value.execute.return_value = MagicMock()
 
+    mock_kling_instance = MagicMock()
+    mock_kling_instance.submit.return_value = "new-kling-job-456"
+    MockKlingClass = MagicMock(return_value=mock_kling_instance)
+
+    # KlingService is imported inside _retry_or_fail via `from app.services.kling import KlingService`
+    # Patch at the kling module so local import picks up our mock
     with patch("app.scheduler.jobs.video_poller.get_supabase", return_value=mock_supabase), \
          patch("app.scheduler.jobs.video_poller._cancel_self"), \
          patch("app.scheduler.jobs.video_poller.register_video_poller"), \
-         patch("app.services.kling.KlingService") as MockKling, \
-         patch("app.scheduler.jobs.video_poller.KlingService", MockKling):
-        mock_kling_instance = MagicMock()
-        mock_kling_instance.submit.return_value = "new-kling-job-456"
-        MockKling.return_value = mock_kling_instance
+         patch("app.services.kling.KlingService", MockKlingClass):
 
         from app.scheduler.jobs.video_poller import _retry_or_fail
         _retry_or_fail("kling-job-005")
 
+    # submit() must have been called on the KlingService instance
     mock_kling_instance.submit.assert_called_once()
+    # Verify the DB was updated with the new job ID and KLING_PENDING_RETRY status
+    update_calls = str(mock_supabase.table.return_value.update.call_args_list)
+    assert "kling_pending_retry" in update_calls or "new-kling-job-456" in update_calls
 
 
 def test_daily_pipeline_imports_kling_service():
