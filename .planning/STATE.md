@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
 status: unknown
-stopped_at: Completed 09-03-PLAN.md
-last_updated: "2026-03-19T14:20:20Z"
+stopped_at: Completed 09-04-PLAN.md
+last_updated: "2026-03-19T14:27:40.700Z"
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -43,6 +43,7 @@ Plan: 3 of 4
 - [09-03]: KlingCircuitBreakerService uses kling_circuit_breaker_state singleton — separate table from HeyGen CB; different failure model (rate-based vs cost+count-based)
 - [09-03]: check_balance() and is_open() are fail-open — return safe defaults on errors to avoid unnecessary pipeline halts
 - [09-03]: _submit_with_backoff at module level (not instance method) for tenacity decorator compatibility; record_attempt called in video_poller not daily_pipeline
+- [Phase 09-04]: AI label applied at publish time in platform_publish.py (not before Telegram approval); YouTube label in description only; exception fallback prevents silent omission
 
 ### v1.0 Quick Tasks Completed
 
@@ -71,6 +72,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T14:20:20Z
-Stopped at: Completed 09-03-PLAN.md
+Last session: 2026-03-19T14:27:40.698Z
+Stopped at: Completed 09-04-PLAN.md
 Resume file: None

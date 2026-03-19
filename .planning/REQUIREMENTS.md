@@ -10,10 +10,10 @@ Requirements for the Mexican Cat Content Machine milestone. Each maps to roadmap
 
 ### Video Generation
 
-- [ ] **VID-01**: System generates cat video using Kling AI 3.0 via fal.ai (20-30s, 9:16 1080p) replacing HeyGen
-- [ ] **VID-02**: Fixed Mexican cat character defined via Character Bible (40-50 word trait spec) embedded in every generation prompt
-- [ ] **VID-03**: Kling API circuit breaker: pauses pipeline if >20% failure rate; exponential backoff (2s, 8s, 32s); credit balance checked before each call
-- [ ] **VID-04**: AI content label applied on all platforms before video is published (mandatory TikTok/YouTube/Instagram compliance)
+- [x] **VID-01**: System generates cat video using Kling AI 3.0 via fal.ai (20-30s, 9:16 1080p) replacing HeyGen
+- [x] **VID-02**: Fixed Mexican cat character defined via Character Bible (40-50 word trait spec) embedded in every generation prompt
+- [x] **VID-03**: Kling API circuit breaker: pauses pipeline if >20% failure rate; exponential backoff (2s, 8s, 32s); credit balance checked before each call
+- [x] **VID-04**: AI content label applied on all platforms before video is published (mandatory TikTok/YouTube/Instagram compliance)
 
 ### Scene Engine
 
@@ -73,10 +73,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VID-01 | Phase 9 | Pending |
-| VID-02 | Phase 9 | Pending |
-| VID-03 | Phase 9 | Pending |
-| VID-04 | Phase 9 | Pending |
+| VID-01 | Phase 9 | Complete |
+| VID-02 | Phase 9 | Complete |
+| VID-03 | Phase 9 | Complete |
+| VID-04 | Phase 9 | Complete |
 | SCN-01 | Phase 10 | Pending |
 | SCN-02 | Phase 10 | Pending |
 | SCN-03 | Phase 10 | Pending |
