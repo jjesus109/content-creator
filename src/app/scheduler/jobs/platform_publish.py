@@ -30,8 +30,43 @@ from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
+# AI content disclosure label — VID-04 (TikTok/YouTube/Instagram compliance, EU AI Act Aug 2026)
+AI_LABEL = "🤖 Creado con IA"
+
 # Module-level scheduler — injected by registry.py via set_scheduler() (same pattern as video_poller)
 _scheduler = None
+
+
+def _apply_ai_label(post_text: str, platform: str) -> str:
+    """
+    Prepend AI disclosure label to platform content before publishing.
+
+    Uniform label: "🤖 Creado con IA" across all platforms.
+    YouTube: label goes in description only (not title) — avoids title length violation.
+    All others: label prepended to caption.
+
+    Per CONTEXT.md locked decision: caption prefix used for all platforms.
+    TikTok native api_generated flag is skipped (label is sufficient for compliance).
+
+    Args:
+        post_text: Platform-specific caption/description. For YouTube, first line is title.
+        platform:  One of: tiktok, instagram, facebook, youtube
+
+    Returns:
+        post_text with AI label prepended appropriately for the platform.
+    """
+    if platform == "youtube":
+        # Split on first newline: title (line 0) stays clean; label goes in description
+        lines = post_text.strip().split("\n", 1)
+        title = lines[0] if lines else "Video"
+        description = lines[1] if len(lines) > 1 else ""
+        labeled_desc = f"{AI_LABEL}\n\n{description}" if description else AI_LABEL
+        return f"{title}\n{labeled_desc}"
+
+    # TikTok, Instagram, Facebook: prepend to caption
+    if post_text:
+        return f"{AI_LABEL}\n{post_text}"
+    return AI_LABEL
 
 
 def set_scheduler(scheduler) -> None:
@@ -62,10 +97,21 @@ def publish_to_platform_job(
     copy_key = f"post_copy_{platform}"
     post_copy = row.get(copy_key) or row.get("post_copy", "")
 
+    # AI content label: apply before publish (VID-04 — TikTok/YouTube/Instagram compliance)
+    # Failure fallback: if _apply_ai_label raises, use naive prefix — never skip silently
+    try:
+        labeled_copy = _apply_ai_label(post_copy, platform)
+    except Exception as label_exc:
+        logger.error(
+            "AI label application failed for platform=%s, falling back to prefix: %s",
+            platform, label_exc,
+        )
+        labeled_copy = f"{AI_LABEL}\n{post_copy}" if post_copy else AI_LABEL
+
     try:
         response = PublishingService().publish(
             platform=platform,
-            post_text=post_copy,
+            post_text=labeled_copy,
             video_url=video_url,
         )
 
