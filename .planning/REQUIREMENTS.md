@@ -73,25 +73,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VID-01 | — | Pending |
-| VID-02 | — | Pending |
-| VID-03 | — | Pending |
-| VID-04 | — | Pending |
-| SCN-01 | — | Pending |
-| SCN-02 | — | Pending |
-| SCN-03 | — | Pending |
-| SCN-04 | — | Pending |
-| SCN-05 | — | Pending |
-| MUS-01 | — | Pending |
-| MUS-02 | — | Pending |
-| MUS-03 | — | Pending |
-| PUB-01 | — | Pending |
+| VID-01 | Phase 9 | Pending |
+| VID-02 | Phase 9 | Pending |
+| VID-03 | Phase 9 | Pending |
+| VID-04 | Phase 9 | Pending |
+| SCN-01 | Phase 10 | Pending |
+| SCN-02 | Phase 10 | Pending |
+| SCN-03 | Phase 10 | Pending |
+| SCN-04 | Phase 10 | Pending |
+| SCN-05 | Phase 10 | Pending |
+| MUS-01 | Phase 10 | Pending |
+| MUS-02 | Phase 10 | Pending |
+| MUS-03 | Phase 10 | Pending |
+| PUB-01 | Phase 11 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13 ⚠️
+- Mapped to phases: 13
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 after initial definition*
+*Last updated: 2026-03-19 — traceability filled after roadmap creation*
