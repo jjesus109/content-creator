@@ -46,6 +46,13 @@ class Settings(BaseSettings):
     heygen_ambient_music_urls: str              # Comma-separated Supabase Storage public URLs for ambient music tracks (2-4 tracks)
     heygen_gesture_prompt: str  # Avatar gesture instruction sent as character.prompt in v2 API
 
+    # Kling AI / fal.ai video generation (VID-01, VID-02) — v2.0
+    # fal_client reads FAL_API_KEY from environment automatically — this field is here
+    # to make the dependency explicit and validate presence at startup
+    fal_api_key: str                        # fal.ai account API key — fal.ai dashboard → API keys
+    kling_model_version: str = "fal-ai/kling-video/v3/standard/text-to-video"
+                                            # Kling 3.0 standard tier model ID (configurable for upgrades)
+
     # Publishing — Direct platform APIs (PUBL-01, PUBL-02)
 
     # Instagram (Meta Graph API v18 — long-lived user access token, 60-day expiry)
