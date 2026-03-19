@@ -224,6 +224,6 @@ Phases execute in numeric order: 1 → 2 → ... → 8 → 9 → 10 → 11
 | 6. Analytics and Storage | v1.0 | 5/5 | Complete | 2026-02-28 |
 | 7. Hardening | v1.0 | 3/4 | In Progress | - |
 | 8. Milestone Closure | v1.0 | 3/3 | Complete | 2026-03-02 |
-| 9. Character Bible and Video Generation | 2/4 | In Progress|  | - |
+| 9. Character Bible and Video Generation | 3/4 | In Progress|  | - |
 | 10. Scene Engine and Music Pool | v2.0 | 0/5 | Not started | - |
 | 11. Music License Enforcement at Publish | v2.0 | 0/2 | Not started | - |

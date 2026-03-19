@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
 status: unknown
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-03-19T14:12:45.019Z"
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-03-19T14:20:20Z"
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-18)
 ## Current Position
 
 Phase: 09 (mexican-animated-cat-video-format) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 
 ## Accumulated Context
 
@@ -40,6 +40,9 @@ Plan: 2 of 4
 - [09-01]: fal_api_key added to Settings explicitly even though fal_client auto-reads env — forces startup validation if key missing
 - [Phase 09]: CHARACTER_BIBLE set to 49 words — orange tabby Mochi in Mexican household; embedded as Python constant in kling.py for deployment consistency
 - [Phase 09]: fal-client==0.13.1 added as runtime dependency (not dev-only) — required by KlingService and video_poller_job in APScheduler ThreadPoolExecutor
+- [09-03]: KlingCircuitBreakerService uses kling_circuit_breaker_state singleton — separate table from HeyGen CB; different failure model (rate-based vs cost+count-based)
+- [09-03]: check_balance() and is_open() are fail-open — return safe defaults on errors to avoid unnecessary pipeline halts
+- [09-03]: _submit_with_backoff at module level (not instance method) for tenacity decorator compatibility; record_attempt called in video_poller not daily_pipeline
 
 ### v1.0 Quick Tasks Completed
 
@@ -68,6 +71,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T14:12:45.017Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-03-19T14:20:20Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
