@@ -6,43 +6,43 @@ from app.services.scene_generation import SeasonalCalendarService
 
 
 def test_independence_day_overlay():
-    """SCN-02: Sep 16 returns Día de Independencia overlay."""
+    """SCN-02: Sep 16 returns Día de Independencia overlay (in English)."""
     svc = SeasonalCalendarService()
     overlay = svc.get_overlay(date(2026, 9, 16))
     assert overlay is not None
-    assert "Independencia" in overlay or "septiembre" in overlay or "16" in overlay
+    assert "Independence" in overlay or "September" in overlay or "16" in overlay
 
 
 def test_day_of_dead_overlay_nov1():
-    """SCN-02: Nov 1 returns Día de Muertos overlay."""
+    """SCN-02: Nov 1 returns Día de Muertos overlay (in English)."""
     svc = SeasonalCalendarService()
     overlay = svc.get_overlay(date(2026, 11, 1))
     assert overlay is not None
-    assert "Muertos" in overlay or "noviembre" in overlay
+    assert "Muertos" in overlay or "November" in overlay
 
 
 def test_day_of_dead_overlay_nov2():
-    """SCN-02: Nov 2 returns Día de Muertos overlay."""
+    """SCN-02: Nov 2 returns Día de Muertos overlay (in English)."""
     svc = SeasonalCalendarService()
     overlay = svc.get_overlay(date(2026, 11, 2))
     assert overlay is not None
-    assert "Muertos" in overlay or "noviembre" in overlay
+    assert "Muertos" in overlay or "November" in overlay
 
 
 def test_revolution_day_overlay():
-    """SCN-02: Nov 20 returns Día de la Revolución overlay."""
+    """SCN-02: Nov 20 returns Día de la Revolución overlay (in English)."""
     svc = SeasonalCalendarService()
     overlay = svc.get_overlay(date(2026, 11, 20))
     assert overlay is not None
-    assert "Revolución" in overlay or "noviembre" in overlay
+    assert "Revolution" in overlay or "November" in overlay
 
 
 def test_cat_day_overlay():
-    """SCN-02: Aug 8 returns Día Internacional del Gato overlay."""
+    """SCN-02: Aug 8 returns Día Internacional del Gato overlay (in English)."""
     svc = SeasonalCalendarService()
     overlay = svc.get_overlay(date(2026, 8, 8))
     assert overlay is not None
-    assert "Gato" in overlay or "agosto" in overlay
+    assert "Cat" in overlay or "August" in overlay
 
 
 def test_non_holiday_returns_none():

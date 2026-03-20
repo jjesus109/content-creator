@@ -34,37 +34,39 @@ GPT4O_COST_OUTPUT_PER_MTOK = 10.00
 SCENES_JSON_PATH = Path(__file__).resolve().parents[1] / "data" / "scenes.json"
 
 # Seasonal calendar: (month, day) -> (theme_name, overlay_text)
+# overlay_text is in English — injected into the GPT-4o system prompt for better Kling results.
+# theme_name keys are kept in Spanish (display/logging only).
 SEASONAL_OVERLAYS: dict[tuple[int, int], tuple[str, str]] = {
     (9, 16): (
         "Día de Independencia",
-        "Hoy es el Día de Independencia de México (16 de septiembre). "
-        "Incorpora sutilmente elementos de celebración mexicana en la escena — "
-        "por ejemplo, una bandera verde-blanco-rojo visible al fondo, o luces de colores. "
-        "No cambies la actividad del gato; solo añade ambiente festivo patriótico."
+        "Today is Mexico's Independence Day (September 16). "
+        "Subtly incorporate Mexican celebration elements into the scene — "
+        "for example, a green-white-red flag visible in the background, or colorful lights. "
+        "Do not change the cat's activity; only add patriotic festive atmosphere."
     ),
     (11, 1): (
         "Día de Muertos",
-        "Hoy comienza el Día de Muertos (1 de noviembre). "
-        "Añade una sutil referencia visual a la tradición — cempasúchil cerca, velas encendidas, "
-        "o altar de fondo. Mantén el comportamiento natural del gato; el ambiente es el que cambia."
+        "Today marks the beginning of Día de Muertos (November 1). "
+        "Add a subtle visual reference to the tradition — nearby cempasúchil flowers, lit candles, "
+        "or an altar in the background. Keep the cat's natural behavior; only the atmosphere changes."
     ),
     (11, 2): (
         "Día de Muertos",
-        "Hoy es el segundo día del Día de Muertos (2 de noviembre). "
-        "Añade una sutil referencia visual a la tradición — cempasúchil cerca, velas encendidas, "
-        "o altar de fondo. Mantén el comportamiento natural del gato; el ambiente es el que cambia."
+        "Today is the second day of Día de Muertos (November 2). "
+        "Add a subtle visual reference to the tradition — nearby cempasúchil flowers, lit candles, "
+        "or an altar in the background. Keep the cat's natural behavior; only the atmosphere changes."
     ),
     (11, 20): (
         "Día de la Revolución",
-        "Hoy es el Día de la Revolución Mexicana (20 de noviembre). "
-        "Añade elementos sutiles de orgullo mexicano en el ambiente — colores de la bandera, "
-        "decoración tricolor al fondo. El comportamiento del gato no cambia."
+        "Today is Mexico's Revolution Day (November 20). "
+        "Add subtle elements of Mexican pride to the environment — flag colors, "
+        "tricolor decoration in the background. The cat's behavior does not change."
     ),
     (8, 8): (
         "Día Internacional del Gato",
-        "Hoy es el Día Internacional del Gato (8 de agosto). "
-        "Haz que la escena celebre especialmente a Mochi — tal vez con un lazo especial, "
-        "o mostrando su mejor lado. El ambiente puede ser un poco más festivo de lo normal."
+        "Today is International Cat Day (August 8). "
+        "Make the scene especially celebratory for Mochi — perhaps with a special bow, "
+        "or showing his best side. The atmosphere can be a little more festive than usual."
     ),
 }
 
@@ -143,10 +145,10 @@ class SceneEngine:
         """Build the GPT-4o system prompt for scene + caption generation."""
         rejection_text = ""
         if rejection_constraints:
-            rejection_lines = ["\nEVITA estas escenas (rechazadas por el creador):"]
+            rejection_lines = ["\nAVOID these scenes (rejected by creator):"]
             for r in rejection_constraints:
                 combo_info = r.get("scene_combo") or {}
-                reason = r.get("reason_text", "sin razón")
+                reason = r.get("reason_text", "no reason given")
                 if combo_info:
                     rejection_lines.append(
                         f"- {combo_info.get('location', '?')} / {combo_info.get('activity', '?')}: {reason}"
@@ -155,36 +157,37 @@ class SceneEngine:
 
         seasonal_text = ""
         if seasonal_overlay:
-            seasonal_text = f"\n\nCONTEXTO ESTACIONAL ESPECIAL:\n{seasonal_overlay}"
+            seasonal_text = f"\n\nSPECIAL SEASONAL CONTEXT:\n{seasonal_overlay}"
 
-        return f"""Eres un director creativo para producción de videos de gato.
-Se te da una composición de escena (location + activity + mood). Tu tarea:
-1. Expandirla en un prompt visual vívido de 2-3 oraciones para generación de video con IA.
-2. Generar un pie de foto en español de 5-8 palabras siguiendo la fórmula: [observación] + [personalidad implícita].
+        return f"""You are a creative director for cat video production.
+You are given a scene composition (location + activity + mood). Your task:
+1. Expand it into a vivid 2-3 sentence visual prompt in ENGLISH for AI video generation (scene_prompt).
+2. Generate a Spanish caption of 5-8 words for the social media post, following the formula: [observation] + [implied personality] (caption).
 
-PERSONAJE — Character Bible (incluir en el prompt):
+CHARACTER — Character Bible (include in the prompt):
 {CHARACTER_BIBLE}
 
-ESCENA SELECCIONADA:
-- Ubicación: {combo['location']}
-- Actividad: {combo['activity']}
-- Estado de ánimo: {combo['mood']}
+SELECTED SCENE:
+- Location: {combo['location']}
+- Activity: {combo['activity']}
+- Mood: {combo['mood']}
 {seasonal_text}
 {rejection_text}
 
-INSTRUCCIONES PARA EL PROMPT DE ESCENA:
-- 2-3 oraciones completas, describen la escena visualmente para generación de video
-- Incluir el nombre "Mochi" y referencia al Character Bible
-- Describir la acción, el ambiente, la luz y el ánimo
-- Optimizado para Kling AI (video generación): específico, visual, cinematográfico
+INSTRUCTIONS FOR SCENE PROMPT (scene_prompt):
+- 2-3 complete sentences, describing the scene visually for video generation
+- Must be in ENGLISH — Kling AI generates better results with English prompts
+- Include the name "Mochi" and reference the Character Bible
+- Describe the action, environment, lighting, and mood
+- Optimized for Kling AI (video generation): specific, visual, cinematic
 
-INSTRUCCIONES PARA EL PIE DE FOTO:
-- Exactamente 5-8 palabras en español
-- Fórmula: [lo que hace/observa] + [personalidad del gato implícita]
-- Ejemplos: "Mochi descubre los secretos de la cocina", "El gato vigila su territorio con calma"
-- NO usar hashtags, NO usar emojis
+INSTRUCTIONS FOR CAPTION (caption):
+- Exactly 5-8 words in SPANISH
+- Formula: [what the cat does/observes] + [implied cat personality]
+- Examples: "Mochi descubre los secretos de la cocina", "El gato vigila su territorio con calma"
+- NO hashtags, NO emojis
 
-Devuelve ÚNICAMENTE un JSON válido con exactamente estas dos claves:
+Return ONLY valid JSON with exactly these two keys:
 {{"scene_prompt": "...", "caption": "..."}}"""
 
     def pick_scene(
