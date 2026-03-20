@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
 status: unknown
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-03-20T05:25:34.650Z"
+stopped_at: Completed 11-02-PLAN.md — Phase 11 complete
+last_updated: "2026-03-20T14:36:45.438Z"
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -61,6 +61,8 @@ Plan: 2 of 2
 - [Phase 11]: [11-01]: _check_music_license_cleared is fail-open on null music_track_id — backward compatibility for legacy content_history rows without a track assigned
 - [Phase 11]: [11-01]: publish_events 'blocked' row inserted before Telegram alert — ensures DB record survives even if alert network call fails
 - [Phase 11]: [11-01]: Expiry comparison uses expiry <= now_utc (fail-closed at exact expiry moment) — consistent with Phase 10 music_matcher.py strict > semantics
+- [Phase 11]: [11-02]: Integration tests call publish_to_platform_job() directly to validate gate wiring into job — not just helper function
+- [Phase 11]: [11-02]: _make_integration_supabase_mock uses table name dispatch via side_effect for multi-table job function testing
 
 ### v1.0 Quick Tasks Completed
 
@@ -89,6 +91,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T05:25:34.647Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-03-20T14:36:45.429Z
+Stopped at: Completed 11-02-PLAN.md — Phase 11 complete
 Resume file: None
