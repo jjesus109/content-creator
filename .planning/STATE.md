@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
-status: unknown
-stopped_at: Phase 10 context gathered
-last_updated: "2026-03-19T20:28:28.375Z"
+status: executing
+stopped_at: "Completed 10-01-PLAN.md"
+last_updated: "2026-03-20T03:52:00Z"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 9
+  completed_plans: 5
 ---
 
 # Project State
@@ -19,17 +19,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** A cute Mexican cat video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 09 — mexican-animated-cat-video-format
+**Current focus:** Phase 10 — scene-engine-and-music-pool
 
 ## Current Position
 
-Phase: 09 (mexican-animated-cat-video-format) — COMPLETE
-Plan: 4 of 4
+Phase: 10 (scene-engine-and-music-pool) — EXECUTING
+Plan: 2 of 5
 
 ## Accumulated Context
 
 ### Decisions
 
+- [10-01]: scene_embedding stored on content_history (not separate table) — atomic updates, no join complexity; existing embedding column preserved
+- [10-01]: check_scene_similarity defaults: threshold=0.78 (mid-range 75-80% research), lookback=7 days (vs 90 days for scripts)
+- [10-01]: artist column added to music_pool via 0009 migration (was missing from Phase 9 stub in 0008)
 - [v2.0]: Kling AI 3.0 via fal.ai async SDK selected (7-60x cheaper than alternatives; character consistency features shipped March 2026)
 - [v2.0]: Character Bible locked at 40-50 words embedded in every prompt; reference image upgrade if consistency <90%
 - [v2.0]: Anti-repetition threshold recalibrated to 75-80% (from v1.0's 85%) — requires empirical validation before automation
@@ -73,6 +76,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T20:28:28.366Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-scene-engine-and-music-pool/10-CONTEXT.md
+Last session: 2026-03-20T03:52:00Z
+Stopped at: Completed 10-01-PLAN.md
+Resume file: .planning/phases/10-scene-engine-and-music-pool/10-02-PLAN.md

@@ -25,9 +25,9 @@ Requirements for the Mexican Cat Content Machine milestone. Each maps to roadmap
 
 ### Music
 
-- [ ] **MUS-01**: Pre-curated music pool of 200+ tracks stored in DB, tagged by mood, tempo, and per-platform license status
+- [x] **MUS-01**: Pre-curated music pool of 200+ tracks stored in DB, tagged by mood, tempo, and per-platform license status
 - [ ] **MUS-02**: Music track selected per video by matching scene mood to BPM range (playful: 110-125, sleepy: 70-80, curious: 90-100)
-- [ ] **MUS-03**: Per-platform license matrix maintained; tracks validated as cleared for TikTok, YouTube, and Instagram independently
+- [x] **MUS-03**: Per-platform license matrix maintained; tracks validated as cleared for TikTok, YouTube, and Instagram independently
 
 ### Publishing
 
@@ -82,9 +82,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCN-03 | Phase 10 | Pending |
 | SCN-04 | Phase 10 | Pending |
 | SCN-05 | Phase 10 | Pending |
-| MUS-01 | Phase 10 | Pending |
+| MUS-01 | Phase 10 | Complete |
 | MUS-02 | Phase 10 | Pending |
-| MUS-03 | Phase 10 | Pending |
+| MUS-03 | Phase 10 | Complete |
 | PUB-01 | Phase 11 | Pending |
 
 **Coverage:**
