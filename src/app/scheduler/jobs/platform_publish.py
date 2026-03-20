@@ -23,6 +23,7 @@ from apscheduler.triggers.date import DateTrigger
 from app.services.database import get_supabase
 from app.services.publishing import PublishingService
 from app.services.telegram import (
+    send_alert_sync,
     send_platform_failure_sync,
     send_platform_success_sync,
 )
@@ -69,6 +70,122 @@ def _apply_ai_label(post_text: str, platform: str) -> str:
     return AI_LABEL
 
 
+def _check_music_license_cleared(
+    supabase,
+    content_history_row: dict,
+    platform: str,
+    content_history_id: str,
+) -> bool:
+    """
+    Check if the music track assigned to this video is cleared for the given platform.
+
+    Returns True if cleared or no track assigned (fail-open).
+    Returns False if blocked; inserts publish_events 'blocked' row and sends Telegram alert.
+
+    Per CONTEXT.md locked decisions:
+    - Per-platform isolation: each platform job checks independently
+    - Expiry logic: NULL = permanent; non-null compared to datetime.now(timezone.utc)
+    - Fail-open on DB error and on missing music_track_id (backward compatibility)
+    """
+    music_track_id = content_history_row.get("music_track_id")
+    if not music_track_id:
+        logger.info(
+            "No music_track_id for content_history_id=%s; skipping license gate (fail-open)",
+            content_history_id,
+        )
+        return True
+
+    # Query music_pool for this track's platform clearance and expiry
+    try:
+        track_result = supabase.table("music_pool").select(
+            "title, artist, license_expires_at, "
+            "platform_tiktok, platform_youtube, platform_instagram, platform_facebook"
+        ).eq("id", music_track_id).single().execute()
+        track = track_result.data
+    except Exception as e:
+        logger.error(
+            "License gate: failed to query music_pool for track_id=%s: %s — allowing publish (fail-open)",
+            music_track_id, e,
+        )
+        return True
+
+    track_title = track.get("title", "Unknown")
+    track_artist = track.get("artist", "Unknown")
+
+    # Check platform clearance flag (e.g. platform_youtube, platform_instagram, platform_facebook)
+    platform_flag = f"platform_{platform}"
+    is_cleared = track.get(platform_flag, False)
+
+    if not is_cleared:
+        error_msg = (
+            f"Music license not cleared for {platform}: "
+            f"'{track_title}' by {track_artist}"
+        )
+        logger.warning("License gate blocked publish: %s (content_history_id=%s)", error_msg, content_history_id)
+
+        # 1. Insert blocked row (before alert — so record exists even if alert fails)
+        supabase.table("publish_events").insert({
+            "content_history_id": content_history_id,
+            "platform": platform,
+            "status": "blocked",
+            "error_message": error_msg,
+            "scheduled_at": datetime.now(tz=timezone.utc).isoformat(),
+        }).execute()
+
+        # 2. Send Telegram alert with fix suggestion
+        alert = (
+            f"\U0001f6ab {platform.upper()} publish blocked\n\n"
+            f"Track: '{track_title}' by {track_artist}\n"
+            f"Reason: Not cleared for {platform}\n\n"
+            f"Fix: Update music_pool platform_{platform} = true for this track, "
+            f"or assign a different track to this video."
+        )
+        send_alert_sync(alert)
+        return False
+
+    # Check license expiry (NULL = permanent license; non-null = check against now_utc)
+    expires_at = track.get("license_expires_at")
+    if expires_at is not None:
+        now_utc = datetime.now(timezone.utc)
+        try:
+            expiry = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            if expiry <= now_utc:  # expired (fail-closed at exact expiry moment)
+                error_msg = (
+                    f"Music license expired for '{track_title}' "
+                    f"(expired {expires_at})"
+                )
+                logger.warning("License gate blocked publish (expired): %s", error_msg)
+
+                supabase.table("publish_events").insert({
+                    "content_history_id": content_history_id,
+                    "platform": platform,
+                    "status": "blocked",
+                    "error_message": error_msg,
+                    "scheduled_at": datetime.now(tz=timezone.utc).isoformat(),
+                }).execute()
+
+                alert = (
+                    f"\U0001f6ab {platform.upper()} publish blocked\n\n"
+                    f"Track: '{track_title}' by {track_artist}\n"
+                    f"Reason: License expired ({expires_at})\n\n"
+                    f"Fix: Assign a track with an active license to this video."
+                )
+                send_alert_sync(alert)
+                return False
+        except (ValueError, AttributeError) as e:
+            logger.error(
+                "License gate: failed to parse expiry date '%s' for track '%s': %s — allowing publish (fail-open)",
+                expires_at, track_title, e,
+            )
+            return True
+
+    logger.info(
+        "License gate: '%s' cleared for %s (content_history_id=%s)",
+        track_title, platform, content_history_id,
+    )
+    return True
+
+
 def set_scheduler(scheduler) -> None:
     """Called by registry.py before job registration."""
     global _scheduler
@@ -90,7 +207,7 @@ def publish_to_platform_job(
 
     # Load platform-specific copy from content_history
     row_result = supabase.table("content_history").select(
-        "post_copy_tiktok, post_copy_instagram, post_copy_facebook, post_copy_youtube, post_copy"
+        "post_copy_tiktok, post_copy_instagram, post_copy_facebook, post_copy_youtube, post_copy, music_track_id"
     ).eq("id", content_history_id).single().execute()
     row = row_result.data
 
@@ -107,6 +224,10 @@ def publish_to_platform_job(
             platform, label_exc,
         )
         labeled_copy = f"{AI_LABEL}\n{post_copy}" if post_copy else AI_LABEL
+
+    # PUB-01: Music license gate — check before publishing
+    if not _check_music_license_cleared(supabase, row, platform, content_history_id):
+        return  # Blocked: publish_events row and Telegram alert already sent
 
     try:
         response = PublishingService().publish(
