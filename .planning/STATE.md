@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
 status: executing
-stopped_at: "Completed 10-02-PLAN.md"
-last_updated: "2026-03-20T03:58:42Z"
+stopped_at: Completed 10-04-PLAN.md
+last_updated: "2026-03-20T04:08:00Z"
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 8
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-18)
 ## Current Position
 
 Phase: 10 (scene-engine-and-music-pool) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 
 ## Accumulated Context
 
@@ -50,6 +50,10 @@ Plan: 3 of 5
 - [09-03]: _submit_with_backoff at module level (not instance method) for tenacity decorator compatibility; record_attempt called in video_poller not daily_pipeline
 - [Phase 09-04]: AI label applied at publish time in platform_publish.py (not before Telegram approval); YouTube label in description only; exception fallback prevents silent omission
 - [Phase 09-04]: Human checkpoint approved — Phase 9 complete, all 4 VID requirements (VID-01 through VID-04) verified passing
+- [Phase 10-03]: is_too_similar_scene() always executes check; caller (pipeline) decides whether to enforce based on feature flag — separation of concerns
+- [Phase 10-03]: scene_anti_repetition_enabled defaults to False (log-only mode) — enforcement deferred until empirical threshold calibration with dry-run script
+- [10-04]: License expiry handled in-Python (not in Supabase query) — simpler than .or_() filter, correct given NULL=permanent semantics
+- [10-04]: MOOD_BPM_MAP hardcoded as module-level constant (not config-driven) — stable content-strategy values that should not change without deliberate code review
 
 ### v1.0 Quick Tasks Completed
 
@@ -78,6 +82,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T03:58:42Z
-Stopped at: Completed 10-02-PLAN.md
-Resume file: .planning/phases/10-scene-engine-and-music-pool/10-03-PLAN.md
+Last session: 2026-03-20T04:08:00Z
+Stopped at: Completed 10-04-PLAN.md
+Resume file: .planning/phases/10-scene-engine-and-music-pool/10-05-PLAN.md
