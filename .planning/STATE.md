@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
-status: executing
-stopped_at: Completed 10-04-PLAN.md
-last_updated: "2026-03-20T04:08:00Z"
+status: unknown
+stopped_at: "Completed 10-05-PLAN.md (checkpoint:human-verify pending)"
+last_updated: "2026-03-20T04:10:05.922Z"
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -54,6 +54,9 @@ Plan: 4 of 5
 - [Phase 10-03]: scene_anti_repetition_enabled defaults to False (log-only mode) — enforcement deferred until empirical threshold calibration with dry-run script
 - [10-04]: License expiry handled in-Python (not in Supabase query) — simpler than .or_() filter, correct given NULL=permanent semantics
 - [10-04]: MOOD_BPM_MAP hardcoded as module-level constant (not config-driven) — stable content-strategy values that should not change without deliberate code review
+- [Phase 10-05]: SceneEngine replaces ScriptGenerationService + MoodService entirely in daily_pipeline.py — v1.0 mood flow deprecated
+- [Phase 10-05]: KlingService.submit() receives scene_prompt (not caption) — scene_prompt is the Kling-optimized 2-3 sentence description
+- [Phase 10-05]: MusicMatcher ValueError halts pipeline with Telegram alert — graceful degradation, no silent failure
 
 ### v1.0 Quick Tasks Completed
 
@@ -82,6 +85,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T04:08:00Z
-Stopped at: Completed 10-04-PLAN.md
-Resume file: .planning/phases/10-scene-engine-and-music-pool/10-05-PLAN.md
+Last session: 2026-03-20T04:10:05.919Z
+Stopped at: Completed 10-05-PLAN.md (checkpoint:human-verify pending)
+Resume file: None
