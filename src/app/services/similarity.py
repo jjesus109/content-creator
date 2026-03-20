@@ -7,6 +7,10 @@ logger = logging.getLogger(__name__)
 SIMILARITY_THRESHOLD = 0.85   # 85% cosine similarity — reject if any history entry exceeds this
 LOOKBACK_DAYS = 90             # Only compare against last 90 days of content history
 
+SCENE_SIMILARITY_THRESHOLD = 0.78   # 75-80% cosine similarity — recalibrated for visual scenes
+                                      # Empirically validated via dry-run script before enforcement
+SCENE_LOOKBACK_DAYS = 7             # 7-day window (visual scenes need shorter memory than scripts)
+
 
 class SimilarityService:
     """
@@ -62,6 +66,44 @@ class SimilarityService:
             # If similarity check fails (e.g., DB connection issue), log and fail OPEN
             # (allow generation to proceed) — content repetition is preferable to a silent outage
             logger.error("Similarity check failed: %s — defaulting to PASS", e)
+            return False
+
+    def is_too_similar_scene(
+        self,
+        embedding: list[float],
+        threshold: float = SCENE_SIMILARITY_THRESHOLD,
+    ) -> bool:
+        """
+        Returns True if any scene in content_history exceeds the similarity threshold.
+        Uses check_scene_similarity SQL function (7-day lookback, scene_embedding column).
+        Mirrors is_too_similar() but for scene embeddings (separate table function, different defaults).
+
+        Returns False when content_history is empty or on DB error (fail open — same as is_too_similar()).
+
+        NOTE: Caller is responsible for respecting the scene_anti_repetition_enabled feature flag.
+        This method always executes the check; the pipeline decides whether to enforce it.
+        """
+        try:
+            result = self._supabase.rpc(
+                "check_scene_similarity",
+                {
+                    "query_embedding": embedding,
+                    "similarity_threshold": threshold,
+                    "lookback_days": SCENE_LOOKBACK_DAYS,
+                },
+            ).execute()
+            is_similar = len(result.data) > 0
+            if is_similar:
+                logger.info(
+                    "Scene similarity check: REJECT — %d matching scene(s) above %.0f%% threshold",
+                    len(result.data),
+                    threshold * 100,
+                )
+            else:
+                logger.debug("Scene similarity check: PASS — scene is sufficiently unique")
+            return is_similar
+        except Exception as e:
+            logger.error("Scene similarity check failed: %s — defaulting to PASS", e)
             return False
 
     def get_similar_scripts(

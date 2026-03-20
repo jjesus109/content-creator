@@ -91,6 +91,12 @@ class Settings(BaseSettings):
     peak_hour_facebook: int = 13    # 1 PM
     peak_hour_youtube: int = 12     # 12 PM
 
+    # Scene anti-repetition feature flag (SCN-03)
+    # False = log-only mode (check runs but never blocks generation)
+    # True = enforcement mode (blocks scene if too similar to past 7 days)
+    # Set to True only after empirical threshold calibration with dry-run script
+    scene_anti_repetition_enabled: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:
