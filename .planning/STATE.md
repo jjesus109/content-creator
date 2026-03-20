@@ -79,6 +79,7 @@ Milestone v2.0 complete — no active phase. Start next milestone with `/gsd:new
 | 007 | Fix Telegram _sync event loop RuntimeError | 2026-03-16 |
 | 008 | HeyGen dynamic title from topic_summary | 2026-03-16 |
 | 009 | Supabase service_role JWT startup validation | 2026-03-16 |
+| 260320-dlf | Translate spanish prompts into english prompts, all the prompts send to Klingservice should be in english | 2026-03-20 |
 
 ### Pending Todos
 
