@@ -128,3 +128,113 @@ def test_telegram_alert_format():
     assert "youtube" in alert_text.lower(), "Alert must include platform"
     assert any(word in alert_text.lower() for word in ("fix", "update", "assign")), \
         "Alert must include a fix suggestion"
+
+
+# ============================================================
+# Integration tests: full publish_to_platform_job() call path
+# ============================================================
+
+def _make_integration_supabase_mock(content_row: dict, track: dict) -> MagicMock:
+    """
+    Mock supporting sequential table() calls in publish_to_platform_job:
+      1. content_history: select single -> content_row
+      2. music_pool: select single -> track
+      3. publish_events: insert -> no-op (on block)
+    """
+    mock = MagicMock()
+
+    content_result = MagicMock()
+    content_result.data = content_row
+
+    track_result = MagicMock()
+    track_result.data = track
+
+    def table_side_effect(table_name):
+        inner = MagicMock()
+        if table_name == "content_history":
+            inner.select.return_value.eq.return_value.single.return_value.execute.return_value = content_result
+        elif table_name == "music_pool":
+            inner.select.return_value.eq.return_value.single.return_value.execute.return_value = track_result
+        else:
+            # publish_events insert on block
+            inner.insert.return_value.execute.return_value = MagicMock()
+        return inner
+
+    mock.table.side_effect = table_side_effect
+    return mock
+
+
+def test_publish_to_platform_job_blocked_by_license():
+    """PUB-01 integration: publish_to_platform_job returns early when track not cleared for platform."""
+    from app.scheduler.jobs.platform_publish import publish_to_platform_job
+
+    content_row = {
+        "post_copy": "Mochi explora.",
+        "post_copy_youtube": "Mochi en la cocina\nExplora con curiosidad",
+        "post_copy_tiktok": None,
+        "post_copy_instagram": None,
+        "post_copy_facebook": None,
+        "music_track_id": "uuid-not-cleared",
+    }
+    blocked_track = {
+        "id": "uuid-not-cleared",
+        "title": "Blocked Song",
+        "artist": "Blocked Artist",
+        "platform_youtube": False,
+        "platform_tiktok": True,
+        "platform_instagram": True,
+        "platform_facebook": True,
+        "license_expires_at": None,
+    }
+    mock_supabase = _make_integration_supabase_mock(content_row, blocked_track)
+
+    with patch("app.scheduler.jobs.platform_publish.get_supabase", return_value=mock_supabase), \
+         patch("app.scheduler.jobs.platform_publish.get_settings"), \
+         patch("app.scheduler.jobs.platform_publish.PublishingService") as mock_pub_svc, \
+         patch("app.scheduler.jobs.platform_publish.send_alert_sync"):
+        publish_to_platform_job("content-id-integration", "youtube", "https://video.url")
+
+    # PublishingService().publish must NOT be called
+    mock_pub_svc.return_value.publish.assert_not_called()
+
+
+def test_publish_to_platform_job_proceeds_when_cleared():
+    """PUB-01 integration: publish_to_platform_job calls PublishingService when track is cleared."""
+    from app.scheduler.jobs.platform_publish import publish_to_platform_job
+
+    content_row = {
+        "post_copy": "Mochi explora.",
+        "post_copy_youtube": "Mochi en la cocina\nExplora con curiosidad",
+        "post_copy_tiktok": None,
+        "post_copy_instagram": None,
+        "post_copy_facebook": None,
+        "music_track_id": "uuid-cleared",
+    }
+    cleared_track = {
+        "id": "uuid-cleared",
+        "title": "Cleared Song",
+        "artist": "Cleared Artist",
+        "platform_youtube": True,
+        "platform_tiktok": True,
+        "platform_instagram": True,
+        "platform_facebook": True,
+        "license_expires_at": None,
+    }
+    mock_supabase = _make_integration_supabase_mock(content_row, cleared_track)
+
+    with patch("app.scheduler.jobs.platform_publish.get_supabase", return_value=mock_supabase), \
+         patch("app.scheduler.jobs.platform_publish.get_settings"), \
+         patch("app.scheduler.jobs.platform_publish.PublishingService") as mock_pub_svc, \
+         patch("app.scheduler.jobs.platform_publish.send_platform_success_sync"), \
+         patch("app.scheduler.jobs.platform_publish.send_alert_sync"):
+        # Make scheduler not crash on add_job
+        import app.scheduler.jobs.platform_publish as pp_module
+        pp_module._scheduler = MagicMock()
+        mock_pub_svc.return_value.publish.return_value = {
+            "external_post_id": "ext-123",
+            "platform_post_id": "plat-456",
+        }
+        publish_to_platform_job("content-id-cleared", "youtube", "https://video.url")
+
+    # PublishingService().publish must be called once
+    mock_pub_svc.return_value.publish.assert_called_once()
