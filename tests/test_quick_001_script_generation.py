@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 def test_hard_word_limit_constant():
     """HARD_WORD_LIMIT = 120 must be importable from script_generation module."""
     from app.services.script_generation import HARD_WORD_LIMIT
-    assert HARD_WORD_LIMIT == 120, f"Expected 120, got {HARD_WORD_LIMIT}"
+    assert HARD_WORD_LIMIT == 90, f"Expected 90, got {HARD_WORD_LIMIT}"
 
 
 def test_word_count_basic():

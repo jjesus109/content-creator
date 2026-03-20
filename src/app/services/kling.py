@@ -65,7 +65,7 @@ class KlingService:
 
     Does NOT write to the database — that is _process_completed_render's responsibility.
     Uses fal_client.submit() (sync) — correct for APScheduler ThreadPoolExecutor context.
-    fal_client auto-reads FAL_API_KEY from environment — no explicit auth token in code.
+    fal_client auto-reads FAL_KEY from environment — no explicit auth token in code.
     """
 
     def __init__(self) -> None:
@@ -100,7 +100,7 @@ class KlingService:
 
         # Use _submit_with_backoff for exponential backoff: 2s -> 8s -> 32s (3 attempts).
         # On transient fal.ai errors, tenacity retries before recording a CB failure.
-        # fal_client auto-reads FAL_API_KEY from environment.
+        # fal_client auto-reads FAL_KEY from environment.
         result = _submit_with_backoff(
             self._settings.kling_model_version,
             arguments={
