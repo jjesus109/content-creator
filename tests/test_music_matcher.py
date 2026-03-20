@@ -77,7 +77,7 @@ def test_pick_track_raises_on_invalid_platform():
     """MUS-03: raises ValueError for unknown platform."""
     matcher = MusicMatcher(supabase=MagicMock())
     with pytest.raises(ValueError, match="invalid platform"):
-        matcher.pick_track(mood="playful", target_platform="facebook")
+        matcher.pick_track(mood="playful", target_platform="snapchat")
 
 
 def test_pick_track_excludes_expired_licenses():

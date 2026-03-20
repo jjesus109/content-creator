@@ -15,7 +15,7 @@ MOOD_BPM_MAP: dict[str, dict[str, int]] = {
     "curious": {"min": 90,  "max": 100},
 }
 
-VALID_PLATFORMS = {"tiktok", "youtube", "instagram"}
+VALID_PLATFORMS = {"tiktok", "youtube", "instagram", "facebook"}
 
 
 class MusicMatcher:

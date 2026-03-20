@@ -19,9 +19,9 @@ SAMPLE_SCENE_LIBRARY = [
 ]
 
 SAMPLE_MUSIC_POOL = [
-    {"id": "uuid-1", "title": "Siesta Suave", "artist": "Lo-Fi Mexico", "file_url": "https://example.com/1.mp3", "mood": "sleepy", "bpm": 75, "platform_tiktok": True, "platform_youtube": True, "platform_instagram": True, "license_expires_at": None},
-    {"id": "uuid-2", "title": "Gatito Juguetón", "artist": "Tropical Beats", "file_url": "https://example.com/2.mp3", "mood": "playful", "bpm": 118, "platform_tiktok": True, "platform_youtube": True, "platform_instagram": False, "license_expires_at": None},
-    {"id": "uuid-3", "title": "Curiosidad Felina", "artist": "Ambient MX", "file_url": "https://example.com/3.mp3", "mood": "curious", "bpm": 95, "platform_tiktok": False, "platform_youtube": True, "platform_instagram": True, "license_expires_at": None},
+    {"id": "uuid-1", "title": "Siesta Suave", "artist": "Lo-Fi Mexico", "file_url": "https://example.com/1.mp3", "mood": "sleepy", "bpm": 75, "platform_tiktok": True, "platform_youtube": True, "platform_instagram": True, "platform_facebook": True, "license_expires_at": None},
+    {"id": "uuid-2", "title": "Gatito Juguetón", "artist": "Tropical Beats", "file_url": "https://example.com/2.mp3", "mood": "playful", "bpm": 118, "platform_tiktok": True, "platform_youtube": True, "platform_instagram": False, "platform_facebook": True, "license_expires_at": None},
+    {"id": "uuid-3", "title": "Curiosidad Felina", "artist": "Ambient MX", "file_url": "https://example.com/3.mp3", "mood": "curious", "bpm": 95, "platform_tiktok": False, "platform_youtube": True, "platform_instagram": True, "platform_facebook": True, "license_expires_at": None},
 ]
 
 SAMPLE_EXPIRED_TRACK = {
@@ -34,6 +34,7 @@ SAMPLE_EXPIRED_TRACK = {
     "platform_tiktok": True,
     "platform_youtube": True,
     "platform_instagram": True,
+    "platform_facebook": True,
     "license_expires_at": "2026-01-01T00:00:00Z",
 }
 

@@ -238,3 +238,54 @@ def test_publish_to_platform_job_proceeds_when_cleared():
 
     # PublishingService().publish must be called once
     mock_pub_svc.return_value.publish.assert_called_once()
+
+
+# ============================================================
+# Gap closure: facebook platform (Phase 11 migration 0011)
+# ============================================================
+
+def test_license_gate_facebook_cleared():
+    """PUB-01 gap closure: track with platform_facebook=True passes the gate."""
+    facebook_cleared_track = {
+        "id": "uuid-fb-cleared",
+        "title": "Fiesta Mexicana",
+        "artist": "Mariachi Pool",
+        "platform_tiktok": True,
+        "platform_youtube": True,
+        "platform_instagram": True,
+        "platform_facebook": True,
+        "license_expires_at": None,
+    }
+    mock_supabase = _make_music_pool_mock(facebook_cleared_track)
+    result = _check_music_license_cleared(
+        mock_supabase, _make_content_row(), "facebook", "content-id-fb-1"
+    )
+    assert result is True, (
+        "Track with platform_facebook=True should be allowed; "
+        "check that migration 0011 added platform_facebook column to music_pool"
+    )
+
+
+def test_license_gate_facebook_blocked():
+    """PUB-01 gap closure: track with platform_facebook=False is blocked for facebook."""
+    facebook_blocked_track = {
+        "id": "uuid-fb-blocked",
+        "title": "Fiesta Mexicana",
+        "artist": "Mariachi Pool",
+        "platform_tiktok": True,
+        "platform_youtube": True,
+        "platform_instagram": True,
+        "platform_facebook": False,
+        "license_expires_at": None,
+    }
+    mock_supabase = _make_music_pool_mock(facebook_blocked_track)
+    with patch("app.scheduler.jobs.platform_publish.send_alert_sync") as mock_alert:
+        result = _check_music_license_cleared(
+            mock_supabase, _make_content_row(), "facebook", "content-id-fb-2"
+        )
+    assert result is False, "Track with platform_facebook=False must be blocked"
+    assert mock_alert.called, "send_alert_sync must be called when facebook publish is blocked"
+    alert_text = mock_alert.call_args[0][0]
+    assert "facebook" in alert_text.lower(), (
+        f"Alert must mention 'facebook'; got: {alert_text!r}"
+    )
