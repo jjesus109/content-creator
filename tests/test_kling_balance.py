@@ -1,16 +1,15 @@
 """
-TDD RED: KlingCircuitBreakerService balance check integration tests.
-Phase 09-03 Task 1
+KlingCircuitBreakerService balance check tests.
+Phase 09-03 Task 1 / Updated quick-260320-fas
 
-Additional balance check scenarios:
-  - check_balance() is fail-open (returns True on fal_client exception)
-  - check_balance() does NOT write to DB on any path
+check_balance() is a no-op — fal.ai does not expose a public billing/balance REST API.
+Method returns True unconditionally (fail-open contract per STATE.md decision [09-03]).
 """
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 def _make_supabase(state: dict) -> MagicMock:
@@ -35,36 +34,37 @@ def _default_state(**overrides) -> dict:
     return base
 
 
-def test_check_balance_fail_open_on_exception():
-    """check_balance() returns True (fail-open) when requests.get raises."""
+def test_check_balance_no_op():
+    """check_balance() returns True immediately with no HTTP or DB calls."""
     mock_db = _make_supabase(_default_state())
+    from app.services.kling_circuit_breaker import KlingCircuitBreakerService
+    cb = KlingCircuitBreakerService(mock_db)
+    result = cb.check_balance()
+    assert result is True, "check_balance() must return True (no-op, fail-open)"
+    mock_db.table.return_value.update.assert_not_called()
 
-    with patch("app.services.kling_circuit_breaker.requests.get", side_effect=Exception("Network error")), \
-         patch("fal_client.auth.fetch_credentials", return_value="test_key_123"), \
-         patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert:
-        from app.services.kling_circuit_breaker import KlingCircuitBreakerService
-        cb = KlingCircuitBreakerService(mock_db)
-        result = cb.check_balance()
 
-    assert result is True, "check_balance() must fail-open (return True) on exception"
-    # On exception, no Telegram alert — fail silently (logged only)
-    mock_alert.assert_not_called()
+def test_check_balance_fail_open_on_exception():
+    """check_balance() returns True (fail-open) — no HTTP call made, no exception possible.
+
+    # No HTTP call expected — fal.ai billing API not available; check_balance() is a no-op.
+    """
+    mock_db = _make_supabase(_default_state())
+    from app.services.kling_circuit_breaker import KlingCircuitBreakerService
+    cb = KlingCircuitBreakerService(mock_db)
+    result = cb.check_balance()
+    assert result is True, "check_balance() must fail-open (return True)"
 
 
 def test_check_balance_does_not_write_to_db():
-    """check_balance() never writes to DB — balance check is read-only via REST API."""
+    """check_balance() never writes to DB — it is a no-op.
+
+    # No HTTP call expected — fal.ai billing API not available; check_balance() is a no-op.
+    """
     mock_db = _make_supabase(_default_state())
-
-    mock_resp = MagicMock()
-    mock_resp.json.return_value = {"balance": 50.0}  # Healthy balance
-    mock_resp.raise_for_status.return_value = None
-
-    with patch("app.services.kling_circuit_breaker.requests.get", return_value=mock_resp), \
-         patch("fal_client.auth.fetch_credentials", return_value="test_key_123"), \
-         patch("app.services.kling_circuit_breaker.send_alert_sync"):
-        from app.services.kling_circuit_breaker import KlingCircuitBreakerService
-        cb = KlingCircuitBreakerService(mock_db)
-        cb.check_balance()
+    from app.services.kling_circuit_breaker import KlingCircuitBreakerService
+    cb = KlingCircuitBreakerService(mock_db)
+    cb.check_balance()
 
     # No DB writes should have occurred
     mock_db.table.return_value.update.assert_not_called(), (
