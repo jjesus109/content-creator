@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
 status: milestone_complete
-stopped_at: v2.0 milestone archived — Mexican Cat Content Machine shipped 2026-03-20
-last_updated: "2026-03-20T15:07:00.030Z"
+stopped_at: Completed quick/260320-dtz — fix Kling poller status detection (isinstance checks)
+last_updated: "2026-03-20T15:30:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 3
@@ -80,6 +80,7 @@ Milestone v2.0 complete — no active phase. Start next milestone with `/gsd:new
 | 008 | HeyGen dynamic title from topic_summary | 2026-03-16 |
 | 009 | Supabase service_role JWT startup validation | 2026-03-16 |
 | 260320-dlf | Translate spanish prompts into english prompts, all the prompts send to Klingservice should be in english | 2026-03-20 |
+| 260320-dtz | Fix Kling poller status detection: isinstance checks for fal_client.Completed/InProgress/Queued + fal_client.result() for URL | 2026-03-20 |
 
 ### Pending Todos
 
