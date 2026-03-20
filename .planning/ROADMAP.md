@@ -203,11 +203,11 @@ Plans:
   1. Before publishing to each platform, the system queries the license matrix for the selected track — if the track is not cleared for a platform, that platform's publish is blocked and the creator is notified via Telegram
   2. A video with a fully licensed track publishes to all four platforms without manual intervention
   3. A video assigned a track with an expired or missing clearance record for at least one platform is blocked from publishing to that platform and a Telegram alert identifies the track and the affected platform
-**Plans**: 4 plans
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: License validation gate in PublishService (pre-publish matrix query, per-platform block logic, Telegram alert on block)
-- [ ] 11-02: Integration smoke tests (licensed track publishes, unlicensed track blocked, expiry scenario) + human verification checkpoint
+- [ ] 11-01-PLAN.md — Migration 0010 (blocked status) + test scaffold (Wave 0) + _check_music_license_cleared() gate wired into publish_to_platform_job()
+- [ ] 11-02-PLAN.md — Integration smoke tests (full job call path) + human verification checkpoint
 
 ## Progress
 
