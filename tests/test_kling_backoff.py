@@ -114,7 +114,9 @@ def test_video_poller_records_success_on_kling_completed():
 # --- Test 4: daily_pipeline skips Kling submit if CB is open ---
 
 def test_daily_pipeline_skips_kling_when_cb_open():
-    """daily_pipeline.py checks kling_cb.is_open() before submit and skips if open."""
+    """daily_pipeline.py checks kling_cb.is_open() before submit and skips if open.
+    Updated for v2.0: uses SceneEngine + MusicMatcher (MoodService + ScriptGenerationService removed).
+    """
     mock_cb = MagicMock()
     mock_cb.is_open.return_value = True  # CB is open
     mock_kling_cb_class = MagicMock(return_value=mock_cb)
@@ -124,39 +126,41 @@ def test_daily_pipeline_skips_kling_when_cb_open():
     mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = MagicMock(data=[])
     mock_supabase.table.return_value.select.return_value.execute.return_value = MagicMock(data=[])
 
-    mock_heygen_cb = MagicMock()
-    mock_heygen_cb.is_tripped.return_value = False
-    mock_heygen_cb.is_daily_halted.return_value = False
-    mock_heygen_cb_class = MagicMock(return_value=mock_heygen_cb)
+    mock_circuit_cb = MagicMock()
+    mock_circuit_cb.is_tripped.return_value = False
+    mock_circuit_cb.is_daily_halted.return_value = False
+    mock_circuit_cb.record_attempt.return_value = True
+    mock_circuit_cb_class = MagicMock(return_value=mock_circuit_cb)
 
-    mock_mood = MagicMock()
-    mock_mood.get_current_week_mood.return_value = {
-        "mood": "playful", "target_words": 120, "guidance": "fun"
+    mock_scene_engine = MagicMock()
+    mock_scene_engine.pick_scene.return_value = ("scene prompt...", "caption here", "curious", 0.001)
+    mock_scene_engine.load_active_scene_rejections.return_value = []
+
+    mock_music_matcher = MagicMock()
+    mock_music_matcher.pick_track.return_value = {
+        "id": "music-uuid-1", "title": "Test Track", "artist": "Test Artist",
+        "file_url": "http://x.mp3", "bpm": 95, "mood": "curious"
     }
 
-    mock_script_svc = MagicMock()
-    mock_script_svc.load_active_rejection_constraints.return_value = []
-    mock_script_svc.generate_topic_summary.return_value = ("Test topic", 0.001)
-    mock_script_svc.generate_script.return_value = ("Test script text.", 0.005)
-    mock_script_svc.summarize_if_needed.return_value = ("Test script text.", 0.0)
-
     mock_embedding_svc = MagicMock()
-    mock_embedding_svc.generate.return_value = ([0.1, 0.2], 0.0005)
+    mock_embedding_svc.generate.return_value = ([0.1] * 1536, 0.0001)
 
     mock_similarity_svc = MagicMock()
-    mock_similarity_svc.is_too_similar.return_value = False
+    mock_similarity_svc.is_too_similar_scene.return_value = False
 
-    mock_heygen_cb.record_attempt.return_value = True
+    mock_settings = MagicMock()
+    mock_settings.scene_anti_repetition_enabled = False
 
-    with patch("app.services.circuit_breaker.CircuitBreakerService", mock_heygen_cb_class), \
-         patch("app.services.database.get_supabase", return_value=mock_supabase), \
-         patch("app.services.mood.MoodService", return_value=mock_mood), \
-         patch("app.services.embeddings.EmbeddingService", return_value=mock_embedding_svc), \
-         patch("app.services.similarity.SimilarityService", return_value=mock_similarity_svc), \
-         patch("app.services.script_generation.ScriptGenerationService", return_value=mock_script_svc), \
+    with patch("app.scheduler.jobs.daily_pipeline.CircuitBreakerService", mock_circuit_cb_class), \
+         patch("app.scheduler.jobs.daily_pipeline.get_supabase", return_value=mock_supabase), \
+         patch("app.scheduler.jobs.daily_pipeline.SceneEngine", return_value=mock_scene_engine), \
+         patch("app.scheduler.jobs.daily_pipeline.MusicMatcher", return_value=mock_music_matcher), \
+         patch("app.scheduler.jobs.daily_pipeline.EmbeddingService", return_value=mock_embedding_svc), \
+         patch("app.scheduler.jobs.daily_pipeline.SimilarityService", return_value=mock_similarity_svc), \
+         patch("app.scheduler.jobs.daily_pipeline.get_settings", return_value=mock_settings), \
          patch("app.services.kling_circuit_breaker.KlingCircuitBreakerService", mock_kling_cb_class), \
-         patch("app.services.telegram.send_alert_sync") as mock_alert, \
-         patch("app.scheduler.jobs.daily_pipeline.send_alert_sync") as mock_alert2:
+         patch("app.scheduler.jobs.daily_pipeline.send_alert_sync") as mock_alert, \
+         patch("app.scheduler.jobs.daily_pipeline._expire_stale_approvals"):
 
         from app.scheduler.jobs.daily_pipeline import daily_pipeline_job
         daily_pipeline_job()
@@ -164,10 +168,11 @@ def test_daily_pipeline_skips_kling_when_cb_open():
     # CB.is_open() must have been called
     mock_cb.is_open.assert_called_once()
 
-    # KlingService.submit must NOT have been called (CB open — pipeline halted)
-    # Verify alert was sent
-    called = mock_alert.called or mock_alert2.called
-    assert called, "Alert must be sent when Kling CB is open"
+    # Verify alert was sent when Kling CB is open
+    mock_alert.assert_called()
+    alert_text = mock_alert.call_args[0][0]
+    assert "Kling" in alert_text or "kling" in alert_text.lower() or "circuit" in alert_text.lower(), \
+        f"Alert must mention Kling CB. Got: {alert_text}"
 
 
 # --- Test 5: KlingService.submit() uses _submit_with_backoff (tenacity) ---
