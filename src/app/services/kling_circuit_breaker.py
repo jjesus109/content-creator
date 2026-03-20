@@ -16,7 +16,6 @@ Thresholds (locked in CONTEXT.md):
 import logging
 from datetime import datetime, timezone
 
-import requests
 from supabase import Client
 
 from app.services.telegram import send_alert_sync
@@ -147,58 +146,18 @@ class KlingCircuitBreakerService:
 
     def check_balance(self) -> bool:
         """
-        Query fal.ai account balance. Called during polling (60s interval), not on submission.
+        fal.ai does not expose a public billing/balance REST API.
+        Balance checking is disabled — returns True (fail-open) unconditionally.
 
-        Returns:
-            True if balance is sufficient to proceed (>= $1.00)
-            False if balance < $1.00 (pipeline should halt for today)
-
-        Side effects:
-            Sends Telegram alert if balance < $5.00 (warning threshold).
+        Original intent: halt pipeline at < $1.00, alert at < $5.00.
+        Replacement strategy: monitor spend manually via fal.ai dashboard.
         """
-        try:
-            import fal_client.auth as _fal_auth
-            credentials = _fal_auth.fetch_credentials()
-            resp = requests.get(
-                "https://fal.ai/v1/billing/balance",
-                headers={"Authorization": f"Key {credentials}"},
-                timeout=10,
-            )
-            resp.raise_for_status()
-            balance: float = float(resp.json()["balance"])
-
-            if balance < BALANCE_HALT_USD:
-                logger.error(
-                    "fal.ai balance critically low: $%.2f < $%.2f halt threshold",
-                    balance, BALANCE_HALT_USD,
-                    extra={"pipeline_step": "kling_cb", "content_history_id": ""},
-                )
-                send_alert_sync(
-                    f"ALERTA: Saldo fal.ai criticamente bajo (${balance:.2f}). "
-                    "Pipeline detenido. Recarga el saldo en fal.ai para continuar."
-                )
-                return False
-
-            if balance < BALANCE_ALERT_USD:
-                logger.warning(
-                    "fal.ai balance low: $%.2f < $%.2f alert threshold",
-                    balance, BALANCE_ALERT_USD,
-                    extra={"pipeline_step": "kling_cb", "content_history_id": ""},
-                )
-                send_alert_sync(
-                    f"Advertencia: saldo fal.ai bajo (${balance:.2f}). "
-                    "El pipeline puede continuar pero recarga pronto."
-                )
-
-            return True
-
-        except Exception as exc:
-            logger.error(
-                "KlingCB.check_balance() failed (fail-open): %s", exc,
-                extra={"pipeline_step": "kling_cb", "content_history_id": ""},
-            )
-            # Fail-open: do not halt pipeline on balance check error
-            return True
+        logger.debug(
+            "KlingCB.check_balance() called — fal.ai billing API unavailable, "
+            "returning True (fail-open). Monitor spend at https://fal.ai/dashboard.",
+            extra={"pipeline_step": "kling_cb", "content_history_id": ""},
+        )
+        return True
 
     def reset(self) -> None:
         """
