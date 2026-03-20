@@ -59,6 +59,7 @@ class MusicMatcher:
             )
 
         bpm_range = MOOD_BPM_MAP[mood]
+        # DB column names: platform_tiktok, platform_youtube, platform_instagram
         platform_flag = f"platform_{target_platform}"
 
         try:

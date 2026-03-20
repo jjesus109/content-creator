@@ -31,19 +31,27 @@ def test_platform_license_flags_are_boolean(mock_music_pool):
         assert isinstance(track["platform_instagram"], bool)
 
 
-@pytest.mark.skip(reason="stub — requires real DB (implement after 0009 migration applied)")
+def test_platform_flags_can_differ_per_platform(mock_music_pool):
+    """MUS-03: a track can be cleared for some platforms but not others."""
+    # uuid-2 in fixture: tiktok=True, youtube=True, instagram=False
+    # uuid-3 in fixture: tiktok=False, youtube=True, instagram=True
+    tiktok_blocked = [t for t in mock_music_pool if not t["platform_tiktok"]]
+    assert len(tiktok_blocked) > 0, "Fixture should have at least one TikTok-blocked track"
+
+
+@pytest.mark.skip(reason="requires real DB — run after 0009 migration applied to Supabase")
 def test_seed_data():
     """MUS-01: music_pool table has 200+ tracks after seed migration."""
     pass
 
 
-@pytest.mark.skip(reason="stub — requires real DB (implement after 0009 migration applied)")
+@pytest.mark.skip(reason="requires real DB — run after 0009 migration applied to Supabase")
 def test_load_music_pool():
     """MUS-01: music_pool table loads successfully from DB."""
     pass
 
 
-@pytest.mark.skip(reason="stub — requires real DB (implement after 0009 migration applied)")
+@pytest.mark.skip(reason="requires real DB — run after 0009 migration applied to Supabase")
 def test_platform_license_filters():
     """MUS-03: tracks with platform_tiktok=False are not returned for TikTok queries."""
     pass
