@@ -189,11 +189,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — DB migration 0009 (scene_embedding, check_scene_similarity, music_pool artist column) + Wave 0 test scaffold + music_seed.csv
-- [ ] 10-02-PLAN.md — scenes.json (40-60 combos) + SceneEngine (GPT-4o scene+caption, single call) + SeasonalCalendarService
-- [ ] 10-03-PLAN.md — SimilarityService.is_too_similar_scene() (7-day/0.78 threshold) + scene rejection storage/load + feature flag
-- [ ] 10-04-PLAN.md — MusicMatcher (mood-to-BPM, license flags, expiry filtering) + music pool tests
-- [ ] 10-05-PLAN.md — Pipeline wiring (SceneEngine+MusicMatcher replace v1.0 script gen) + integration tests + human checkpoint
+- [x] 10-01-PLAN.md — DB migration 0009 (scene_embedding, check_scene_similarity, music_pool artist column) + Wave 0 test scaffold + music_seed.csv
+- [x] 10-02-PLAN.md — scenes.json (40-60 combos) + SceneEngine (GPT-4o scene+caption, single call) + SeasonalCalendarService
+- [x] 10-03-PLAN.md — SimilarityService.is_too_similar_scene() (7-day/0.78 threshold) + scene rejection storage/load + feature flag
+- [x] 10-04-PLAN.md — MusicMatcher (mood-to-BPM, license flags, expiry filtering) + music pool tests
+- [x] 10-05-PLAN.md — Pipeline wiring (SceneEngine+MusicMatcher replace v1.0 script gen) + integration tests + human checkpoint
 
 #### Phase 11: Music License Enforcement at Publish
 **Goal**: No video is published to any platform with a music track that is not cleared for that platform — the license matrix is the final gate before cross-platform distribution
