@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
 status: milestone_complete
-stopped_at: Completed quick/260320-dtz — fix Kling poller status detection (isinstance checks)
-last_updated: "2026-03-20T15:30:00.000Z"
+stopped_at: Completed quick/260320-fas — fix KlingCB.check_balance() 404 (no-op stub)
+last_updated: "2026-03-20T18:40:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 3
@@ -82,6 +82,7 @@ Milestone v2.0 complete — no active phase. Start next milestone with `/gsd:new
 | 260320-dlf | Translate spanish prompts into english prompts, all the prompts send to Klingservice should be in english | 2026-03-20 |
 | 260320-dtz | Fix Kling poller status detection: isinstance checks for fal_client.Completed/InProgress/Queued + fal_client.result() for URL | 2026-03-20 |
 | 260320-edq | Fix KlingCB.check_balance() — replace non-existent fal_client.get_balance() with REST call to fal.ai billing API | 2026-03-20 |
+| 260320-fas | Fix KlingCB.check_balance() 404 — replace non-existent fal.ai billing REST call with no-op (logger.debug + return True) | 2026-03-20 |
 
 ### Pending Todos
 
@@ -96,6 +97,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T14:56:17.848Z
-Stopped at: Completed 11-03-PLAN.md — Phase 11 gap closure complete
+Last session: 2026-03-20T18:40:03Z
+Stopped at: Completed quick/260320-fas — fix KlingCB.check_balance() 404 (no-op stub)
 Resume file: None
