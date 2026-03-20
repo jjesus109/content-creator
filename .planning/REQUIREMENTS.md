@@ -31,7 +31,7 @@ Requirements for the Mexican Cat Content Machine milestone. Each maps to roadmap
 
 ### Publishing
 
-- [ ] **PUB-01**: Music license validated against matrix before publishing; publish blocked if track not cleared for target platform
+- [x] **PUB-01**: Music license validated against matrix before publishing; publish blocked if track not cleared for target platform
 
 ## v3.0 Requirements
 
@@ -85,7 +85,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MUS-01 | Phase 10 | Complete |
 | MUS-02 | Phase 10 | Complete |
 | MUS-03 | Phase 10 | Complete |
-| PUB-01 | Phase 11 | Pending |
+| PUB-01 | Phase 11 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 13 total

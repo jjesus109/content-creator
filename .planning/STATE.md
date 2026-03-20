@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
 status: unknown
-stopped_at: Phase 11 context gathered
-last_updated: "2026-03-20T05:05:38.778Z"
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-20T05:25:34.650Z"
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 11
+  completed_plans: 10
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** A cute Mexican cat video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
-**Current focus:** Phase 10 — scene-engine-and-music-pool
+**Current focus:** Phase 11 — music-license-enforcement-at-publish
 
 ## Current Position
 
-Phase: 10 (scene-engine-and-music-pool) — COMPLETE
-Plan: 5 of 5 (ALL PLANS DONE)
+Phase: 11 (music-license-enforcement-at-publish) — EXECUTING
+Plan: 2 of 2
 
 ## Accumulated Context
 
@@ -58,6 +58,9 @@ Plan: 5 of 5 (ALL PLANS DONE)
 - [Phase 10-05]: KlingService.submit() receives scene_prompt (not caption) — scene_prompt is the Kling-optimized 2-3 sentence description
 - [Phase 10-05]: MusicMatcher ValueError halts pipeline with Telegram alert — graceful degradation, no silent failure
 - [Phase 10-05]: Human checkpoint approved 2026-03-20 — Phase 10 complete, all 5 plans verified, 149 tests passing, pipeline wiring confirmed
+- [Phase 11]: [11-01]: _check_music_license_cleared is fail-open on null music_track_id — backward compatibility for legacy content_history rows without a track assigned
+- [Phase 11]: [11-01]: publish_events 'blocked' row inserted before Telegram alert — ensures DB record survives even if alert network call fails
+- [Phase 11]: [11-01]: Expiry comparison uses expiry <= now_utc (fail-closed at exact expiry moment) — consistent with Phase 10 music_matcher.py strict > semantics
 
 ### v1.0 Quick Tasks Completed
 
@@ -86,6 +89,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T05:05:38.769Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-music-license-enforcement-at-publish/11-CONTEXT.md
+Last session: 2026-03-20T05:25:34.647Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: None
