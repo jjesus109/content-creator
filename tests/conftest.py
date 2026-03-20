@@ -24,6 +24,24 @@ SAMPLE_MUSIC_POOL = [
     {"id": "uuid-3", "title": "Curiosidad Felina", "artist": "Ambient MX", "file_url": "https://example.com/3.mp3", "mood": "curious", "bpm": 95, "platform_tiktok": False, "platform_youtube": True, "platform_instagram": True, "license_expires_at": None},
 ]
 
+SAMPLE_EXPIRED_TRACK = {
+    "id": "uuid-expired",
+    "title": "Expired Song",
+    "artist": "Old Artist",
+    "file_url": "https://example.com/expired.mp3",
+    "mood": "playful",
+    "bpm": 115,
+    "platform_tiktok": True,
+    "platform_youtube": True,
+    "platform_instagram": True,
+    "license_expires_at": "2026-01-01T00:00:00Z",
+}
+
+
+@pytest.fixture
+def expired_track():
+    return SAMPLE_EXPIRED_TRACK
+
 
 @pytest.fixture
 def mock_scene_library():
