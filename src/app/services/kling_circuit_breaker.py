@@ -16,6 +16,7 @@ Thresholds (locked in CONTEXT.md):
 import logging
 from datetime import datetime, timezone
 
+import requests
 from supabase import Client
 
 from app.services.telegram import send_alert_sync
@@ -156,8 +157,15 @@ class KlingCircuitBreakerService:
             Sends Telegram alert if balance < $5.00 (warning threshold).
         """
         try:
-            import fal_client
-            balance: float = fal_client.get_balance()
+            import fal_client.auth as _fal_auth
+            credentials = _fal_auth.fetch_credentials()
+            resp = requests.get(
+                "https://fal.ai/v1/billing/balance",
+                headers={"Authorization": f"Key {credentials}"},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            balance: float = float(resp.json()["balance"])
 
             if balance < BALANCE_HALT_USD:
                 logger.error(
