@@ -118,11 +118,13 @@ def test_check_balance_proceeds_when_above_halt_threshold():
     """check_balance() returns True when balance >= $1.00."""
     mock_db = _make_supabase(_default_state())
 
-    mock_fal = MagicMock()
-    mock_fal.get_balance.return_value = 10.0  # $10 — well above all thresholds
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"balance": 10.0}  # $10 — well above all thresholds
+    mock_resp.raise_for_status.return_value = None
 
-    with patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert, \
-         patch.dict("sys.modules", {"fal_client": mock_fal}):
+    with patch("app.services.kling_circuit_breaker.requests.get", return_value=mock_resp), \
+         patch("fal_client.auth.fetch_credentials", return_value="test_key_123"), \
+         patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert:
         from app.services.kling_circuit_breaker import KlingCircuitBreakerService
         cb = KlingCircuitBreakerService(mock_db)
         result = cb.check_balance()
@@ -135,11 +137,13 @@ def test_check_balance_halts_when_below_one_dollar():
     """check_balance() returns False (halt pipeline) when balance < $1.00."""
     mock_db = _make_supabase(_default_state())
 
-    mock_fal = MagicMock()
-    mock_fal.get_balance.return_value = 0.50  # $0.50 — below $1 halt threshold
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"balance": 0.50}  # $0.50 — below $1 halt threshold
+    mock_resp.raise_for_status.return_value = None
 
-    with patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert, \
-         patch.dict("sys.modules", {"fal_client": mock_fal}):
+    with patch("app.services.kling_circuit_breaker.requests.get", return_value=mock_resp), \
+         patch("fal_client.auth.fetch_credentials", return_value="test_key_123"), \
+         patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert:
         from app.services.kling_circuit_breaker import KlingCircuitBreakerService
         cb = KlingCircuitBreakerService(mock_db)
         result = cb.check_balance()
@@ -154,11 +158,13 @@ def test_check_balance_alerts_but_proceeds_when_between_one_and_five():
     """check_balance() returns True but sends alert when $1.00 <= balance < $5.00."""
     mock_db = _make_supabase(_default_state())
 
-    mock_fal = MagicMock()
-    mock_fal.get_balance.return_value = 3.00  # $3.00 — alert zone but not halt
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"balance": 3.00}  # $3.00 — alert zone but not halt
+    mock_resp.raise_for_status.return_value = None
 
-    with patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert, \
-         patch.dict("sys.modules", {"fal_client": mock_fal}):
+    with patch("app.services.kling_circuit_breaker.requests.get", return_value=mock_resp), \
+         patch("fal_client.auth.fetch_credentials", return_value="test_key_123"), \
+         patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert:
         from app.services.kling_circuit_breaker import KlingCircuitBreakerService
         cb = KlingCircuitBreakerService(mock_db)
         result = cb.check_balance()

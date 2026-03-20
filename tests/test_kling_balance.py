@@ -36,14 +36,12 @@ def _default_state(**overrides) -> dict:
 
 
 def test_check_balance_fail_open_on_exception():
-    """check_balance() returns True (fail-open) when fal_client.get_balance() raises."""
+    """check_balance() returns True (fail-open) when requests.get raises."""
     mock_db = _make_supabase(_default_state())
 
-    mock_fal = MagicMock()
-    mock_fal.get_balance.side_effect = Exception("Network error")
-
-    with patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert, \
-         patch.dict("sys.modules", {"fal_client": mock_fal}):
+    with patch("app.services.kling_circuit_breaker.requests.get", side_effect=Exception("Network error")), \
+         patch("fal_client.auth.fetch_credentials", return_value="test_key_123"), \
+         patch("app.services.kling_circuit_breaker.send_alert_sync") as mock_alert:
         from app.services.kling_circuit_breaker import KlingCircuitBreakerService
         cb = KlingCircuitBreakerService(mock_db)
         result = cb.check_balance()
@@ -54,14 +52,16 @@ def test_check_balance_fail_open_on_exception():
 
 
 def test_check_balance_does_not_write_to_db():
-    """check_balance() never writes to DB — balance check is read-only from fal_client."""
+    """check_balance() never writes to DB — balance check is read-only via REST API."""
     mock_db = _make_supabase(_default_state())
 
-    mock_fal = MagicMock()
-    mock_fal.get_balance.return_value = 50.0  # Healthy balance
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"balance": 50.0}  # Healthy balance
+    mock_resp.raise_for_status.return_value = None
 
-    with patch("app.services.kling_circuit_breaker.send_alert_sync"), \
-         patch.dict("sys.modules", {"fal_client": mock_fal}):
+    with patch("app.services.kling_circuit_breaker.requests.get", return_value=mock_resp), \
+         patch("fal_client.auth.fetch_credentials", return_value="test_key_123"), \
+         patch("app.services.kling_circuit_breaker.send_alert_sync"):
         from app.services.kling_circuit_breaker import KlingCircuitBreakerService
         cb = KlingCircuitBreakerService(mock_db)
         cb.check_balance()
