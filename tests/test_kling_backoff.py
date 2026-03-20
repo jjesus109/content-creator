@@ -17,19 +17,22 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from unittest.mock import MagicMock, patch, call
 from datetime import datetime, timezone
+import fal_client as fal_module
 
 
-def _make_fal_status(status: str, video_url: str = None, error: str = None):
-    """Helper: create a mock fal_client.status() response."""
-    mock_status = MagicMock()
-    mock_status.status = status
-    if video_url:
-        mock_status.response = {"video": {"url": video_url}}
-    elif error:
-        mock_status.response = {"error": error}
-    else:
-        mock_status.response = {}
-    return mock_status
+def _make_completed_status():
+    """Return a real fal_client.Completed instance."""
+    return fal_module.Completed(logs=None, metrics={})
+
+
+def _make_in_progress_status():
+    """Return a real fal_client.InProgress instance."""
+    return fal_module.InProgress(logs=None)
+
+
+def _make_queued_status():
+    """Return a real fal_client.Queued instance."""
+    return fal_module.Queued(position=0)
 
 
 # --- Test 1: video_poller_job calls check_balance() and halts if False ---
@@ -59,12 +62,13 @@ def test_video_poller_calls_check_balance_and_cancels_if_false():
     mock_fal.status.assert_not_called()
 
 
-# --- Test 2: video_poller_job records failure on Kling "failed" status ---
+# --- Test 2: video_poller_job does not call record_attempt on transient exception ---
+# Note: fal.ai does not return a typed "failed" status; HTTP-level errors surface as exceptions.
+# The except block logs and continues polling — it does NOT call record_attempt(success=False).
 
-def test_video_poller_records_failure_on_kling_failed():
-    """video_poller_job calls cb.record_attempt(success=False) when Kling status is 'failed'."""
+def test_video_poller_does_not_record_attempt_on_transient_exception():
+    """When fal_client.status() raises an exception, video_poller_job does NOT call record_attempt."""
     submitted_at = datetime.now(tz=timezone.utc)
-    mock_status = _make_fal_status("failed", error="render_timeout")
 
     mock_cb = MagicMock()
     mock_cb.check_balance.return_value = True  # Balance OK
@@ -73,24 +77,29 @@ def test_video_poller_records_failure_on_kling_failed():
     with patch("app.scheduler.jobs.video_poller.fal_client") as mock_fal, \
          patch("app.scheduler.jobs.video_poller.get_settings") as mock_settings, \
          patch("app.scheduler.jobs.video_poller.get_supabase"), \
-         patch("app.scheduler.jobs.video_poller._cancel_self"), \
-         patch("app.services.kling._handle_render_failure"), \
+         patch("app.scheduler.jobs.video_poller._cancel_self") as mock_cancel, \
          patch("app.services.kling_circuit_breaker.KlingCircuitBreakerService", mock_kling_cb_class):
         mock_settings.return_value.kling_model_version = "fal-ai/kling-video/v3/standard/text-to-video"
-        mock_fal.status.return_value = mock_status
+        mock_fal.status.side_effect = Exception("render_timeout")
+        mock_fal.Completed = fal_module.Completed
+        mock_fal.InProgress = fal_module.InProgress
+        mock_fal.Queued = fal_module.Queued
 
         from app.scheduler.jobs.video_poller import video_poller_job
         video_poller_job("kling-job-fail-002", submitted_at)
 
-    mock_cb.record_attempt.assert_called_once_with(success=False)
+    # Transient exception — poller continues, no record_attempt called, not cancelled
+    mock_cb.record_attempt.assert_not_called()
+    mock_cancel.assert_not_called()
 
 
-# --- Test 3: video_poller_job records success on Kling "completed" status ---
+# --- Test 3: video_poller_job records success on Kling Completed status ---
 
 def test_video_poller_records_success_on_kling_completed():
-    """video_poller_job calls cb.record_attempt(success=True) when Kling status is 'completed'."""
+    """video_poller_job calls cb.record_attempt(success=True) when Kling returns Completed."""
     submitted_at = datetime.now(tz=timezone.utc)
-    mock_status = _make_fal_status("completed", video_url="https://fal.ai/video/test.mp4")
+    mock_status = _make_completed_status()
+    mock_result = {"video": {"url": "https://fal.ai/video/test.mp4"}}
 
     mock_cb = MagicMock()
     mock_cb.check_balance.return_value = True  # Balance OK
@@ -104,6 +113,10 @@ def test_video_poller_records_success_on_kling_completed():
          patch("app.services.kling_circuit_breaker.KlingCircuitBreakerService", mock_kling_cb_class):
         mock_settings.return_value.kling_model_version = "fal-ai/kling-video/v3/standard/text-to-video"
         mock_fal.status.return_value = mock_status
+        mock_fal.result.return_value = mock_result
+        mock_fal.Completed = fal_module.Completed
+        mock_fal.InProgress = fal_module.InProgress
+        mock_fal.Queued = fal_module.Queued
 
         from app.scheduler.jobs.video_poller import video_poller_job
         video_poller_job("kling-job-ok-003", submitted_at)
