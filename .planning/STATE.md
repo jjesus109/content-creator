@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Mexican Cat Content Machine
 status: unknown
-stopped_at: Completed 11-02-PLAN.md — Phase 11 complete
-last_updated: "2026-03-20T14:36:45.438Z"
+stopped_at: Completed 11-03-PLAN.md — Phase 11 gap closure complete
+last_updated: "2026-03-20T14:56:17.850Z"
 progress:
   total_phases: 3
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 12
+  completed_plans: 12
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-18)
 ## Current Position
 
 Phase: 11 (music-license-enforcement-at-publish) — EXECUTING
-Plan: 2 of 2
+Plan: 1 of 3
 
 ## Accumulated Context
 
@@ -63,6 +63,9 @@ Plan: 2 of 2
 - [Phase 11]: [11-01]: Expiry comparison uses expiry <= now_utc (fail-closed at exact expiry moment) — consistent with Phase 10 music_matcher.py strict > semantics
 - [Phase 11]: [11-02]: Integration tests call publish_to_platform_job() directly to validate gate wiring into job — not just helper function
 - [Phase 11]: [11-02]: _make_integration_supabase_mock uses table name dispatch via side_effect for multi-table job function testing
+- [Phase 11-03]: [11-03]: VALID_PLATFORMS updated to include facebook — keeps MusicMatcher aligned with 4-platform publish pipeline
+- [Phase 11-03]: [11-03]: migration 0011 uses ADD COLUMN IF NOT EXISTS — idempotent, safe to apply to Supabase multiple times
+- [Phase 11-03]: [11-03]: test_pick_track_raises_on_invalid_platform updated to use snapchat as invalid platform (facebook now valid)
 
 ### v1.0 Quick Tasks Completed
 
@@ -91,6 +94,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T14:36:45.429Z
-Stopped at: Completed 11-02-PLAN.md — Phase 11 complete
+Last session: 2026-03-20T14:56:17.848Z
+Stopped at: Completed 11-03-PLAN.md — Phase 11 gap closure complete
 Resume file: None
