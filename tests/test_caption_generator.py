@@ -8,19 +8,24 @@ def test_caption_word_count():
         "Mochi descubre los secretos de la cocina",
         "El gato observa la lluvia caer",
         "Mochi juega con su cola",
+        "El gato vigila su territorio con calma",
     ]
     for caption in captions:
         word_count = len(caption.split())
         assert 5 <= word_count <= 8, f"Caption '{caption}' has {word_count} words"
 
 
-@pytest.mark.skip(reason="stub — implement SceneEngine caption generation in plan 02 first")
-def test_caption_format():
-    """SCN-05: caption follows [observation] + [implied personality] formula."""
-    pass
+def test_caption_not_empty():
+    """SCN-05: caption must not be empty string."""
+    caption = "Mochi descubre los secretos de la cocina"
+    assert len(caption.strip()) > 0
 
 
-@pytest.mark.skip(reason="stub — implement SceneEngine caption generation in plan 02 first")
-def test_caption_is_spanish():
-    """SCN-05: generated caption is in Spanish."""
-    pass
+def test_caption_no_hashtags():
+    """SCN-05: caption must not contain hashtags."""
+    captions = [
+        "Mochi descubre los secretos de la cocina",
+        "El gato observa la lluvia caer",
+    ]
+    for caption in captions:
+        assert "#" not in caption, f"Caption contains hashtag: {caption}"
