@@ -61,13 +61,14 @@ def video_poller_job(video_id: str, submitted_at: datetime) -> None:
             with_logs=False,
         )
         logger.info(
-            "Kling poll: job_id=%s status=%s elapsed=%s",
-            video_id, status.status, elapsed,
+            "Kling poll: job_id=%s status_type=%s elapsed=%s",
+            video_id, type(status).__name__, elapsed,
         )
 
-        if status.status == "completed":
-            # Extract video URL from fal.ai response
-            video_url = status.response["video"]["url"]
+        if isinstance(status, fal_client.Completed):
+            # Fetch the actual result payload to get the video URL
+            result_data = fal_client.result(settings.kling_model_version, video_id)
+            video_url = result_data["video"]["url"]
             logger.info(
                 "Poller: Kling render complete for job_id=%s, triggering processing",
                 video_id,
@@ -77,18 +78,11 @@ def video_poller_job(video_id: str, submitted_at: datetime) -> None:
             kling_cb.record_attempt(success=True)
             _cancel_self(video_id)
 
-        elif status.status == "failed":
-            error_msg = str(status.response.get("error", "unknown"))
-            logger.error(
-                "Poller: Kling render failed for job_id=%s error=%s",
-                video_id, error_msg,
-            )
-            from app.services.kling import _handle_render_failure
-            _handle_render_failure(video_id, error_msg)
-            kling_cb.record_attempt(success=False)
-            _cancel_self(video_id)
+        elif isinstance(status, (fal_client.InProgress, fal_client.Queued)):
+            # Still running — continue polling on next interval
+            pass
 
-        # "queued" or "in_progress" — continue polling on next interval
+        # Any other unexpected type — log and continue polling (do not cancel)
 
     except Exception as exc:
         logger.error("Kling poller error for job_id=%s: %s", video_id, exc)

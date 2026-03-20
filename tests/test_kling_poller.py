@@ -1,6 +1,6 @@
 """
-TDD RED: video_poller.py and daily_pipeline.py adaptation for Kling/fal.ai.
-Phase 09-02 Task 2
+Tests for video_poller.py — Kling/fal.ai status detection using isinstance checks.
+Phase 09-02 Task 2 (updated 260320-dtz: fix status flow)
 """
 import sys
 import os
@@ -8,31 +8,37 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from unittest.mock import MagicMock, patch, call
 from datetime import datetime, timezone
+import fal_client as fal_module
 
 
-def _make_fal_status(status: str, video_url: str = None, error: str = None):
-    """Helper: create a mock fal_client.status() response."""
-    mock_status = MagicMock()
-    mock_status.status = status
-    if video_url:
-        mock_status.response = {"video": {"url": video_url}}
-    elif error:
-        mock_status.response = {"error": error}
-    else:
-        mock_status.response = {}
-    return mock_status
+def _make_completed_status():
+    """Return a real fal_client.Completed instance."""
+    return fal_module.Completed(logs=None, metrics={})
+
+
+def _make_in_progress_status():
+    """Return a real fal_client.InProgress instance."""
+    return fal_module.InProgress(logs=None)
+
+
+def _make_queued_status():
+    """Return a real fal_client.Queued instance."""
+    return fal_module.Queued(position=0)
 
 
 def test_video_poller_calls_fal_client_status_not_heygen():
     """video_poller_job calls fal_client.status(), not requests.get(HEYGEN_STATUS_URL)."""
     submitted_at = datetime.now(tz=timezone.utc)
-    mock_status = _make_fal_status("in_progress")
+    mock_status = _make_in_progress_status()
 
     with patch("app.scheduler.jobs.video_poller.fal_client") as mock_fal, \
          patch("app.scheduler.jobs.video_poller.get_settings") as mock_settings, \
          patch("app.scheduler.jobs.video_poller.get_supabase"):
         mock_settings.return_value.kling_model_version = "fal-ai/kling-video/v3/standard/text-to-video"
         mock_fal.status.return_value = mock_status
+        mock_fal.InProgress = fal_module.InProgress
+        mock_fal.Completed = fal_module.Completed
+        mock_fal.Queued = fal_module.Queued
 
         from app.scheduler.jobs.video_poller import video_poller_job
         video_poller_job("kling-job-001", submitted_at)
@@ -42,9 +48,10 @@ def test_video_poller_calls_fal_client_status_not_heygen():
 
 
 def test_video_poller_on_completed_calls_process_completed_render():
-    """On fal.ai status 'completed', calls kling._process_completed_render with video_url."""
+    """On fal.ai Completed status, calls kling._process_completed_render with video_url."""
     submitted_at = datetime.now(tz=timezone.utc)
-    mock_status = _make_fal_status("completed", video_url="https://fal.ai/video/test.mp4")
+    mock_status = _make_completed_status()
+    mock_result = {"video": {"url": "https://fal.ai/video/test.mp4"}}
 
     with patch("app.scheduler.jobs.video_poller.fal_client") as mock_fal, \
          patch("app.scheduler.jobs.video_poller.get_settings") as mock_settings, \
@@ -53,34 +60,81 @@ def test_video_poller_on_completed_calls_process_completed_render():
          patch("app.scheduler.jobs.video_poller.get_supabase"):
         mock_settings.return_value.kling_model_version = "fal-ai/kling-video/v3/standard/text-to-video"
         mock_fal.status.return_value = mock_status
+        mock_fal.result.return_value = mock_result
+        mock_fal.Completed = fal_module.Completed
+        mock_fal.InProgress = fal_module.InProgress
+        mock_fal.Queued = fal_module.Queued
 
         from app.scheduler.jobs.video_poller import video_poller_job
         video_poller_job("kling-job-002", submitted_at)
 
     mock_process.assert_called_once_with("kling-job-002", "https://fal.ai/video/test.mp4")
     mock_cancel.assert_called_once_with("kling-job-002")
+    # Verify fal_client.result() was called to retrieve the video URL
+    mock_fal.result.assert_called_once()
 
 
-def test_video_poller_on_failed_calls_handle_render_failure():
-    """On fal.ai status 'failed', calls kling._handle_render_failure."""
+def test_video_poller_on_exception_logs_and_continues_polling():
+    """When fal_client.status() raises an exception, logs error and does NOT cancel the poller."""
     submitted_at = datetime.now(tz=timezone.utc)
-    mock_status = _make_fal_status("failed", error="render_timeout")
 
     with patch("app.scheduler.jobs.video_poller.fal_client") as mock_fal, \
          patch("app.scheduler.jobs.video_poller.get_settings") as mock_settings, \
-         patch("app.services.kling._handle_render_failure") as mock_fail, \
          patch("app.scheduler.jobs.video_poller._cancel_self") as mock_cancel, \
          patch("app.scheduler.jobs.video_poller.get_supabase"):
         mock_settings.return_value.kling_model_version = "fal-ai/kling-video/v3/standard/text-to-video"
-        mock_fal.status.return_value = mock_status
+        mock_fal.status.side_effect = Exception("render error")
+        mock_fal.Completed = fal_module.Completed
+        mock_fal.InProgress = fal_module.InProgress
+        mock_fal.Queued = fal_module.Queued
 
         from app.scheduler.jobs.video_poller import video_poller_job
         video_poller_job("kling-job-003", submitted_at)
 
-    mock_fail.assert_called_once()
-    call_args = mock_fail.call_args[0]
-    assert call_args[0] == "kling-job-003"
-    mock_cancel.assert_called_once_with("kling-job-003")
+    # Exception handling — poller should NOT be cancelled (transient failure)
+    mock_cancel.assert_not_called()
+
+
+def test_video_poller_on_in_progress_continues_polling():
+    """On fal.ai InProgress status, does NOT cancel and does NOT call _process_completed_render."""
+    submitted_at = datetime.now(tz=timezone.utc)
+    mock_status = _make_in_progress_status()
+
+    with patch("app.scheduler.jobs.video_poller.fal_client") as mock_fal, \
+         patch("app.scheduler.jobs.video_poller.get_settings") as mock_settings, \
+         patch("app.scheduler.jobs.video_poller._cancel_self") as mock_cancel, \
+         patch("app.scheduler.jobs.video_poller.get_supabase"):
+        mock_settings.return_value.kling_model_version = "fal-ai/kling-video/v3/standard/text-to-video"
+        mock_fal.status.return_value = mock_status
+        mock_fal.Completed = fal_module.Completed
+        mock_fal.InProgress = fal_module.InProgress
+        mock_fal.Queued = fal_module.Queued
+
+        from app.scheduler.jobs.video_poller import video_poller_job
+        video_poller_job("kling-job-004", submitted_at)
+
+    mock_cancel.assert_not_called()
+
+
+def test_video_poller_on_queued_continues_polling():
+    """On fal.ai Queued status, does NOT cancel the poller."""
+    submitted_at = datetime.now(tz=timezone.utc)
+    mock_status = _make_queued_status()
+
+    with patch("app.scheduler.jobs.video_poller.fal_client") as mock_fal, \
+         patch("app.scheduler.jobs.video_poller.get_settings") as mock_settings, \
+         patch("app.scheduler.jobs.video_poller._cancel_self") as mock_cancel, \
+         patch("app.scheduler.jobs.video_poller.get_supabase"):
+        mock_settings.return_value.kling_model_version = "fal-ai/kling-video/v3/standard/text-to-video"
+        mock_fal.status.return_value = mock_status
+        mock_fal.Completed = fal_module.Completed
+        mock_fal.InProgress = fal_module.InProgress
+        mock_fal.Queued = fal_module.Queued
+
+        from app.scheduler.jobs.video_poller import video_poller_job
+        video_poller_job("kling-job-005", submitted_at)
+
+    mock_cancel.assert_not_called()
 
 
 def test_retry_or_fail_uses_kling_job_id_column():
@@ -91,7 +145,7 @@ def test_retry_or_fail_uses_kling_job_id_column():
     with patch("app.scheduler.jobs.video_poller.get_supabase", return_value=mock_supabase), \
          patch("app.scheduler.jobs.video_poller._cancel_self"):
         from app.scheduler.jobs.video_poller import _retry_or_fail
-        _retry_or_fail("kling-job-004")
+        _retry_or_fail("kling-job-006")
 
     # Verify query used kling_job_id
     eq_call = mock_supabase.table.return_value.select.return_value.eq.call_args
@@ -119,7 +173,7 @@ def test_retry_or_fail_first_timeout_calls_kling_service():
          patch("app.services.kling.KlingService", MockKlingClass):
 
         from app.scheduler.jobs.video_poller import _retry_or_fail
-        _retry_or_fail("kling-job-005")
+        _retry_or_fail("kling-job-007")
 
     # submit() must have been called on the KlingService instance
     mock_kling_instance.submit.assert_called_once()
