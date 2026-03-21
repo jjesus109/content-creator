@@ -59,6 +59,17 @@ def test_post_copy_service_importable():
     assert "video_url" in sig.parameters
 
 
+def test_extract_thumbnail_ffmpeg_flags():
+    """Asserts extract_thumbnail uses temp-file approach and ffmpeg 7.x safe flags."""
+    import inspect
+    from app.services.post_copy import extract_thumbnail
+    src = inspect.getsource(extract_thumbnail)
+    assert "NamedTemporaryFile" in src, "Must use temp file (not pipe:0)"
+    assert "pipe:0" not in src, "pipe:0 causes partial-file EOF — must be removed"
+    assert "yuvj420p" in src, "Must set pix_fmt yuvj420p for ffmpeg 7.x mjpeg"
+    assert "unofficial" in src, "Must include -strict unofficial for mjpeg encoder"
+
+
 # ---------------------------------------------------------------------------
 # Check 4 — send_approval_message_sync in services/telegram.py
 # ---------------------------------------------------------------------------
