@@ -43,12 +43,17 @@ def _run_pipeline_with_mocks(
     mock_settings = MagicMock()
     mock_settings.scene_anti_repetition_enabled = anti_rep_enabled
 
+    mock_prompt_gen_svc = MagicMock()
+    mock_prompt_gen_svc.generate_unified_prompt.return_value = "Unified animated prompt for grey kitten."
+    mock_prompt_gen_svc._last_cost_usd = 0.0
+
     with patch("app.scheduler.jobs.daily_pipeline.get_supabase", return_value=mock_supabase), \
          patch("app.scheduler.jobs.daily_pipeline.CircuitBreakerService", return_value=mock_cb), \
          patch("app.scheduler.jobs.daily_pipeline.SceneEngine", return_value=mock_scene_engine), \
          patch("app.scheduler.jobs.daily_pipeline.MusicMatcher", return_value=mock_music_matcher), \
          patch("app.scheduler.jobs.daily_pipeline.EmbeddingService", return_value=mock_embedding_svc), \
          patch("app.scheduler.jobs.daily_pipeline.SimilarityService", return_value=mock_similarity_svc), \
+         patch("app.scheduler.jobs.daily_pipeline.PromptGenerationService", return_value=mock_prompt_gen_svc), \
          patch("app.scheduler.jobs.daily_pipeline.get_settings", return_value=mock_settings), \
          patch("app.scheduler.jobs.daily_pipeline.send_alert_sync"), \
          patch("app.services.kling_circuit_breaker.KlingCircuitBreakerService", return_value=mock_kling_cb), \
@@ -63,6 +68,7 @@ def _run_pipeline_with_mocks(
         "music_matcher": mock_music_matcher,
         "embedding_svc": mock_embedding_svc,
         "similarity_svc": mock_similarity_svc,
+        "prompt_gen_svc": mock_prompt_gen_svc,
         "kling_svc": mock_kling_svc,
         "supabase": mock_supabase,
         "settings": mock_settings,
@@ -88,17 +94,22 @@ def test_music_matcher_called_with_scene_mood():
 
 
 def test_scene_prompt_passed_to_kling_not_caption():
-    """Pipeline: KlingService.submit() receives scene_prompt, not caption."""
+    """Pipeline: KlingService.submit() receives unified_prompt (not caption).
+    Phase 12: scene_prompt is passed to PromptGenerationService which returns the
+    unified prompt. KlingService receives the unified prompt, not the raw scene_prompt.
+    """
     scene_prompt = "Mochi, el gato naranja tabby, inspecciona la cocina..."
     caption = "Mochi descubre los secretos"
     mocks = _run_pipeline_with_mocks(
         scene_return=(scene_prompt, caption, "curious", 0.001)
     )
-    # Kling receives scene_prompt
+    # PromptGenerationService should be called with scene_prompt
+    mocks["prompt_gen_svc"].generate_unified_prompt.assert_called_once_with(scene_prompt)
+    # Kling receives the unified prompt (not the raw scene_prompt, not the caption)
     submit_call = mocks["kling_svc"].submit.call_args
-    submitted_text = submit_call[0][0] if submit_call[0] else submit_call[1].get("scene_prompt", "")
-    assert scene_prompt in (submitted_text or ""), \
-        f"Kling should receive scene_prompt, got: {submitted_text}"
+    submitted_text = submit_call[0][0] if submit_call[0] else submit_call[1].get("script_text", "")
+    assert caption not in (submitted_text or ""), \
+        f"Kling should NOT receive caption, got: {submitted_text}"
 
 
 def test_music_track_id_saved_to_content_history():
@@ -133,6 +144,7 @@ def test_music_matcher_failure_sends_alert_and_halts():
          patch("app.scheduler.jobs.daily_pipeline.MusicMatcher") as mock_matcher_cls, \
          patch("app.scheduler.jobs.daily_pipeline.EmbeddingService") as mock_embed_cls, \
          patch("app.scheduler.jobs.daily_pipeline.SimilarityService") as mock_sim_cls, \
+         patch("app.scheduler.jobs.daily_pipeline.PromptGenerationService") as mock_prompt_gen_cls, \
          patch("app.scheduler.jobs.daily_pipeline.get_settings") as mock_settings, \
          patch("app.scheduler.jobs.daily_pipeline.send_alert_sync") as mock_alert, \
          patch("app.scheduler.jobs.daily_pipeline._expire_stale_approvals"):
@@ -160,6 +172,11 @@ def test_music_matcher_failure_sends_alert_and_halts():
         mock_sim = MagicMock()
         mock_sim.is_too_similar_scene.return_value = False
         mock_sim_cls.return_value = mock_sim
+
+        mock_prompt_gen = MagicMock()
+        mock_prompt_gen.generate_unified_prompt.return_value = "Unified animated prompt."
+        mock_prompt_gen._last_cost_usd = 0.0
+        mock_prompt_gen_cls.return_value = mock_prompt_gen
 
         mock_settings.return_value.scene_anti_repetition_enabled = False
 
