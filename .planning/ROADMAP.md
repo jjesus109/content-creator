@@ -4,6 +4,7 @@
 
 - ✅ **v1.0 Autonomous Content Machine** — Phases 1-8 (shipped 2026-03-02)
 - ✅ **v2.0 Mexican Cat Content Machine** — Phases 9-11 (shipped 2026-03-20)
+- 🚧 **v3.0 Grey Kitten Character Refresh** — Phases 12+ (in progress)
 
 ## Phases
 
@@ -49,3 +50,15 @@ Full details: `.planning/milestones/v2.0-ROADMAP.md`
 | 9. Character Bible and Video Generation | v2.0 | 4/4 | Complete | 2026-03-19 |
 | 10. Scene Engine and Music Pool | v2.0 | 5/5 | Complete | 2026-03-20 |
 | 11. Music License Enforcement at Publish | v2.0 | 3/3 | Complete | 2026-03-20 |
+
+### Phase 12: Grey Kitten Unified Prompt Generation
+
+**Goal:** Replace CHARACTER_BIBLE concatenation with AI-generated unified scene prompts that naturally incorporate the new grey kitten character description. Persist the generated prompt to content_history and include it in Telegram creator notifications.
+**Requires**: New cat character: "A full-body, high-definition 3D render of an ultra-cute, sitting light grey kitten. The kitten has huge, wide, expressive blue eyes and a cheerful, open-mouthed smile showing its pink tongue. Its soft fur texture is highly detailed."
+**Depends on:** Phase 11
+**Plans:** 3 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — Update CHARACTER_BIBLE to grey kitten + create PromptGenerationService
+- [ ] 12-02-PLAN.md — Wire PromptGenerationService into daily_pipeline.py + remove KlingService concatenation
+- [ ] 12-03-PLAN.md — Update broken tests + add PromptGenerationService test coverage
