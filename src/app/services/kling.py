@@ -24,18 +24,22 @@ from app.services.telegram import send_alert_sync
 
 logger = logging.getLogger(__name__)
 
-# Character Bible: 40-50 word constant defining the Mexican cat character identity.
+# Character Bible: 40-50 word constant defining the grey kitten character identity.
 # Embedded unchanged as the FIRST part of every Kling generation prompt.
 # DO NOT move to config or environment variables — character consistency requires
 # prompt consistency. Changes require code review + explicit commit + deployment.
 CHARACTER_BIBLE = (
-    "An orange tabby cat with white chest markings, bright and visually distinct against any background. "
-    "Curious and mischievous personality — always getting into things and exploring every corner. "
-    "Lives in a warm Mexican household filled with serapes, colorful clay pottery, lush tropical plants, "
-    "and traditional adobe architecture. Named Mochi."
+    "A full-body, high-definition 3D render of an ultra-cute, sitting light grey kitten. "
+    "The kitten has huge, wide, expressive blue eyes and a cheerful, open-mouthed smile "
+    "showing its pink tongue. Its soft fur texture is highly detailed. "
+    "Always animated, playful, and irresistibly cute — capturing audience attention "
+    "in every frame."
 )
-# Word count target: 40-50 words. Current: ~46 words.
+# Word count target: 40-50 words. Current: ~46 words. Grey kitten replaces orange tabby Mochi (v3.0).
 
+# Default duration for Kling generations (seconds)
+# Nowayds this is the maximum durations can be generated
+DEFAULT_KLING_DURATION = 15
 
 @retry(
     stop=stop_after_attempt(3),
@@ -105,7 +109,7 @@ class KlingService:
             self._settings.kling_model_version,
             arguments={
                 "prompt": full_prompt,
-                "duration": 20,           # seconds — locked: 20-30s range
+                "duration": DEFAULT_KLING_DURATION,   # seconds — locked: 15s
                 "resolution": "1080p",    # locked: 1080p
                 "aspect_ratio": "9:16",   # locked: vertical video
             },
