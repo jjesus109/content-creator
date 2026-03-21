@@ -2,9 +2,9 @@
 Kling AI 3.0 video generation service via fal.ai async SDK.
 
 Provides:
-  - CHARACTER_BIBLE: Python constant (40-50 words) defining the Mexican cat character.
-    Embedded unchanged in every Kling generation prompt. Stored as code (not config/DB)
-    to guarantee consistency across all generations and deployments.
+  - CHARACTER_BIBLE: Python constant (40-50 words) defining the grey kitten character.
+    Used by PromptGenerationService for unified prompt generation and fallback concatenation.
+    Stored as code (not config/DB) to guarantee character consistency.
   - KlingService: submits text-to-video jobs to Kling 3.0 via fal.ai sync SDK.
   - _process_completed_render(): shared by poller on completion.
   - _handle_render_failure(): marks failed + alerts creator.
@@ -77,14 +77,13 @@ class KlingService:
 
     def submit(self, script_text: str) -> str:
         """
-        Submit Character Bible + scene prompt to Kling 3.0 via fal.ai.
-
-        Concatenates CHARACTER_BIBLE (unchanged) + script_text into a single prompt.
-        This is the locked decision from CONTEXT.md: single text field, no split.
+        Submits the unified prompt directly to Kling 3.0. No internal concatenation.
+        Phase 12: PromptGenerationService generates the unified prompt upstream;
+        KlingService receives it ready-to-send.
 
         Args:
-            script_text: Scene description from daily_pipeline (Phase 10 will provide
-                         structured scene prompt; Phase 9 uses script directly).
+            script_text: Unified animated-style prompt from PromptGenerationService.
+                         CHARACTER_BIBLE is already woven in by the caller — do not concatenate here.
 
         Returns:
             fal.ai request_id string — used as kling_job_id for DB tracking and polling.
@@ -92,13 +91,10 @@ class KlingService:
         Raises:
             Exception: On fal.ai API failure (logged + re-raised to caller).
         """
-        # Concatenate: CHARACTER_BIBLE unchanged + scene prompt
-        full_prompt = f"{CHARACTER_BIBLE}\n\n{script_text}"
-
         logger.info(
             "Submitting Kling job: model=%s duration=20s aspect=9:16 prompt_chars=%d",
             self._settings.kling_model_version,
-            len(full_prompt),
+            len(script_text),
             extra={"pipeline_step": "kling_submit", "content_history_id": ""},
         )
 
@@ -108,7 +104,7 @@ class KlingService:
         result = _submit_with_backoff(
             self._settings.kling_model_version,
             arguments={
-                "prompt": full_prompt,
+                "prompt": script_text,
                 "duration": DEFAULT_KLING_DURATION,   # seconds — locked: 15s
                 "resolution": "1080p",    # locked: 1080p
                 "aspect_ratio": "9:16",   # locked: vertical video
