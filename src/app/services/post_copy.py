@@ -11,8 +11,10 @@ handlers directly; use asyncio.get_event_loop().run_in_executor() or equivalent.
 """
 import json
 import logging
+import os
 import re
 import subprocess
+import tempfile
 from io import BytesIO
 
 import requests
@@ -174,8 +176,9 @@ def extract_thumbnail(video_url: str) -> BytesIO:
     """
     Extract a thumbnail JPEG from a video URL at the 1-second mark.
 
-    Downloads the video bytes synchronously, pipes them into ffmpeg, and returns
-    the resulting JPEG image wrapped in a BytesIO object.
+    Downloads the video bytes synchronously, writes them to a temp file, calls
+    ffmpeg with frame-accurate seek and ffmpeg 7.x-compatible mjpeg flags, and
+    returns the resulting JPEG image wrapped in a BytesIO object.
 
     The returned BytesIO has a `.name` attribute set to "thumbnail.jpg" because
     python-telegram-bot requires a file-like object with a name when sending photos.
@@ -202,27 +205,34 @@ def extract_thumbnail(video_url: str) -> BytesIO:
     video_bytes = resp.content
     logger.info("Video downloaded for thumbnail: %d bytes", len(video_bytes))
 
-    # Extract one JPEG frame at t=1s.
-    # -ss before -i: fast seek to 1 second before reading input.
-    # scale=320:-1: resize to 320px wide, preserve aspect ratio.
-    # pipe:0 / pipe:1: read from stdin, write to stdout — no temp files.
-    cmd = [
-        "ffmpeg",
-        "-ss", "00:00:01",
-        "-i", "pipe:0",
-        "-frames:v", "1",
-        "-f", "image2",
-        "-c:v", "mjpeg",
-        "-vf", "scale=320:-1",
-        "pipe:1",
-    ]
+    # Write video bytes to a named temp file so ffmpeg can seek the container.
+    # Piping stdin causes partial-file / EOF errors for MP4s with moov at end.
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
+        tmp.write(video_bytes)
+        tmp_path = tmp.name
 
-    result = subprocess.run(
-        cmd,
-        input=video_bytes,
-        capture_output=True,
-        timeout=30,
-    )
+    try:
+        cmd = [
+            "ffmpeg",
+            "-y",                          # overwrite output (defensive)
+            "-i", tmp_path,                # real file path — ffmpeg can seek
+            "-ss", "00:00:01",             # seek AFTER -i for frame-accurate seek on file input
+            "-frames:v", "1",
+            "-f", "image2",
+            "-c:v", "mjpeg",
+            "-pix_fmt", "yuvj420p",        # JPEG full-range — fixes ffmpeg 7.x mjpeg rejection
+            "-strict", "unofficial",       # belt-and-suspenders for mjpeg encoder
+            "-vf", "scale=320:-1",
+            "pipe:1",
+        ]
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            timeout=30,
+        )
+    finally:
+        os.unlink(tmp_path)
 
     if result.returncode != 0:
         stderr_text = result.stderr.decode(errors="replace")
