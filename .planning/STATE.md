@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Mexican Cat Content Machine
-status: milestone_complete
-stopped_at: Completed quick/260320-fas — fix KlingCB.check_balance() 404 (no-op stub)
-last_updated: "2026-03-20T18:40:00.000Z"
+milestone: v3.0
+milestone_name: Grey Kitten Character Refresh
+status: unknown
+stopped_at: Phase 12 context gathered
+last_updated: "2026-03-21T06:23:05.349Z"
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -26,6 +26,10 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 Milestone v2.0 complete — no active phase. Start next milestone with `/gsd:new-milestone`.
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 12 added: Grey Kitten Unified Prompt Generation — replace CHARACTER_BIBLE concatenation with AI-generated prompt that naturally embeds new grey kitten character; persist generated prompt to content_history; send to Telegram creator notification
 
 ### Decisions
 
@@ -98,6 +102,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T05:51:38Z
-Stopped at: Completed quick/260320-x27 — fix thumbnail extraction ffmpeg EOF and mjpeg range errors
-Resume file: None
+Last session: 2026-03-21T06:23:05.340Z
+Stopped at: Phase 12 context gathered
+Resume file: .planning/phases/12-grey-kitten-unified-prompt-generation/12-CONTEXT.md
