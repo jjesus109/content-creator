@@ -7,6 +7,7 @@ from app.services.embeddings import EmbeddingService
 from app.services.similarity import SimilarityService
 from app.services.scene_generation import SceneEngine
 from app.services.music_matcher import MusicMatcher
+from app.services.prompt_generation import PromptGenerationService
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -30,9 +31,11 @@ def daily_pipeline_job() -> None:
        c. Embed scene prompt for anti-repetition check
        d. Anti-repetition check (7-day window, 0.78 threshold); gated by scene_anti_repetition_enabled
        e. Select music track matching scene mood (MusicMatcher.pick_track)
-       f. Kling circuit breaker check; submit scene_prompt to Kling AI 3.0 via fal.ai
-       g. Save scene + music_track_id + scene_embedding + kling_job_id to content_history
-       h. Register APScheduler polling fallback
+       f. Generate unified animated-style prompt via PromptGenerationService (GPT-4o)
+       g. Record unified prompt generation cost to circuit breaker
+       h. Kling circuit breaker check; submit unified_prompt to Kling AI 3.0 via fal.ai
+       i. Save unified_prompt (as script_text) + scene_prompt + music_track_id + scene_embedding + kling_job_id to content_history
+       j. Register APScheduler polling fallback
     """
     # Step 0: Mark any unanswered 'ready' rows from previous pipeline runs as approval_timeout
     _expire_stale_approvals()
@@ -60,6 +63,7 @@ def daily_pipeline_job() -> None:
     music_matcher = MusicMatcher(supabase)
     embedding_svc = EmbeddingService()
     similarity_svc = SimilarityService(supabase)
+    prompt_gen_svc = PromptGenerationService()
 
     plog.extra["pipeline_step"] = "scene_gen"
     plog.info("Daily pipeline starting (v2.0 Scene Engine).")
@@ -138,7 +142,20 @@ def daily_pipeline_job() -> None:
             )
             return
 
-        # 4f: Kling CB check (unchanged from Phase 9)
+        # 4f (v3.0): Generate unified animated-style prompt via PromptGenerationService
+        unified_prompt = prompt_gen_svc.generate_unified_prompt(scene_prompt)
+        plog.info(
+            "Unified prompt generated (chars=%d, cost=$%.6f)",
+            len(unified_prompt),
+            prompt_gen_svc._last_cost_usd,
+        )
+        if prompt_gen_svc._last_cost_usd > 0.0:
+            if not cb.record_attempt(prompt_gen_svc._last_cost_usd):
+                plog.error("Circuit breaker tripped during unified prompt generation.")
+                send_alert_sync("Circuit breaker disparado durante generación de prompt unificado. Pipeline detenido.")
+                return
+
+        # 4h: Kling CB check (unchanged from Phase 9)
         from app.services.kling import KlingService
         from app.scheduler.jobs.video_poller import register_video_poller
         from app.services.kling_circuit_breaker import KlingCircuitBreakerService
@@ -155,13 +172,15 @@ def daily_pipeline_job() -> None:
         kling_svc = KlingService()
         plog.extra["pipeline_step"] = "kling_submit"
         try:
-            kling_job_id = kling_svc.submit(scene_prompt)
+            kling_job_id = kling_svc.submit(unified_prompt)
             plog.info("Kling job submitted: job_id=%s", kling_job_id)
         except Exception as exc:
             plog.error("Kling submission failed: %s", exc)
             send_alert_sync(f"Error al enviar escena a Kling AI: {exc}. Escena guardada sin video.")
             _save_to_content_history(
-                supabase, scene_prompt, caption, scene_embedding, music_track_id=music_track["id"]
+                supabase, scene_prompt, caption, scene_embedding,
+                music_track_id=music_track["id"],
+                unified_prompt=unified_prompt,
             )
             return
 
@@ -173,6 +192,7 @@ def daily_pipeline_job() -> None:
             scene_embedding=scene_embedding,
             music_track_id=music_track["id"],
             kling_job_id=kling_job_id,
+            unified_prompt=unified_prompt,
         )
         plog.extra["content_history_id"] = new_id or ""
         plog.extra["pipeline_step"] = "pipeline_complete"
@@ -193,19 +213,23 @@ def _save_to_content_history(
     scene_embedding: list[float],
     music_track_id: str | None = None,
     kling_job_id: str | None = None,
+    unified_prompt: str | None = None,
 ) -> str | None:
     """
     Persist the generated scene with its embedding to content_history.
     v2.0: uses scene_prompt, caption, scene_embedding, music_track_id.
+    v3.0: unified_prompt overwrites script_text (Phase 12 decision); scene_prompt column retains raw SceneEngine output.
     script_text and topic_summary set for backward compatibility.
     Returns the new content_history id, or None on failure.
     """
     from app.models.video import VideoStatus
+    # unified_prompt overwrites script_text (Phase 12 decision); scene_prompt column retains raw SceneEngine output
+    effective_script = unified_prompt if unified_prompt else scene_prompt
     row = {
-        "script_text": scene_prompt,   # backward compat: scene_prompt stored here too
+        "script_text": effective_script,
         "topic_summary": caption[:100] if caption else "",  # backward compat
         "embedding": scene_embedding,   # reuse existing embedding column for scene embedding
-        "scene_prompt": scene_prompt,
+        "scene_prompt": scene_prompt,   # raw SceneEngine output preserved
         "caption": caption,
         "scene_embedding": scene_embedding,
     }
