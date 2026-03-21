@@ -32,10 +32,10 @@ class TestVID01KlingServiceSmoke:
         sig = inspect.signature(KlingService.submit)
         assert "script_text" in sig.parameters
 
-    def test_fal_api_key_in_settings(self):
-        """Settings declares fal_api_key field."""
+    def test_fal_key_in_settings(self):
+        """Settings declares fal_key field."""
         from app.settings import Settings
-        assert "fal_api_key" in Settings.model_fields
+        assert "fal_key" in Settings.model_fields
 
     def test_kling_model_version_in_settings(self):
         """Settings declares kling_model_version field with default."""
@@ -77,21 +77,20 @@ class TestVID02CharacterBibleSmoke:
             f"CHARACTER_BIBLE has {word_count} words — must be 40-50"
         )
 
-    def test_character_bible_contains_orange_tabby(self):
-        """CHARACTER_BIBLE describes an orange tabby cat."""
+    def test_character_bible_contains_grey_kitten(self):
+        """CHARACTER_BIBLE describes a grey kitten (v3.0 character refresh)."""
         from app.services.kling import CHARACTER_BIBLE
-        assert "orange tabby" in CHARACTER_BIBLE.lower(), (
-            "CHARACTER_BIBLE must describe 'orange tabby' (locked decision)"
+        lower = CHARACTER_BIBLE.lower()
+        assert "grey kitten" in lower or "gray kitten" in lower, (
+            "CHARACTER_BIBLE must describe 'grey kitten' or 'gray kitten' (v3.0 character refresh)"
         )
 
-    def test_character_bible_contains_mexican_context(self):
-        """CHARACTER_BIBLE references Mexican cultural environment."""
+    def test_character_bible_contains_blue_eyes(self):
+        """CHARACTER_BIBLE references the grey kitten's blue eyes (key visual hook)."""
         from app.services.kling import CHARACTER_BIBLE
-        mexican_keywords = ["mexican", "serape", "pottery", "adobe", "mochi"]
-        found = any(kw in CHARACTER_BIBLE.lower() for kw in mexican_keywords)
-        assert found, (
-            f"CHARACTER_BIBLE must reference Mexican context. "
-            f"Keywords checked: {mexican_keywords}"
+        lower = CHARACTER_BIBLE.lower()
+        assert "blue eyes" in lower, (
+            "CHARACTER_BIBLE must reference 'blue eyes' — key visual hook for v3.0 grey kitten"
         )
 
 

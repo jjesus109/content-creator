@@ -188,6 +188,21 @@ def test_music_matcher_failure_sends_alert_and_halts():
     assert "música" in alert_text.lower() or "music" in alert_text.lower() or "MusicMatcher" in alert_text
 
 
+def test_prompt_generation_service_called_between_scene_and_kling():
+    """Pipeline: PromptGenerationService.generate_unified_prompt() is called with scene_prompt before KlingService.submit()."""
+    scene_prompt = "A curious grey kitten investigates a fallen clay pot."
+    mocks = _run_pipeline_with_mocks(
+        scene_return=(scene_prompt, "caption", "curious", 0.001)
+    )
+    mocks["prompt_gen_svc"].generate_unified_prompt.assert_called_once_with(scene_prompt)
+    # KlingService should receive the output of PromptGenerationService, not raw scene_prompt
+    submit_call = mocks["kling_svc"].submit.call_args
+    submitted = submit_call[0][0] if submit_call[0] else ""
+    assert submitted != scene_prompt, (
+        "KlingService should receive the unified_prompt from PromptGenerationService, not the raw scene_prompt"
+    )
+
+
 def test_anti_repetition_log_only_mode_does_not_retry():
     """Pipeline: similarity detected + anti-repetition disabled = log warning, continue (no retry)."""
     mocks = _run_pipeline_with_mocks(
