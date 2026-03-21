@@ -1,0 +1,154 @@
+"""
+TDD RED: PromptGenerationService tests.
+Phase 12-01 Task 2
+
+Tests that PromptGenerationService correctly generates or falls back to
+a unified prompt string for Kling AI video generation.
+
+Written before implementation — must FAIL until prompt_generation.py exists.
+"""
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from unittest.mock import MagicMock, patch, PropertyMock
+
+
+def _make_mock_settings():
+    """Build mock settings with required API keys."""
+    settings = MagicMock()
+    settings.openai_api_key = "sk-test-mock-key"
+    return settings
+
+
+def _make_mock_response(text: str, prompt_tokens: int = 100, completion_tokens: int = 50):
+    """Build a mock OpenAI chat completion response."""
+    response = MagicMock()
+    response.choices[0].message.content = text
+    response.usage.prompt_tokens = prompt_tokens
+    response.usage.completion_tokens = completion_tokens
+    return response
+
+
+def test_import_prompt_generation_service():
+    """PromptGenerationService must be importable from prompt_generation module."""
+    from app.services.prompt_generation import PromptGenerationService
+    assert PromptGenerationService is not None
+
+
+def test_generate_unified_prompt_returns_string():
+    """generate_unified_prompt must return a non-empty string on success."""
+    with patch("app.services.prompt_generation.get_settings", return_value=_make_mock_settings()), \
+         patch("app.services.prompt_generation.OpenAI") as mock_openai_cls:
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.chat.completions.create.return_value = _make_mock_response(
+            "A cute grey kitten with blue eyes explores a sunlit kitchen."
+        )
+        from app.services.prompt_generation import PromptGenerationService
+        svc = PromptGenerationService()
+        result = svc.generate_unified_prompt("The kitten sits by the window.")
+        assert isinstance(result, str), "generate_unified_prompt must return a str"
+        assert len(result) > 0, "generate_unified_prompt must return a non-empty str"
+
+
+def test_generate_unified_prompt_gpt4o_success():
+    """On GPT-4o success, returns the text from the response (not concatenation fallback)."""
+    expected_text = "An ultra-cute grey kitten with huge blue eyes investigates a bubbling pot on the stove."
+    with patch("app.services.prompt_generation.get_settings", return_value=_make_mock_settings()), \
+         patch("app.services.prompt_generation.OpenAI") as mock_openai_cls:
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.chat.completions.create.return_value = _make_mock_response(expected_text)
+        from app.services.prompt_generation import PromptGenerationService
+        svc = PromptGenerationService()
+        result = svc.generate_unified_prompt("Kitchen exploration scene.")
+        assert result == expected_text
+
+
+def test_generate_unified_prompt_fallback_on_exception():
+    """On GPT-4o failure, returns CHARACTER_BIBLE + '\\n\\n' + scene_prompt."""
+    from app.services.kling import CHARACTER_BIBLE
+
+    with patch("app.services.prompt_generation.get_settings", return_value=_make_mock_settings()), \
+         patch("app.services.prompt_generation.OpenAI") as mock_openai_cls:
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.chat.completions.create.side_effect = RuntimeError("API down")
+        from app.services.prompt_generation import PromptGenerationService
+        # Patch tenacity retry to not actually sleep/retry
+        with patch("app.services.prompt_generation._call_gpt4o_with_backoff", side_effect=RuntimeError("API down")):
+            svc = PromptGenerationService()
+            scene = "The kitten naps on a warm blanket."
+            result = svc.generate_unified_prompt(scene)
+            expected = f"{CHARACTER_BIBLE}\n\n{scene}"
+            assert result == expected, f"Fallback must be CHARACTER_BIBLE + scene, got: {result!r}"
+
+
+def test_generate_unified_prompt_never_raises():
+    """generate_unified_prompt must NEVER raise — always returns a usable string."""
+    with patch("app.services.prompt_generation.get_settings", return_value=_make_mock_settings()), \
+         patch("app.services.prompt_generation.OpenAI") as mock_openai_cls:
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        with patch("app.services.prompt_generation._call_gpt4o_with_backoff", side_effect=Exception("total failure")):
+            from app.services.prompt_generation import PromptGenerationService
+            svc = PromptGenerationService()
+            result = svc.generate_unified_prompt("Any scene.")
+            assert isinstance(result, str) and len(result) > 0
+
+
+def test_fallback_logs_warning():
+    """logger.warning must be called when falling back to concatenation."""
+    with patch("app.services.prompt_generation.get_settings", return_value=_make_mock_settings()), \
+         patch("app.services.prompt_generation.OpenAI") as mock_openai_cls, \
+         patch("app.services.prompt_generation.logger") as mock_logger:
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        with patch("app.services.prompt_generation._call_gpt4o_with_backoff", side_effect=RuntimeError("fail")):
+            from app.services.prompt_generation import PromptGenerationService
+            svc = PromptGenerationService()
+            svc.generate_unified_prompt("Scene prompt here.")
+            mock_logger.warning.assert_called_once()
+
+
+def test_last_cost_usd_set_on_success():
+    """self._last_cost_usd must be set to a float after successful GPT-4o call."""
+    with patch("app.services.prompt_generation.get_settings", return_value=_make_mock_settings()), \
+         patch("app.services.prompt_generation.OpenAI") as mock_openai_cls:
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.chat.completions.create.return_value = _make_mock_response(
+            "Unified prompt text.", prompt_tokens=500, completion_tokens=100
+        )
+        from app.services.prompt_generation import PromptGenerationService
+        svc = PromptGenerationService()
+        svc.generate_unified_prompt("Test scene.")
+        assert isinstance(svc._last_cost_usd, float), "_last_cost_usd must be a float"
+        assert svc._last_cost_usd > 0.0, "_last_cost_usd must be positive on success"
+
+
+def test_last_cost_usd_zero_on_fallback():
+    """self._last_cost_usd must be 0.0 on GPT-4o failure (fallback)."""
+    with patch("app.services.prompt_generation.get_settings", return_value=_make_mock_settings()), \
+         patch("app.services.prompt_generation.OpenAI") as mock_openai_cls:
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        with patch("app.services.prompt_generation._call_gpt4o_with_backoff", side_effect=RuntimeError("fail")):
+            from app.services.prompt_generation import PromptGenerationService
+            svc = PromptGenerationService()
+            svc.generate_unified_prompt("Test scene.")
+            assert svc._last_cost_usd == 0.0
+
+
+def test_call_gpt4o_with_backoff_is_module_level():
+    """_call_gpt4o_with_backoff must be a module-level function, not an instance method."""
+    import inspect
+    from app.services import prompt_generation
+    assert hasattr(prompt_generation, "_call_gpt4o_with_backoff"), (
+        "_call_gpt4o_with_backoff must be at module level"
+    )
+    func = prompt_generation._call_gpt4o_with_backoff
+    # It should be a function (or tenacity-wrapped function), not a method
+    # Checking it's not defined on the class
+    assert not hasattr(prompt_generation.PromptGenerationService, "_call_gpt4o_with_backoff")
