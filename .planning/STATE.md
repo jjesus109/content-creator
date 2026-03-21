@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Grey Kitten Character Refresh
 status: unknown
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-03-21T07:01:10.770Z"
+stopped_at: Completed 12-03-PLAN.md
+last_updated: "2026-03-21T07:30:00.000Z"
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 
 ## Current Position
 
-Phase: 12 (grey-kitten-unified-prompt-generation) — EXECUTING
-Plan: 2 of 3
+Phase: 12 (grey-kitten-unified-prompt-generation) — COMPLETE
+Plan: 3 of 3
 
 ## Accumulated Context
 
@@ -74,6 +74,8 @@ Plan: 2 of 3
 - [Phase 12]: PromptGenerationService uses plain-text GPT-4o output (not JSON response_format) — output is prose for Kling AI; temperature 0.9; never-raise pattern with fallback to concatenation
 - [Phase 12]: [Phase 12-02]: unified_prompt stored as script_text in content_history; raw scene_prompt preserved in scene_prompt column
 - [Phase 12]: [Phase 12-02]: KlingService.submit() is now a pure passthrough — no concatenation, no CHARACTER_BIBLE prepend
+- [Phase 12]: [Phase 12-03]: test_smoke.py TestVID02CharacterBibleSmoke updated from orange tabby/Mexican to grey kitten/blue eyes for v3.0 character refresh
+- [Phase 12]: [Phase 12-03]: test_prompt_generation.py extended with 6 plan-required named tests; additive approach preserves 9 TDD tests from 12-01; 186 tests total, 0 failures
 
 ### v1.0 Quick Tasks Completed
 
@@ -107,6 +109,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T07:01:10.762Z
-Stopped at: Completed 12-02-PLAN.md
+Last session: 2026-03-21T07:30:00.000Z
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None
