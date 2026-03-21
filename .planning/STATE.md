@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Grey Kitten Character Refresh
 status: unknown
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-03-21T06:53:45.545Z"
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-21T07:01:10.770Z"
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -72,6 +72,8 @@ Plan: 2 of 3
 - [Phase 11-03]: [11-03]: test_pick_track_raises_on_invalid_platform updated to use snapchat as invalid platform (facebook now valid)
 - [Phase 12]: CHARACTER_BIBLE updated from orange tabby Mochi to grey kitten: blue eyes, pink tongue, soft light grey fur (49 words, v3.0)
 - [Phase 12]: PromptGenerationService uses plain-text GPT-4o output (not JSON response_format) — output is prose for Kling AI; temperature 0.9; never-raise pattern with fallback to concatenation
+- [Phase 12]: [Phase 12-02]: unified_prompt stored as script_text in content_history; raw scene_prompt preserved in scene_prompt column
+- [Phase 12]: [Phase 12-02]: KlingService.submit() is now a pure passthrough — no concatenation, no CHARACTER_BIBLE prepend
 
 ### v1.0 Quick Tasks Completed
 
@@ -105,6 +107,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T06:53:45.543Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-03-21T07:01:10.762Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None
