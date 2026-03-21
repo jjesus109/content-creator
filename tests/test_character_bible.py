@@ -29,18 +29,21 @@ def test_character_bible_not_empty():
     assert CHARACTER_BIBLE.strip(), "CHARACTER_BIBLE must not be empty"
 
 
-def test_character_bible_mentions_orange_tabby():
-    """CHARACTER_BIBLE must reference the orange tabby cat identity."""
+def test_character_bible_mentions_grey_kitten():
+    """CHARACTER_BIBLE must reference the v3.0 grey kitten character identity."""
     from app.services.kling import CHARACTER_BIBLE
     lower = CHARACTER_BIBLE.lower()
-    assert "orange" in lower or "tabby" in lower, (
-        "CHARACTER_BIBLE must mention 'orange' or 'tabby' for visual identity"
+    assert "grey" in lower or "gray" in lower, (
+        "CHARACTER_BIBLE must mention 'grey' or 'gray' for v3.0 grey kitten visual identity"
     )
 
 
-def test_character_bible_mentions_mexican_setting():
-    """CHARACTER_BIBLE must contain Mexican cultural markers."""
+def test_character_bible_mentions_key_visual_hooks():
+    """CHARACTER_BIBLE must describe the grey kitten's key visual features: blue eyes, pink tongue."""
     from app.services.kling import CHARACTER_BIBLE
     lower = CHARACTER_BIBLE.lower()
-    has_setting = any(kw in lower for kw in ["mexican", "mexico", "serape", "pottery", "adobe"])
-    assert has_setting, "CHARACTER_BIBLE must reference Mexican setting/culture"
+    has_eyes = "blue" in lower
+    has_tongue = "tongue" in lower or "pink" in lower
+    assert has_eyes and has_tongue, (
+        f"CHARACTER_BIBLE must mention blue eyes and pink tongue/pink for grey kitten identity. Content: {CHARACTER_BIBLE!r}"
+    )

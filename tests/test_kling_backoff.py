@@ -161,6 +161,10 @@ def test_daily_pipeline_skips_kling_when_cb_open():
     mock_similarity_svc = MagicMock()
     mock_similarity_svc.is_too_similar_scene.return_value = False
 
+    mock_prompt_gen_svc = MagicMock()
+    mock_prompt_gen_svc.generate_unified_prompt.return_value = "Unified animated prompt."
+    mock_prompt_gen_svc._last_cost_usd = 0.0
+
     mock_settings = MagicMock()
     mock_settings.scene_anti_repetition_enabled = False
 
@@ -170,6 +174,7 @@ def test_daily_pipeline_skips_kling_when_cb_open():
          patch("app.scheduler.jobs.daily_pipeline.MusicMatcher", return_value=mock_music_matcher), \
          patch("app.scheduler.jobs.daily_pipeline.EmbeddingService", return_value=mock_embedding_svc), \
          patch("app.scheduler.jobs.daily_pipeline.SimilarityService", return_value=mock_similarity_svc), \
+         patch("app.scheduler.jobs.daily_pipeline.PromptGenerationService", return_value=mock_prompt_gen_svc), \
          patch("app.scheduler.jobs.daily_pipeline.get_settings", return_value=mock_settings), \
          patch("app.services.kling_circuit_breaker.KlingCircuitBreakerService", mock_kling_cb_class), \
          patch("app.scheduler.jobs.daily_pipeline.send_alert_sync") as mock_alert, \

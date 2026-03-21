@@ -46,10 +46,10 @@ def test_kling_service_submit_returns_request_id():
     assert result == "fal-job-abc123"
 
 
-def test_kling_prompt_includes_character_bible_unchanged():
-    """Prompt sent to fal.ai is CHARACTER_BIBLE + newline + script_text, bible first and unchanged."""
-    from app.services.kling import CHARACTER_BIBLE
-
+def test_kling_submit_passes_prompt_directly():
+    """Phase 12: KlingService.submit() passes script_text directly to fal.ai without concatenation.
+    CHARACTER_BIBLE is no longer prepended by KlingService — PromptGenerationService does this upstream.
+    """
     mock_result = MagicMock()
     mock_result.request_id = "job-xyz"
 
@@ -60,16 +60,14 @@ def test_kling_prompt_includes_character_bible_unchanged():
 
         from app.services.kling import KlingService
         svc = KlingService()
-        scene_text = "Mochi investigates a fallen serape."
-        svc.submit(scene_text)
+        unified_prompt = "An ultra-cute grey kitten with huge blue eyes investigates a fallen serape."
+        svc.submit(unified_prompt)
 
     call_kwargs = mock_fal.submit.call_args[1]
     prompt = call_kwargs["arguments"]["prompt"]
-    assert prompt.startswith(CHARACTER_BIBLE), (
-        "Prompt must start with CHARACTER_BIBLE unchanged"
+    assert prompt == unified_prompt, (
+        f"Phase 12: KlingService.submit() must pass prompt unchanged to fal.ai; got: {prompt!r}"
     )
-    assert scene_text in prompt, "Prompt must include the scene text"
-    assert f"{CHARACTER_BIBLE}\n\n{scene_text}" == prompt
 
 
 def test_kling_fal_arguments_locked_spec():
@@ -88,7 +86,7 @@ def test_kling_fal_arguments_locked_spec():
 
     call_kwargs = mock_fal.submit.call_args[1]
     args = call_kwargs["arguments"]
-    assert args["duration"] == 20, f"Expected duration=20, got {args['duration']}"
+    assert args["duration"] == 15, f"Expected duration=15 (DEFAULT_KLING_DURATION), got {args['duration']}"
     assert args["resolution"] == "1080p", f"Expected resolution='1080p', got {args['resolution']}"
     assert args["aspect_ratio"] == "9:16", f"Expected aspect_ratio='9:16', got {args['aspect_ratio']}"
 
