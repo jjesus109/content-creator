@@ -56,7 +56,7 @@ Full details: `.planning/milestones/v2.0-ROADMAP.md`
 **Goal:** Replace CHARACTER_BIBLE concatenation with AI-generated unified scene prompts that naturally incorporate the new grey kitten character description. Persist the generated prompt to content_history and include it in Telegram creator notifications.
 **Requires**: New cat character: "A full-body, high-definition 3D render of an ultra-cute, sitting light grey kitten. The kitten has huge, wide, expressive blue eyes and a cheerful, open-mouthed smile showing its pink tongue. Its soft fur texture is highly detailed."
 **Depends on:** Phase 11
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 - [ ] 12-01-PLAN.md — Update CHARACTER_BIBLE to grey kitten + create PromptGenerationService
