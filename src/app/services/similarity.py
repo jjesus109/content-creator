@@ -11,6 +11,9 @@ SCENE_SIMILARITY_THRESHOLD = 0.78   # 75-80% cosine similarity — recalibrated 
                                       # Empirically validated via dry-run script before enforcement
 SCENE_LOOKBACK_DAYS = 7             # 7-day window (visual scenes need shorter memory than scripts)
 
+PROMPT_SIMILARITY_THRESHOLD = 0.78   # Same threshold as scene similarity — visual/stylistic repetition
+PROMPT_LOOKBACK_DAYS = 7             # 7-day window matches scene similarity window
+
 
 class SimilarityService:
     """
@@ -104,6 +107,45 @@ class SimilarityService:
             return is_similar
         except Exception as e:
             logger.error("Scene similarity check failed: %s — defaulting to PASS", e)
+            return False
+
+    def is_too_similar_prompt(
+        self,
+        embedding: list[float],
+        threshold: float = PROMPT_SIMILARITY_THRESHOLD,
+    ) -> bool:
+        """
+        Returns True if any Kling prompt in content_history exceeds the similarity threshold.
+        Uses check_prompt_similarity SQL function (7-day lookback, prompt_embedding column).
+        Catches visual/stylistic repetition at the Kling-prompt level (D-09).
+
+        Mirrors is_too_similar_scene() but for prompt embeddings (separate SQL function).
+        Returns False when content_history is empty or on DB error (fail open — same pattern).
+
+        NOTE: Caller (pipeline) decides whether to enforce based on scene_anti_repetition_enabled flag.
+        This method always executes the check; enforcement is external.
+        """
+        try:
+            result = self._supabase.rpc(
+                "check_prompt_similarity",
+                {
+                    "query_embedding": embedding,
+                    "similarity_threshold": threshold,
+                    "lookback_days": PROMPT_LOOKBACK_DAYS,
+                },
+            ).execute()
+            is_similar = len(result.data) > 0
+            if is_similar:
+                logger.info(
+                    "Prompt similarity check: REJECT — %d matching prompt(s) above %.0f%% threshold",
+                    len(result.data),
+                    threshold * 100,
+                )
+            else:
+                logger.debug("Prompt similarity check: PASS — prompt is sufficiently unique")
+            return is_similar
+        except Exception as e:
+            logger.error("Prompt similarity check failed: %s — defaulting to PASS", e)
             return False
 
     def get_similar_scripts(
