@@ -68,10 +68,10 @@ Plans:
 **Goal:** Replace the static scene selection pipeline with dynamic GPT-4o scenario generation. Each daily video follows a hook→climax→conclusion story arc (flowing prose, Kling AI 3.0 multi-shot). Dual embedding anti-repetition catches both semantic (story type) and visual/stylistic (Kling prompt) repetition.
 **Requirements**: SCN-13-01, SCN-13-02, SCN-13-03, SCN-13-04, SCN-13-05
 **Depends on:** Phase 12
-**Plans:** 4 plans
+**Plans:** 3/4 plans executed
 
 Plans:
-- [ ] 13-01-PLAN.md — Create categories.json + migration 0012 + extend SceneEngine with pick_scenario_arc()
-- [ ] 13-02-PLAN.md — Add SimilarityService.is_too_similar_prompt() + update PromptGenerationService arc system prompt
-- [ ] 13-03-PLAN.md — Wire pick_scenario_arc + prompt_embedding into daily_pipeline.py
+- [x] 13-01-PLAN.md — Create categories.json + migration 0012 + extend SceneEngine with pick_scenario_arc()
+- [x] 13-02-PLAN.md — Add SimilarityService.is_too_similar_prompt() + update PromptGenerationService arc system prompt
+- [x] 13-03-PLAN.md — Wire pick_scenario_arc + prompt_embedding into daily_pipeline.py
 - [ ] 13-04-PLAN.md — Phase 13 test coverage + human checkpoint for first arc videos

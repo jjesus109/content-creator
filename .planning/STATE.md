@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Grey Kitten Character Refresh
 status: Phase complete — ready for verification
-stopped_at: Completed 13-02-PLAN.md
-last_updated: "2026-03-30T04:18:57.034Z"
+stopped_at: Completed 13-03-PLAN.md
+last_updated: "2026-03-30T04:28:29.292Z"
 progress:
-  total_phases: 1
+  total_phases: 2
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 7
+  completed_plans: 6
 ---
 
 # Project State
@@ -78,6 +78,8 @@ Plan: 3 of 3
 - [Phase 12]: [Phase 12-03]: test_prompt_generation.py extended with 6 plan-required named tests; additive approach preserves 9 TDD tests from 12-01; 186 tests total, 0 failures
 - [Phase 13-02]: PROMPT_SIMILARITY_THRESHOLD = 0.78 — same as scene threshold; is_too_similar_prompt() always executes check, enforcement external via feature flag (mirrors scene check pattern)
 - [Phase 13-02]: PromptGenerationService _SYSTEM_PROMPT updated to preserve hook->climax->conclusion arc; output expanded 2-4 to 3-5 sentences; flowing prose required, explicit time markers prohibited
+- [Phase 13]: [13-03]: arc_prompt passed to PromptGenerationService per D-07 spec (not scene_prompt alias); scene_prompt alias still used for scene_embedding and column persistence
+- [Phase 13]: [13-03]: prompt_embedding conditionally persisted in _save_to_content_history row dict (if prompt_embedding not None) — consistent with optional field pattern
 
 ### v1.0 Quick Tasks Completed
 
@@ -111,6 +113,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T04:18:57.031Z
-Stopped at: Completed 13-02-PLAN.md
+Last session: 2026-03-30T04:28:29.290Z
+Stopped at: Completed 13-03-PLAN.md
 Resume file: None
