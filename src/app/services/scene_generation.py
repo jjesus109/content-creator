@@ -19,6 +19,7 @@ from typing import Optional
 
 from openai import OpenAI
 from supabase import Client
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.services.database import get_supabase
 from app.services.kling import CHARACTER_BIBLE
@@ -32,6 +33,58 @@ GPT4O_COST_OUTPUT_PER_MTOK = 10.00
 
 # Absolute path to scenes.json (resolved from this file's location)
 SCENES_JSON_PATH = Path(__file__).resolve().parents[1] / "data" / "scenes.json"
+
+# Absolute path to categories.json (scenario type categories for Phase 13 arc generation)
+CATEGORIES_JSON_PATH = Path(__file__).resolve().parents[1] / "data" / "categories.json"
+
+# Scenario type categories list (loaded from categories.json for type validation)
+SCENARIO_TYPE_CATEGORIES = [
+    "slapstick",
+    "reaction_surprise",
+    "chase",
+    "investigation_gone_wrong",
+    "unexpected_nap",
+    "overconfident_leap",
+]
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=16),
+    retry=retry_if_exception_type(Exception),
+    reraise=True,
+    before_sleep=lambda retry_state: logger.warning(
+        "SceneEngine scenario generation retry attempt %d",
+        retry_state.attempt_number,
+    ),
+)
+def _generate_scenario_with_backoff(client: "OpenAI", filled_prompt: str) -> tuple[dict, float]:
+    """
+    Generate scenario arc via GPT-4o with exponential backoff: 2s -> 8s -> 16s (3 attempts).
+    Returns (scenario_data dict, cost_usd).
+    Module-level function (not instance method) required for tenacity decorator
+    compatibility in APScheduler ThreadPoolExecutor context.
+    scenario_data keys: scenario_description, arc_prompt, caption, mood
+    """
+    import json as _json
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": filled_prompt}],
+        response_format={"type": "json_object"},
+        temperature=0.9,
+        max_tokens=600,
+    )
+    response_text = response.choices[0].message.content.strip()
+    scenario_data = _json.loads(response_text)
+
+    input_tokens = response.usage.prompt_tokens
+    output_tokens = response.usage.completion_tokens
+    cost_usd = (
+        input_tokens * GPT4O_COST_INPUT_PER_MTOK
+        + output_tokens * GPT4O_COST_OUTPUT_PER_MTOK
+    ) / 1_000_000
+
+    return scenario_data, cost_usd
 
 # Seasonal calendar: (month, day) -> (theme_name, overlay_text)
 # overlay_text is in English — injected into the GPT-4o system prompt for better Kling results.
@@ -113,11 +166,17 @@ class SceneEngine:
         settings = get_settings()
         self._client = OpenAI(api_key=settings.openai_api_key)
         self._scene_library = self._load_scene_library()
+        self._categories = self._load_categories()
         self._seasonal = SeasonalCalendarService()
         logger.info(
             "SceneEngine initialized: %d scenes loaded from %s",
             len(self._scene_library),
             SCENES_JSON_PATH,
+        )
+        logger.info(
+            "SceneEngine initialized: %d categories loaded from %s",
+            len(self._categories),
+            CATEGORIES_JSON_PATH,
         )
 
     def _load_scene_library(self) -> list[dict]:
@@ -127,6 +186,15 @@ class SceneEngine:
         if not library:
             raise ValueError("scenes.json is empty — cannot generate scenes")
         return library
+
+    def _load_categories(self) -> list[dict]:
+        """Load categories.json once at init. Raises FileNotFoundError if missing."""
+        with open(CATEGORIES_JSON_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        categories = data.get("categories", [])
+        if not categories:
+            raise ValueError("categories.json is empty — cannot generate scenario arcs")
+        return categories
 
     def _select_combo(self) -> dict:
         """
@@ -189,6 +257,60 @@ INSTRUCTIONS FOR CAPTION (caption):
 
 Return ONLY valid JSON with exactly these two keys:
 {{"scene_prompt": "...", "caption": "..."}}"""
+
+    def _build_scenario_system_prompt(
+        self,
+        category: dict,
+        rejection_constraints: list[dict] | None = None,
+        seasonal_overlay: Optional[str] = None,
+    ) -> str:
+        """Build the GPT-4o system prompt for scenario arc generation."""
+        rejection_text = ""
+        if rejection_constraints:
+            rejection_lines = ["\nAVOID these scenarios (rejected by creator):"]
+            for r in rejection_constraints:
+                reason = r.get("reason_text", "no reason given")
+                rejection_lines.append(f"- {reason}")
+            rejection_text = "\n".join(rejection_lines)
+
+        seasonal_text = ""
+        if seasonal_overlay:
+            seasonal_text = f"\n\nSPECIAL SEASONAL CONTEXT:\n{seasonal_overlay}"
+
+        return f"""You are a creative director for short-form cat video content (TikTok, Instagram Reels).
+
+Generate a funny and cute 15-second video scenario for a grey kitten.
+
+SCENARIO TYPE: {category['name']}
+CATEGORY DESCRIPTION: {category['description']}
+
+SETTING: Domestic Mexican household — kitchen (cocina), living room (sala), garden (jardín), or bedroom (recámara). Optional cultural props for flavor: tortillas on the counter, molcajete, talavera tiles, papel picado. Setting must feel authentic and warm.
+
+STORY STRUCTURE: The scenario must follow a hook → climax → conclusion arc:
+- Hook: an intriguing setup that grabs attention immediately (the kitten notices, approaches, or prepares)
+- Climax: the peak comedic or cute moment (the main action, reaction, or event)
+- Conclusion: a satisfying, endearing resolution (the kitten's reaction after the climax)
+
+IMPORTANT PROMPT STYLE: Write the arc_prompt as flowing prose with action progression — DO NOT use explicit time markers like "In the first 3 seconds..." or "At second 5...". Use linking words like "immediately," "pause," "suddenly," "continuing" to signal beat transitions naturally. Kling AI 3.0 produces better multi-beat narrative from flowing prose than explicit timecodes.
+
+CHARACTER VISUAL IDENTITY (weave naturally into arc_prompt, do NOT just prepend):
+A full-body, high-definition 3D render of an ultra-cute, sitting light grey kitten. Huge, wide, expressive blue eyes and a cheerful, open-mouthed smile showing a pink tongue. Soft fur texture highly detailed. Animated style, vibrant, ultra-cute.
+
+CAPTION RULES:
+- Exactly 5-8 words in SPANISH
+- Arc-aware tease/hook style that teases the story without revealing the outcome
+- Suspense-building tone. Examples: "Algo malo va a pasar.", "Eso no iba a funcionar.", "Nadie le dijo que no."
+- NO hashtags, NO emojis
+{seasonal_text}
+{rejection_text}
+
+Return ONLY valid JSON with exactly these four keys:
+{{
+  "scenario_description": "2-3 sentences describing what happens in the scenario (plain language, for semantic analysis)",
+  "arc_prompt": "3-5 sentences in flowing prose describing the visual arc for Kling AI video generation (hook → climax → conclusion, ENGLISH only, animated style)",
+  "caption": "5-8 word Spanish suspense caption",
+  "mood": "playful or curious or sleepy (pick the most fitting)"
+}}"""
 
     def pick_scene(
         self,
@@ -256,6 +378,73 @@ Return ONLY valid JSON with exactly these two keys:
         )
 
         return scene_prompt, caption, combo["mood"], cost_usd
+
+    def pick_scenario_arc(
+        self,
+        attempt: int = 0,
+        rejection_constraints: list[dict] | None = None,
+    ) -> tuple[str, str, str, str, float]:
+        """
+        Generate a story-arc scenario prompt for today's video.
+
+        Replaces pick_scene() in Phase 13+ pipeline. Selects a random scenario
+        type category, then calls GPT-4o to generate a dynamic hook→climax→conclusion
+        scenario within that category.
+
+        Returns:
+            (scenario_description, arc_prompt, caption, mood, cost_usd)
+            - scenario_description: 2-3 sentence plain description (for scene_embedding)
+            - arc_prompt: 3-5 sentence flowing prose arc prompt (for PromptGenerationService)
+            - caption: 5-8 word Spanish suspense caption (arc-aware tease/hook style)
+            - mood: "playful" | "sleepy" | "curious" (for MusicMatcher)
+            - cost_usd: GPT-4o API cost for circuit breaker tracking
+
+        attempt: 0 = normal; 1+ = retry (similarity rejection)
+        """
+        import random as _random
+        category = _random.choice(self._categories)
+        seasonal_overlay = self._seasonal.get_overlay()
+
+        system_prompt = self._build_scenario_system_prompt(
+            category=category,
+            rejection_constraints=rejection_constraints,
+            seasonal_overlay=seasonal_overlay,
+        )
+
+        logger.info(
+            "SceneEngine picking scenario arc (attempt %d): category=%s",
+            attempt + 1, category["name"],
+        )
+
+        try:
+            scenario_data, cost_usd = _generate_scenario_with_backoff(self._client, system_prompt)
+        except Exception as e:
+            logger.error("GPT-4o scenario arc generation failed: %s", e)
+            raise
+
+        required_keys = {"scenario_description", "arc_prompt", "caption", "mood"}
+        missing = required_keys - scenario_data.keys()
+        if missing:
+            raise ValueError(
+                f"SceneEngine: GPT-4o scenario response missing keys: {missing} | raw: {scenario_data}"
+            )
+
+        scenario_description = scenario_data["scenario_description"].strip()
+        arc_prompt = scenario_data["arc_prompt"].strip()
+        caption = scenario_data["caption"].strip()
+        mood = scenario_data["mood"].strip()
+
+        valid_moods = {"playful", "sleepy", "curious"}
+        if mood not in valid_moods:
+            logger.warning("Unexpected mood '%s' — defaulting to 'playful'", mood)
+            mood = "playful"
+
+        logger.info(
+            "Scenario arc generated: category=%s, mood=%s, caption='%s', cost=$%.6f",
+            category["name"], mood, caption, cost_usd,
+        )
+
+        return scenario_description, arc_prompt, caption, mood, cost_usd
 
     def load_active_scene_rejections(self) -> list[dict]:
         """

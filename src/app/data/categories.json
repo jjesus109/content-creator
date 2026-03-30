@@ -1,0 +1,28 @@
+{
+  "categories": [
+    {
+      "name": "slapstick",
+      "description": "Physical comedy: the kitten slips, crashes, falls, or creates chaos through clumsy antics. Always ends with the kitten unharmed and adorable."
+    },
+    {
+      "name": "reaction_surprise",
+      "description": "Emotional comedy: the kitten reacts to an unexpected event (water spray, door opening, another pet appearing). Reaction should be exaggerated and cute."
+    },
+    {
+      "name": "chase",
+      "description": "Pursuit comedy: the kitten chases a toy, insect, shadow, or its own tail. The chase builds in intensity with the kitten getting more frantic and cute."
+    },
+    {
+      "name": "investigation_gone_wrong",
+      "description": "Curiosity comedy: the kitten investigates something (open cupboard, garden plant, water dish) and discovers something that surprises or amuses it. The investigation should feel playful, not dangerous."
+    },
+    {
+      "name": "unexpected_nap",
+      "description": "Comfort comedy: the kitten finds an absurd or inconvenient place to nap (empty food bowl, cardboard box, plant pot, sunny window ledge). The nap setup should be funny or cozy."
+    },
+    {
+      "name": "overconfident_leap",
+      "description": "Ambition comedy: the kitten attempts a risky jump, climb, or leap (onto high shelf, across furniture gap, onto moving object). The setup builds tension; the outcome is endearing (success or adorable failure)."
+    }
+  ]
+}
