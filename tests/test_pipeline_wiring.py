@@ -276,3 +276,45 @@ def test_anti_repetition_log_only_mode_does_not_retry():
         "In log-only mode, pipeline should NOT retry on similarity detection"
     # Kling should still be called
     mocks["kling_svc"].submit.assert_called_once()
+
+
+# ── Phase 13: Scenario arc pipeline wiring ──────────────────────────────────
+
+def test_pipeline_uses_pick_scenario_arc():
+    """Phase 13 (SCN-13-04): Pipeline calls pick_scenario_arc, not pick_scene."""
+    mocks = _run_pipeline_with_mocks()
+    mocks["scene_engine"].pick_scenario_arc.assert_called_once()
+    mocks["scene_engine"].pick_scene.assert_not_called()
+
+
+def test_prompt_embedding_saved_to_content_history_phase13():
+    """Phase 13 (SCN-13-04): prompt_embedding is included in content_history insert row."""
+    mocks = _run_pipeline_with_mocks()
+    # Find the insert call to content_history
+    insert_calls = mocks["supabase"].table.return_value.insert.call_args_list
+    inserted_rows = [c[0][0] for c in insert_calls if c[0]]
+    # At least one insert should include prompt_embedding
+    has_prompt_embedding = any("prompt_embedding" in row for row in inserted_rows)
+    assert has_prompt_embedding, (
+        f"prompt_embedding must be saved to content_history. Insert rows: {inserted_rows}"
+    )
+
+
+def test_prompt_similarity_check_called_in_pipeline():
+    """Phase 13 (SCN-13-04): is_too_similar_prompt() is called during pipeline execution."""
+    mocks = _run_pipeline_with_mocks()
+    mocks["similarity_svc"].is_too_similar_prompt.assert_called_once()
+
+
+def test_arc_caption_saved_to_content_history():
+    """Phase 13: Suspense-style caption from pick_scenario_arc is saved to content_history."""
+    caption = "Algo malo va a pasar."
+    mocks = _run_pipeline_with_mocks(
+        scenario_return=("scenario desc...", "arc prompt...", caption, "curious", 0.001)
+    )
+    insert_call = mocks["supabase"].table.return_value.insert.call_args
+    if insert_call:
+        inserted_data = insert_call[0][0]
+        assert inserted_data.get("caption") == caption, (
+            f"Arc caption must be saved to content_history. Got: {inserted_data.get('caption')}"
+        )

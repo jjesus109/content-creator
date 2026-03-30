@@ -282,3 +282,41 @@ def test_prompt_generation_system_prompt_contains_animated():
     full_prompt = " ".join(captured_prompts).lower()
     assert "animated" in full_prompt, f"System prompt must contain 'animated', got: {full_prompt[:200]}"
     assert "ultra-cute" in full_prompt, f"System prompt must contain 'ultra-cute', got: {full_prompt[:200]}"
+
+
+# ── Phase 13: Arc-preservation system prompt tests ──────────────────────────
+
+def test_system_prompt_contains_arc_keywords():
+    """Phase 13 (SCN-13-03): _SYSTEM_PROMPT must contain hook/climax/conclusion arc keywords."""
+    from app.services.prompt_generation import _SYSTEM_PROMPT
+    prompt_lower = _SYSTEM_PROMPT.lower()
+    assert "hook" in prompt_lower, "_SYSTEM_PROMPT must mention 'hook'"
+    assert "climax" in prompt_lower, "_SYSTEM_PROMPT must mention 'climax'"
+    assert "conclusion" in prompt_lower, "_SYSTEM_PROMPT must mention 'conclusion'"
+
+
+def test_system_prompt_requires_flowing_prose():
+    """Phase 13 (SCN-13-03): _SYSTEM_PROMPT must require flowing prose (not explicit time markers)."""
+    from app.services.prompt_generation import _SYSTEM_PROMPT
+    assert "flowing prose" in _SYSTEM_PROMPT.lower(), "_SYSTEM_PROMPT must mention 'flowing prose'"
+    # Must prohibit explicit time markers
+    assert "do not use explicit time markers" in _SYSTEM_PROMPT.lower() or \
+           "not use explicit time markers" in _SYSTEM_PROMPT.lower(), (
+        "_SYSTEM_PROMPT must prohibit explicit time markers (e.g., 'In the first 3 seconds...')"
+    )
+
+
+def test_system_prompt_instructs_arc_preservation_in_each_beat():
+    """Phase 13 (SCN-13-03): _SYSTEM_PROMPT must instruct weaving kitten into each narrative beat."""
+    from app.services.prompt_generation import _SYSTEM_PROMPT
+    assert "each" in _SYSTEM_PROMPT.lower() and "beat" in _SYSTEM_PROMPT.lower(), (
+        "_SYSTEM_PROMPT must instruct character presence in each narrative beat"
+    )
+
+
+def test_system_prompt_output_is_3_to_5_sentences():
+    """Phase 13 (SCN-13-03): _SYSTEM_PROMPT must request 3-5 sentences (not 2-4 from Phase 12)."""
+    from app.services.prompt_generation import _SYSTEM_PROMPT
+    assert "3-5 sentences" in _SYSTEM_PROMPT, (
+        "_SYSTEM_PROMPT must request 3-5 sentences for arc prompts (was 2-4 in Phase 12)"
+    )
