@@ -146,7 +146,10 @@ def test_daily_pipeline_skips_kling_when_cb_open():
     mock_circuit_cb_class = MagicMock(return_value=mock_circuit_cb)
 
     mock_scene_engine = MagicMock()
-    mock_scene_engine.pick_scene.return_value = ("scene prompt...", "caption here", "curious", 0.001)
+    # Phase 13: pick_scenario_arc returns (scenario_description, arc_prompt, caption, mood, cost_usd)
+    mock_scene_engine.pick_scenario_arc.return_value = (
+        "scenario description", "arc prompt text", "caption here", "curious", 0.001
+    )
     mock_scene_engine.load_active_scene_rejections.return_value = []
 
     mock_music_matcher = MagicMock()
@@ -160,6 +163,7 @@ def test_daily_pipeline_skips_kling_when_cb_open():
 
     mock_similarity_svc = MagicMock()
     mock_similarity_svc.is_too_similar_scene.return_value = False
+    mock_similarity_svc.is_too_similar_prompt.return_value = False
 
     mock_prompt_gen_svc = MagicMock()
     mock_prompt_gen_svc.generate_unified_prompt.return_value = "Unified animated prompt."

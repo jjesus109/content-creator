@@ -26,16 +26,18 @@ def daily_pipeline_job() -> None:
     2. Initialize scene generation services (SceneEngine, MusicMatcher, EmbeddingService, SimilarityService)
     3. Load active scene rejection constraints
     4. For each attempt (max 3):
-       a. Generate scene prompt + caption via GPT-4o (SceneEngine.pick_scene)
-       b. Record scene generation cost to circuit breaker
-       c. Embed scene prompt for anti-repetition check
-       d. Anti-repetition check (7-day window, 0.78 threshold); gated by scene_anti_repetition_enabled
-       e. Select music track matching scene mood (MusicMatcher.pick_track)
-       f. Generate unified animated-style prompt via PromptGenerationService (GPT-4o)
+       a. Generate scenario arc + caption via GPT-4o (SceneEngine.pick_scenario_arc) — Phase 13
+       b. Record scenario generation cost to circuit breaker
+       c. Embed scenario_description for scene-level anti-repetition check
+       d. Scene anti-repetition check (7-day window, 0.78 threshold); gated by scene_anti_repetition_enabled
+       e. Select music track matching scenario mood (MusicMatcher.pick_track)
+       f. Generate unified animated-style arc prompt via PromptGenerationService (GPT-4o)
        g. Record unified prompt generation cost to circuit breaker
-       h. Kling circuit breaker check; submit unified_prompt to Kling AI 3.0 via fal.ai
-       i. Save unified_prompt (as script_text) + scene_prompt + music_track_id + scene_embedding + kling_job_id to content_history
-       j. Register APScheduler polling fallback
+       h. Embed unified_prompt for prompt-level visual/stylistic anti-repetition check (Phase 13, D-09)
+       i. Prompt anti-repetition check (7-day window, 0.78 threshold); gated by scene_anti_repetition_enabled
+       j. Kling circuit breaker check; submit unified_prompt to Kling AI 3.0 via fal.ai
+       k. Save unified_prompt (as script_text) + scene_prompt + music_track_id + scene_embedding + prompt_embedding + kling_job_id to content_history
+       l. Register APScheduler polling fallback
     """
     # Step 0: Mark any unanswered 'ready' rows from previous pipeline runs as approval_timeout
     _expire_stale_approvals()
@@ -77,18 +79,20 @@ def daily_pipeline_job() -> None:
     for attempt in range(MAX_RETRIES + 1):
         plog.info("Scene engine attempt %d/%d", attempt + 1, MAX_RETRIES + 1)
 
-        # 4a: Generate scene prompt + caption via GPT-4o (single call)
+        # 4a (Phase 13): Generate scenario arc + caption via GPT-4o (SceneEngine.pick_scenario_arc)
         try:
-            scene_prompt, caption, mood, scene_cost = scene_engine.pick_scene(
+            scenario_description, arc_prompt, caption, mood, scene_cost = scene_engine.pick_scenario_arc(
                 attempt=attempt,
                 rejection_constraints=rejection_constraints,
             )
         except Exception as exc:
-            plog.error("SceneEngine failed: %s", exc)
+            plog.error("SceneEngine scenario arc generation failed: %s", exc)
             send_alert_sync(f"SceneEngine falló al generar escena: {exc}. Pipeline detenido.")
             return
+        # scene_prompt alias: scenario_description maps to scene_prompt column (D-10 semantic rename)
+        scene_prompt = scenario_description
 
-        plog.info("Scene selected: mood=%s, caption='%s'", mood, caption)
+        plog.info("Scenario arc generated: mood=%s, caption='%s'", mood, caption)
 
         # 4b: Record scene generation cost to circuit breaker
         if not cb.record_attempt(scene_cost):
@@ -96,7 +100,7 @@ def daily_pipeline_job() -> None:
             send_alert_sync("Circuit breaker disparado durante generación de escena. Pipeline detenido.")
             return
 
-        # 4c: Embed scene prompt for anti-repetition check
+        # 4c (Phase 13): Embed scenario_description for scene-level anti-repetition check
         scene_embedding, embed_cost = embedding_svc.generate(scene_prompt)
         if not cb.record_attempt(embed_cost):
             plog.error("Circuit breaker tripped during scene embedding.")
@@ -142,8 +146,9 @@ def daily_pipeline_job() -> None:
             )
             return
 
-        # 4f (v3.0): Generate unified animated-style prompt via PromptGenerationService
-        unified_prompt = prompt_gen_svc.generate_unified_prompt(scene_prompt)
+        # 4f (Phase 13): Generate unified animated-style arc prompt via PromptGenerationService
+        # arc_prompt (3-5 sentence flowing prose arc) is passed to PromptGenerationService (D-07)
+        unified_prompt = prompt_gen_svc.generate_unified_prompt(arc_prompt)
         plog.info(
             "Unified prompt generated (chars=%d, cost=$%.6f)",
             len(unified_prompt),
@@ -155,7 +160,38 @@ def daily_pipeline_job() -> None:
                 send_alert_sync("Circuit breaker disparado durante generación de prompt unificado. Pipeline detenido.")
                 return
 
-        # 4h: Kling CB check (unchanged from Phase 9)
+        # 4h (Phase 13): Embed unified_prompt for prompt-level visual/stylistic anti-repetition (D-09)
+        prompt_embedding, prompt_embed_cost = embedding_svc.generate(unified_prompt)
+        if not cb.record_attempt(prompt_embed_cost):
+            plog.error("Circuit breaker tripped during prompt embedding.")
+            send_alert_sync("Circuit breaker disparado durante embedding de prompt. Pipeline detenido.")
+            return
+
+        # 4i (Phase 13): Prompt anti-repetition check (catches visual/stylistic repetition, D-09)
+        is_prompt_similar = similarity_svc.is_too_similar_prompt(prompt_embedding)
+        if is_prompt_similar:
+            if settings.scene_anti_repetition_enabled:
+                plog.info("Prompt too similar to recent content — retrying (attempt %d)", attempt + 1)
+                if attempt < MAX_RETRIES:
+                    continue
+                else:
+                    plog.error(
+                        "All %d prompt attempts rejected by prompt anti-repetition check. Manual intervention needed.",
+                        MAX_RETRIES + 1,
+                    )
+                    send_alert_sync(
+                        f"Pipeline v3.0: todos los intentos ({MAX_RETRIES + 1}) rechazados por "
+                        "similaridad de prompt. Intervención manual requerida."
+                    )
+                    return
+            else:
+                plog.warning(
+                    "Prompt similarity detected (%.0f%% threshold) but anti-repetition is in "
+                    "log-only mode (scene_anti_repetition_enabled=False). Proceeding.",
+                    0.78 * 100,
+                )
+
+        # 4j: Kling CB check (unchanged from Phase 9)
         from app.services.kling import KlingService
         from app.scheduler.jobs.video_poller import register_video_poller
         from app.services.kling_circuit_breaker import KlingCircuitBreakerService
@@ -181,6 +217,7 @@ def daily_pipeline_job() -> None:
                 supabase, scene_prompt, caption, scene_embedding,
                 music_track_id=music_track["id"],
                 unified_prompt=unified_prompt,
+                prompt_embedding=prompt_embedding,
             )
             return
 
@@ -193,6 +230,7 @@ def daily_pipeline_job() -> None:
             music_track_id=music_track["id"],
             kling_job_id=kling_job_id,
             unified_prompt=unified_prompt,
+            prompt_embedding=prompt_embedding,
         )
         plog.extra["content_history_id"] = new_id or ""
         plog.extra["pipeline_step"] = "pipeline_complete"
@@ -214,6 +252,7 @@ def _save_to_content_history(
     music_track_id: str | None = None,
     kling_job_id: str | None = None,
     unified_prompt: str | None = None,
+    prompt_embedding: list[float] | None = None,
 ) -> str | None:
     """
     Persist the generated scene with its embedding to content_history.
@@ -233,6 +272,8 @@ def _save_to_content_history(
         "caption": caption,
         "scene_embedding": scene_embedding,
     }
+    if prompt_embedding:
+        row["prompt_embedding"] = prompt_embedding
     if music_track_id:
         row["music_track_id"] = music_track_id
     if kling_job_id:

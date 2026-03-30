@@ -1,17 +1,34 @@
-"""Integration tests for Phase 10 pipeline wiring (SCN-01 through MUS-03 end-to-end)."""
+"""Integration tests for Phase 13 pipeline wiring (story-arc format with dual embedding anti-repetition)."""
 import pytest
 from unittest.mock import MagicMock, patch, call
 
+# Phase 13: pick_scenario_arc returns 5-tuple:
+# (scenario_description, arc_prompt, caption, mood, cost_usd)
+_DEFAULT_SCENARIO_RETURN = (
+    "A curious grey kitten spots a rolling avocado on the kitchen floor.",  # scenario_description
+    "The grey kitten freezes, pupils wide, as the avocado rolls toward her. "
+    "She crouches low, tail flicking, then pounces — only to slide across the tile. "
+    "She sits up, licks her paw, and pretends nothing happened.",            # arc_prompt
+    "Algo malo va a pasar.",                                                  # caption
+    "curious",                                                                # mood
+    0.001,                                                                    # cost_usd
+)
+
 
 def _run_pipeline_with_mocks(
-    scene_return=("Mochi explora la cocina...", "Mochi descubre la cocina", "curious", 0.001),
+    scenario_return=_DEFAULT_SCENARIO_RETURN,
     music_return={"id": "music-uuid-1", "title": "Test Track", "artist": "Test Artist", "file_url": "http://x.mp3", "bpm": 95, "mood": "curious"},
     embedding_return=([0.1] * 1536, 0.0001),
     similarity_return=False,
     kling_job_id="kling-test-job-123",
     anti_rep_enabled=False,
 ):
-    """Helper: run daily_pipeline_job with all external services mocked."""
+    """Helper: run daily_pipeline_job with all external services mocked.
+
+    Phase 13: SceneEngine.pick_scenario_arc() replaces pick_scene().
+    Returns (scenario_description, arc_prompt, caption, mood, cost_usd).
+    Dual embedding anti-repetition: scene_embedding + prompt_embedding.
+    """
     mock_supabase = MagicMock()
     mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value.data = []
     mock_supabase.table.return_value.insert.return_value.execute.return_value.data = [{"id": "content-history-uuid-1"}]
@@ -25,7 +42,7 @@ def _run_pipeline_with_mocks(
     mock_kling_cb.is_open.return_value = False
 
     mock_scene_engine = MagicMock()
-    mock_scene_engine.pick_scene.return_value = scene_return
+    mock_scene_engine.pick_scenario_arc.return_value = scenario_return
     mock_scene_engine.load_active_scene_rejections.return_value = []
 
     mock_music_matcher = MagicMock()
@@ -36,6 +53,7 @@ def _run_pipeline_with_mocks(
 
     mock_similarity_svc = MagicMock()
     mock_similarity_svc.is_too_similar_scene.return_value = similarity_return
+    mock_similarity_svc.is_too_similar_prompt.return_value = False
 
     mock_kling_svc = MagicMock()
     mock_kling_svc.submit.return_value = kling_job_id
@@ -44,7 +62,7 @@ def _run_pipeline_with_mocks(
     mock_settings.scene_anti_repetition_enabled = anti_rep_enabled
 
     mock_prompt_gen_svc = MagicMock()
-    mock_prompt_gen_svc.generate_unified_prompt.return_value = "Unified animated prompt for grey kitten."
+    mock_prompt_gen_svc.generate_unified_prompt.return_value = "Unified animated arc prompt for grey kitten."
     mock_prompt_gen_svc._last_cost_usd = 0.0
 
     with patch("app.scheduler.jobs.daily_pipeline.get_supabase", return_value=mock_supabase), \
@@ -75,37 +93,48 @@ def _run_pipeline_with_mocks(
     }
 
 
-def test_scene_engine_replaces_script_generation():
-    """Pipeline: SceneEngine.pick_scene() is called instead of ScriptGenerationService."""
+def test_scene_engine_uses_pick_scenario_arc():
+    """Phase 13 Pipeline: SceneEngine.pick_scenario_arc() is called (not pick_scene)."""
     mocks = _run_pipeline_with_mocks()
-    mocks["scene_engine"].pick_scene.assert_called_once()
-    # ScriptGenerationService should not be imported or called
-    # (verified by the absence of its import in daily_pipeline.py)
+    mocks["scene_engine"].pick_scenario_arc.assert_called_once()
+    # pick_scene should NOT be called in Phase 13+
+    mocks["scene_engine"].pick_scene.assert_not_called()
 
 
 def test_music_matcher_called_with_scene_mood():
     """Pipeline: MusicMatcher.pick_track() called with mood from SceneEngine result."""
     mocks = _run_pipeline_with_mocks(
-        scene_return=("scene prompt...", "caption here", "curious", 0.001)
+        scenario_return=(
+            "scenario description", "arc prompt text", "caption here", "curious", 0.001
+        )
     )
     mocks["music_matcher"].pick_track.assert_called_once()
     call_args = mocks["music_matcher"].pick_track.call_args
     assert call_args.kwargs.get("mood") == "curious" or call_args[1].get("mood") == "curious" or call_args[0][0] == "curious"
 
 
-def test_scene_prompt_passed_to_kling_not_caption():
-    """Pipeline: KlingService.submit() receives unified_prompt (not caption).
-    Phase 12: scene_prompt is passed to PromptGenerationService which returns the
-    unified prompt. KlingService receives the unified prompt, not the raw scene_prompt.
+def test_arc_prompt_passed_to_prompt_generation_service():
+    """Phase 13 Pipeline: PromptGenerationService.generate_unified_prompt() receives arc_prompt (not scenario_description).
+
+    D-07: PromptGenerationService role is to fuse grey kitten character into the arc-structured prompt.
+    arc_prompt (3-5 sentence flowing prose arc) is the correct input — not the scenario_description.
     """
-    scene_prompt = "Mochi, el gato naranja tabby, inspecciona la cocina..."
-    caption = "Mochi descubre los secretos"
+    arc_prompt = "The grey kitten spots a fallen tortilla and creeps toward it with exaggerated stealth."
+    scenario_description = "A kitten investigates a fallen tortilla."
+    caption = "Eso no iba a funcionar."
     mocks = _run_pipeline_with_mocks(
-        scene_return=(scene_prompt, caption, "curious", 0.001)
+        scenario_return=(scenario_description, arc_prompt, caption, "curious", 0.001)
     )
-    # PromptGenerationService should be called with scene_prompt
-    mocks["prompt_gen_svc"].generate_unified_prompt.assert_called_once_with(scene_prompt)
-    # Kling receives the unified prompt (not the raw scene_prompt, not the caption)
+    # PromptGenerationService should be called with arc_prompt (the flowing prose arc)
+    mocks["prompt_gen_svc"].generate_unified_prompt.assert_called_once_with(arc_prompt)
+
+
+def test_kling_receives_unified_prompt_not_caption():
+    """Pipeline: KlingService.submit() receives unified_prompt (not caption, not raw arc_prompt)."""
+    caption = "Algo malo va a pasar."
+    mocks = _run_pipeline_with_mocks(
+        scenario_return=_DEFAULT_SCENARIO_RETURN
+    )
     submit_call = mocks["kling_svc"].submit.call_args
     submitted_text = submit_call[0][0] if submit_call[0] else submit_call[1].get("script_text", "")
     assert caption not in (submitted_text or ""), \
@@ -126,14 +155,44 @@ def test_music_track_id_saved_to_content_history():
 
 def test_caption_saved_to_content_history():
     """Pipeline: caption from SceneEngine saved to content_history.caption."""
-    caption = "Mochi descubre los secretos de la cocina"
+    caption = "Algo malo va a pasar."
     mocks = _run_pipeline_with_mocks(
-        scene_return=("scene prompt...", caption, "curious", 0.001)
+        scenario_return=(
+            "scenario description", "arc prompt text", caption, "curious", 0.001
+        )
     )
     insert_call = mocks["supabase"].table.return_value.insert.call_args
     if insert_call:
         inserted_data = insert_call[0][0]
         assert "caption" in inserted_data, "caption must be saved to content_history"
+
+
+def test_prompt_embedding_saved_to_content_history():
+    """Phase 13 Pipeline: prompt_embedding is included in content_history insert (D-09)."""
+    mocks = _run_pipeline_with_mocks()
+    insert_call = mocks["supabase"].table.return_value.insert.call_args
+    if insert_call:
+        inserted_data = insert_call[0][0]
+        assert "prompt_embedding" in inserted_data or "prompt_embedding" in str(inserted_data), \
+            "prompt_embedding must be saved to content_history (Phase 13 D-09)"
+
+
+def test_dual_embedding_calls():
+    """Phase 13 Pipeline: EmbeddingService.generate() called twice — once for scene, once for prompt."""
+    mocks = _run_pipeline_with_mocks()
+    # embedding_svc.generate should be called at least twice:
+    # 4c: embed scene_prompt (scenario_description)
+    # 4h: embed unified_prompt
+    assert mocks["embedding_svc"].generate.call_count >= 2, (
+        "Phase 13 requires dual embeddings: scene_embedding (4c) + prompt_embedding (4h). "
+        f"generate() was called {mocks['embedding_svc'].generate.call_count} time(s)"
+    )
+
+
+def test_is_too_similar_prompt_called():
+    """Phase 13 Pipeline: SimilarityService.is_too_similar_prompt() is called for prompt-level anti-repetition."""
+    mocks = _run_pipeline_with_mocks()
+    mocks["similarity_svc"].is_too_similar_prompt.assert_called_once()
 
 
 def test_music_matcher_failure_sends_alert_and_halts():
@@ -157,7 +216,7 @@ def test_music_matcher_failure_sends_alert_and_halts():
         mock_cb_cls.return_value = mock_cb
 
         mock_engine = MagicMock()
-        mock_engine.pick_scene.return_value = ("prompt...", "caption", "curious", 0.001)
+        mock_engine.pick_scenario_arc.return_value = _DEFAULT_SCENARIO_RETURN
         mock_engine.load_active_scene_rejections.return_value = []
         mock_engine_cls.return_value = mock_engine
 
@@ -171,6 +230,7 @@ def test_music_matcher_failure_sends_alert_and_halts():
 
         mock_sim = MagicMock()
         mock_sim.is_too_similar_scene.return_value = False
+        mock_sim.is_too_similar_prompt.return_value = False
         mock_sim_cls.return_value = mock_sim
 
         mock_prompt_gen = MagicMock()
@@ -189,28 +249,30 @@ def test_music_matcher_failure_sends_alert_and_halts():
 
 
 def test_prompt_generation_service_called_between_scene_and_kling():
-    """Pipeline: PromptGenerationService.generate_unified_prompt() is called with scene_prompt before KlingService.submit()."""
-    scene_prompt = "A curious grey kitten investigates a fallen clay pot."
+    """Pipeline: PromptGenerationService.generate_unified_prompt() is called before KlingService.submit()."""
+    arc_prompt = "The grey kitten creeps toward the avocado, pounces, and slides."
     mocks = _run_pipeline_with_mocks(
-        scene_return=(scene_prompt, "caption", "curious", 0.001)
+        scenario_return=(
+            "scenario description", arc_prompt, "caption", "curious", 0.001
+        )
     )
-    mocks["prompt_gen_svc"].generate_unified_prompt.assert_called_once_with(scene_prompt)
-    # KlingService should receive the output of PromptGenerationService, not raw scene_prompt
+    mocks["prompt_gen_svc"].generate_unified_prompt.assert_called_once_with(arc_prompt)
+    # KlingService should receive the output of PromptGenerationService, not raw arc_prompt
     submit_call = mocks["kling_svc"].submit.call_args
     submitted = submit_call[0][0] if submit_call[0] else ""
-    assert submitted != scene_prompt, (
-        "KlingService should receive the unified_prompt from PromptGenerationService, not the raw scene_prompt"
+    assert submitted != arc_prompt, (
+        "KlingService should receive the unified_prompt from PromptGenerationService, not the raw arc_prompt"
     )
 
 
 def test_anti_repetition_log_only_mode_does_not_retry():
-    """Pipeline: similarity detected + anti-repetition disabled = log warning, continue (no retry)."""
+    """Pipeline: scene similarity detected + anti-repetition disabled = log warning, continue (no retry)."""
     mocks = _run_pipeline_with_mocks(
         similarity_return=True,   # scene IS similar
         anti_rep_enabled=False,   # but enforcement is disabled
     )
-    # Pipeline should complete (not halt): pick_scene called only once
-    assert mocks["scene_engine"].pick_scene.call_count == 1, \
+    # Pipeline should complete (not halt): pick_scenario_arc called only once
+    assert mocks["scene_engine"].pick_scenario_arc.call_count == 1, \
         "In log-only mode, pipeline should NOT retry on similarity detection"
     # Kling should still be called
     mocks["kling_svc"].submit.assert_called_once()
