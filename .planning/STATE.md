@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Grey Kitten Character Refresh
-status: unknown
-stopped_at: Completed 12-03-PLAN.md
-last_updated: "2026-03-21T07:10:33.515Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-03-30T04:19:52.802Z"
 progress:
   total_phases: 1
   completed_phases: 1
@@ -76,6 +76,8 @@ Plan: 3 of 3
 - [Phase 12]: [Phase 12-02]: KlingService.submit() is now a pure passthrough — no concatenation, no CHARACTER_BIBLE prepend
 - [Phase 12]: [Phase 12-03]: test_smoke.py TestVID02CharacterBibleSmoke updated from orange tabby/Mexican to grey kitten/blue eyes for v3.0 character refresh
 - [Phase 12]: [Phase 12-03]: test_prompt_generation.py extended with 6 plan-required named tests; additive approach preserves 9 TDD tests from 12-01; 186 tests total, 0 failures
+- [Phase 13]: _generate_scenario_with_backoff module-level for ThreadPoolExecutor compatibility; mirrors prompt_generation.py pattern
+- [Phase 13]: pick_scenario_arc() returns 5-tuple (scenario_description, arc_prompt, caption, mood, cost_usd) — adds scenario_description vs pick_scene() for downstream semantic embedding
 
 ### v1.0 Quick Tasks Completed
 
@@ -109,6 +111,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T07:30:00.000Z
-Stopped at: Completed 12-03-PLAN.md
+Last session: 2026-03-30T04:19:52.799Z
+Stopped at: Completed 13-01-PLAN.md
 Resume file: None
