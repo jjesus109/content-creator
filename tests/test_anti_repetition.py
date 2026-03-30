@@ -143,3 +143,50 @@ def test_load_active_scene_rejections_filters_by_pattern_type(mock_supabase):
     # Verify the query chain used pattern_type='scene' filter
     eq_call = mock_supabase.table.return_value.select.return_value.eq.call_args
     assert eq_call[0] == ("pattern_type", "scene")
+
+
+# ── Phase 13: Prompt similarity check ───────────────────────────────────────
+
+def test_is_too_similar_prompt_returns_true_when_rows_found(mock_supabase):
+    """SCN-13-05: Returns True when check_prompt_similarity finds matching prompts."""
+    from app.services.similarity import SimilarityService
+    mock_supabase.rpc.return_value.execute.return_value.data = [
+        {"id": "uuid-1", "scene_prompt": "A grey kitten...", "similarity": 0.82}
+    ]
+    svc = SimilarityService(supabase=mock_supabase)
+    result = svc.is_too_similar_prompt(embedding=[0.1] * 1536)
+    assert result is True
+    mock_supabase.rpc.assert_called_once_with(
+        "check_prompt_similarity",
+        {"query_embedding": [0.1] * 1536, "similarity_threshold": 0.78, "lookback_days": 7},
+    )
+
+
+def test_is_too_similar_prompt_returns_false_when_no_rows(mock_supabase):
+    """SCN-13-05: Returns False (unique prompt) when no matching prompts found."""
+    from app.services.similarity import SimilarityService
+    mock_supabase.rpc.return_value.execute.return_value.data = []
+    svc = SimilarityService(supabase=mock_supabase)
+    result = svc.is_too_similar_prompt(embedding=[0.5] * 1536)
+    assert result is False
+
+
+def test_is_too_similar_prompt_fails_open_on_exception(mock_supabase):
+    """SCN-13-05: Returns False (fail open) when DB raises exception."""
+    from app.services.similarity import SimilarityService
+    mock_supabase.rpc.side_effect = Exception("DB connection error")
+    svc = SimilarityService(supabase=mock_supabase)
+    result = svc.is_too_similar_prompt(embedding=[0.1] * 1536)
+    assert result is False
+
+
+def test_prompt_similarity_threshold_is_0_78():
+    """SCN-13-05: PROMPT_SIMILARITY_THRESHOLD is 0.78 (matches scene similarity threshold)."""
+    from app.services.similarity import PROMPT_SIMILARITY_THRESHOLD
+    assert PROMPT_SIMILARITY_THRESHOLD == 0.78
+
+
+def test_prompt_similarity_lookback_is_7_days():
+    """SCN-13-05: PROMPT_LOOKBACK_DAYS is 7 (matches scene lookback window)."""
+    from app.services.similarity import PROMPT_LOOKBACK_DAYS
+    assert PROMPT_LOOKBACK_DAYS == 7

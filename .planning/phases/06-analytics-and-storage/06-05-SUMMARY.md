@@ -97,6 +97,14 @@ None - no external service configuration required.
 - Phase 7 (Hardening) can verify all 6 scheduled jobs are registered and firing correctly
 - No blockers
 
+## Self-Check: PASSED
+
+- FOUND: src/app/scheduler/jobs/weekly_report.py
+- FOUND: src/app/scheduler/jobs/storage_lifecycle.py
+- FOUND: .planning/phases/06-analytics-and-storage/06-05-SUMMARY.md
+- FOUND: commit daf3fbf (feat: create weekly_report_job and storage_lifecycle_job)
+- FOUND: commit 793f070 (feat: register both jobs in registry.py)
+
 ---
 *Phase: 06-analytics-and-storage*
 *Completed: 2026-02-28*

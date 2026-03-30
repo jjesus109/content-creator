@@ -122,6 +122,16 @@ CLAUDE_GENERATION_MODEL defaults to `claude-haiku-3-5-20241022` — override in 
 - Migration 0002 must be applied to Supabase before the pipeline runs similarity checks
 - .env file needs ANTHROPIC_API_KEY and OPENAI_API_KEY populated
 
+## Self-Check: PASSED
+
+- FOUND: src/app/telegram/__init__.py
+- FOUND: src/app/telegram/app.py
+- FOUND: migrations/0002_script_generation.sql
+- FOUND: 02-01-SUMMARY.md
+- FOUND: commit 876b84b (Task 1)
+- FOUND: commit 3517e5d (Task 2)
+- FOUND: commit bad6c25 (metadata)
+
 ---
 *Phase: 02-script-generation*
 *Completed: 2026-02-20*
