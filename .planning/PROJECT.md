@@ -2,11 +2,11 @@
 
 ## What This Is
 
-An automated AI-powered content pipeline for a single creator. The system generates one cute Mexican cat short-form video per day — AI-generated via Kling AI 3.0 with a fixed character bible, dynamically matched licensed music, and a scene engine that varies location, activity, and mood daily with seasonal Mexican cultural overlays — delivers it to a Telegram bot for approval, then publishes to TikTok, IG Reels, FB Reels, and YT Shorts automatically with AI content labels and music license enforcement at the publish gate.
+An automated AI-powered dual-pipeline content machine for a single creator. Pipeline 1 generates one Mexican cat short-form video per day via Kling AI 3.0. Pipeline 2 generates one Deep History & Education narrated video (2–5 min 16:9 long-form + 60s 9:16 short cut) every two days via ElevenLabs voice, Shotstack stock-footage composition, and Whisper subtitles. Both pipelines deliver to Telegram for approval, then auto-publish to platform-appropriate targets with AI content labels.
 
 ## Core Value
 
-A cute Mexican cat video lands in Telegram every day, ready to approve and publish — the creator's only job is to say yes or no.
+Every piece of content lands in Telegram ready to approve — the creator's only job is to say yes or no.
 
 ## Current State
 
@@ -52,43 +52,59 @@ The full pipeline is operational: Kling AI generates a cat video daily from a GP
 
 ### Active
 
-<!-- Next milestone scope -->
+<!-- v4.0 scope — Dual-Pipeline Content Machine -->
 
-(None — awaiting v3.0 planning)
+- [ ] `content_type` discriminator in `content_history` — separates cat and history rows across shared pipeline infrastructure
+- [ ] GPT-4o script generation for Deep History & Education — 500–700 words, structured hook / body / CTA, topic anti-repetition via pgvector (30-day lookback)
+- [ ] ElevenLabs voice narration — single consistent channel voice, MP3 stored in Supabase Storage `audio-files/` bucket
+- [ ] Whisper subtitle generation — SRT from ElevenLabs audio, stored in Supabase Storage `subtitle-files/` bucket
+- [ ] Shotstack video composition — Pexels stock footage + ElevenLabs audio + Whisper SRT, two JSON templates (long 16:9 / short 9:16)
+- [ ] Dual-format render — 2–5 min 16:9 long-form and 60s 9:16 short cut produced per pipeline run
+- [ ] History APScheduler job — runs every 2 days; cat job unchanged (daily); both share Postgres job store
+- [ ] Telegram approval extended — shows content type (cat vs history) and format previews; single approval publishes all formats
+- [ ] Format-aware publishing — YouTube + Facebook receive long-form; YouTube Shorts + TikTok + Instagram Reels receive short
+- [ ] DB migration — `content_type` column on `content_history`, `history_topics` table, `audio_url` / `long_video_url` / `short_video_url` / `subtitle_url` columns, Supabase Storage buckets created
 
 ### Out of Scope
 
 - Multi-user support — single creator only, no accounts or tenancy
-- Horizontal short-form formats — 9:16 only
 - Analytics dashboards/UI — all interaction via Telegram only
-- AI avatar / spoken content — cat videos are visual-only, no voice
-- Per-platform post copy variants — universal caption validated in v2.0
-- Weekly mood profile Telegram flow — replaced by seasonal calendar
-- 5 Pillars philosophical framework — not applicable to cat content
-- Music fallback pool (50-track backup) — deferred to v3.0
-- Compliance audit log per publish — deferred to v3.0
-- Quarterly music pool refresh workflow — deferred to v3.0
-- MEDIUM/HIGH complexity scenes (pounce, zoom) — expand after LOW complexity validates
-- Caption A/B testing — deferred to v3.0
+- Per-platform post copy variants — universal caption validated in v2.0; same policy for history channel
+- Weekly mood profile Telegram flow — replaced by seasonal calendar (cat) / topic rotation (history)
+- 5 Pillars philosophical framework — not applicable
+- Music for history videos — narrated voice content; no background music in v4.0
+- Multiple history niches — single niche (Deep History & Education) only; multi-channel deferred
+- AI avatar / on-camera presenter — stock footage + voice only; no avatar video
+- Caption A/B testing — deferred
+- Compliance audit log per publish — deferred
+- Quarterly music pool refresh — deferred
+
+## Current Milestone: v4.0 Dual-Pipeline Content Machine
+
+**Goal:** Add Deep History & Education narrated video pipeline alongside the existing cat pipeline — shared infrastructure, separate jobs, unified Telegram approval.
+
+**Target features:** script generation, ElevenLabs voice, Whisper subtitles, Shotstack composition, dual-format render (2–5 min + 60s), format-aware publishing, DB migration.
 
 ## Context
 
-- **Content identity**: Fixed recurring Mexican cat character "Mochi" (orange tabby, 49-word character bible), shown in varied Mexican and everyday environments
-- **Scene variety**: 50 curated combos; location + activity + mood rotate daily via GPT-4o selection; seasonal themes overlay automatically
-- **Content language**: Captions in Spanish, casual and cute tone; universal (no per-platform variants)
-- **Generation cadence**: 1 video/day, fully automated — creator approves or rejects via Telegram
-- **Target platforms**: TikTok, Instagram Reels, Facebook Reels, YouTube Shorts
-- **Music pool**: Pre-curated, tagged by mood + BPM + per-platform license flags; per-platform license gate at publish
+- **Pipeline 1 — Cat**: Fixed grey kitten character (CHARACTER_BIBLE, v3.0), Kling AI 3.0 via fal.ai, scene engine, music matching, Spanish captions, daily cadence, YT Shorts + TikTok + IG Reels + FB Reels
+- **Pipeline 2 — History**: Deep History & Education niche, GPT-4o 500–700 word scripts, ElevenLabs voice, Shotstack + Pexels stock footage, Whisper SRT subtitles, every-2-days cadence, YouTube + Facebook (long-form) + YT Shorts + TikTok + IG Reels (short)
+- **Shared infrastructure**: FastAPI, APScheduler (Postgres job store), Supabase (Postgres + pgvector + Storage), Telegram approval bot, direct platform publishers, Railway deployment
+- **Anti-repetition**: Cat uses scene embedding (0.78 cosine, 7-day lookback); History uses topic+era embedding (0.78 cosine, 30-day lookback)
+- **Storage**: Supabase Storage for all media — cat videos (existing), history audio / long video / short video / subtitles (new buckets)
 
 ## Constraints
 
 - **Tech — Language/Backend**: Python 3.11 + FastAPI
-- **Tech — Scene AI**: GPT-4o generates scene prompts within curated categories
-- **Tech — Video generation**: Kling AI 3.0 via fal.ai async SDK (fal-client==0.13.1)
-- **Tech — Music**: Pre-curated music pool, mood-matched per video; no voice/TTS
+- **Tech — Cat video generation**: Kling AI 3.0 via fal.ai async SDK (fal-client==0.13.1)
+- **Tech — History script**: GPT-4o (same client as cat scene engine)
+- **Tech — History voice**: ElevenLabs API — Flash v2.5, Creator Plan ($22/month, 100K chars)
+- **Tech — History subtitles**: OpenAI Whisper-1 via `openai.audio.transcriptions`
+- **Tech — History video composition**: Shotstack API — JSON templates, Pexels API for stock footage
+- **Tech — Music**: Cat pipeline only; history pipeline has no background music in v4.0
 - **Tech — Publishing**: Direct platform APIs: TikTok Content Publishing API, Meta Graph API (Instagram + Facebook Pages), YouTube Data API v3
 - **Tech — Database**: Supabase (Postgres + pgvector for anti-repetition)
-- **Tech — Storage**: Supabase Storage for video lifecycle management
+- **Tech — Storage**: Supabase Storage — no S3; all media (cat + history) stored in Supabase buckets
 - **Tech — Scheduler**: APScheduler 3.10.x with Postgres job store (survives deploys)
 - **Tech — Telegram**: python-telegram-bot v21.x (async)
 - **Tech — HTTP client**: httpx (async — never requests in async context)
@@ -112,5 +128,29 @@ The full pipeline is operational: Kling AI generates a cat video daily from a GP
 | Music license gate fail-open on null track_id | Backward compatibility for legacy content_history rows without a track | ✓ Good — safe default |
 | Kling CB separate from HeyGen CB | Different failure models: rate-based vs cost+count-based | ✓ Good — clean separation |
 
+| Dual pipeline coexistence | Cat and history share infrastructure; `content_type` discriminator separates rows | — Pending |
+| Supabase Storage (no S3) | All media in one managed service; no separate S3 billing or credentials | — Pending |
+| ElevenLabs single voice | Consistent channel identity; voice chosen once, locked as Python constant | — Pending |
+| Shotstack + Pexels | Royalty-free stock footage (Pexels free tier) + cloud rendering; cheaper than AI video for long-form | — Pending |
+| Two Shotstack templates | One 16:9 long-form, one 9:16 short; generated from same audio in single pipeline run | — Pending |
+| 30-day anti-repetition lookback for history | Topics repeat less frequently than cat scenes; 7-day cat lookback preserved unchanged | — Pending |
+
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd:transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd:complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-03-20 after v2.0 milestone — Mexican Cat Content Machine*
+*Last updated: 2026-05-20 after v4.0 milestone start — Dual-Pipeline Content Machine*
