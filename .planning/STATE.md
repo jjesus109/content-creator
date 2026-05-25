@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Dual-Pipeline Content Machine
-status: Defining requirements
-stopped_at: Milestone initialized — requirements and roadmap pending
+status: In progress
+stopped_at: Roadmap created — Phase 14 ready for planning
 last_updated: "2026-05-20T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,14 +19,27 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** Every piece of content lands in Telegram ready to approve — the creator's only job is to say yes or no.
-**Current focus:** v4.0 — Dual-Pipeline Content Machine (requirements + roadmap)
+**Current focus:** v4.0 — Dual-Pipeline Content Machine (Phase 14 next)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 14 — Infrastructure & DB
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-20 — Milestone v4.0 started
+Status: Pending (not started)
+Last activity: 2026-05-20 — v4.0 roadmap created (Phases 14-19)
+
+```
+Progress: ░░░░░░░░░░░░░░░░░░░░ 0% (0/6 phases)
+```
+
+## Performance Metrics
+
+| Metric | Value |
+|--------|-------|
+| v4.0 phases | 6 |
+| v4.0 requirements | 27 |
+| Requirements mapped | 27/27 |
+| Phases complete | 0/6 |
 
 ## Accumulated Context
 
@@ -34,6 +47,7 @@ Last activity: 2026-05-20 — Milestone v4.0 started
 
 - Phase 12 added: Grey Kitten Unified Prompt Generation — replace CHARACTER_BIBLE concatenation with AI-generated prompt that naturally embeds new grey kitten character; persist generated prompt to content_history; send to Telegram creator notification
 - Phase 13 added: Kitten Scenario Video Generation — generate funny/cute grey kitten videos with varied activities/scenarios; each 15-second video follows hook→climax→conclusion story arc; inspired by Mexican bedroom aesthetic from Phase 12 character
+- Phases 14-19 added: v4.0 Dual-Pipeline Content Machine — history narrated video pipeline alongside existing cat pipeline
 
 ### Decisions
 
@@ -109,9 +123,11 @@ None.
 - [Phase 10]: Anti-repetition 75-80% threshold is research estimate — empirical calibration with 20-30 test video pairs required before automation enabled
 - [Deployment]: New env vars FAL_API_KEY and KLING_MODEL_VERSION declared in Settings and .env.example — must be added to Railway before Phase 9 plans 02-04 execute
 - [Deployment]: Migration 0008_v2_schema.sql must be applied to Supabase DB before Phase 9 plans 02-04 execute
+- [v4.0]: New env vars ELEVENLABS_API_KEY, HISTORY_VOICE_ID, PEXELS_API_KEY, SHOTSTACK_API_KEY must be added to Railway before Phase 16-18 plans execute
+- [v4.0]: DB migrations for INFRA-01 through INFRA-04 must be applied to Supabase production before Phase 15+ plans execute
 
 ## Session Continuity
 
-Last session: 2026-03-27T04:46:16.985Z
-Stopped at: Phase 13 context gathered (discuss mode)
-Resume file: .planning/phases/13-kitten-scenario-video-generation-hook-climax-conclusion-stories/13-CONTEXT.md
+Last session: 2026-05-20T00:00:00.000Z
+Stopped at: v4.0 roadmap created — Phases 14-19 defined; Phase 14 ready for /gsd:plan-phase
+Resume file: .planning/ROADMAP.md
