@@ -32,6 +32,17 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \".claude/hooks/pre-commit-check.sh\"",
+            "timeout": 60,
+            "statusMessage": "Running pre-commit checks (ruff, pytest, secrets)..."
+          }
+        ]
       }
     ]
   },
